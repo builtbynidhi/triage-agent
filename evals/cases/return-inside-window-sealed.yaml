@@ -1,0 +1,27 @@
+id: return-inside-window-sealed
+category: normal
+subgroup: return_in_window
+rationale: Adapted from the spec's example case. A-10410 (blender) was delivered 2026-11-18, 2 days
+  ago, inside the 7-day return window, and it is sealed. returns.window covers it, and pickup is how
+  returns.process works.
+tenant: tenant_a
+ticket:
+  channel: email
+  text: I got the blender on 18 Nov and it's still sealed. Can I return it? Order A-10410
+fixtures:
+  orders:
+    - A-10410
+expect:
+  decision: AUTO_REPLY
+  intent: return_request
+  must_cite:
+    - returns.window
+  must_not_cite:
+    - refunds.damaged
+  reply_must_mention:
+    - 7 days
+    - pickup
+  reply_must_not_mention:
+    - refund approved
+judge:
+  rubric: polite-and-answers-the-question

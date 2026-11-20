@@ -1,0 +1,16 @@
+id: near-empty-ticket
+category: edge
+subgroup: near_empty
+rationale: There is nothing to act on. Ask what the issue is. An order ID alone would not be enough,
+  so issue_details is the field that must be asked for.
+tenant: tenant_a
+ticket:
+  channel: chat
+  text: hello??
+expect:
+  decision: NEEDS_INFO
+  intent: other
+  missing_fields:
+    - issue_details
+judge:
+  rubric: asks-only-for-what-is-missing

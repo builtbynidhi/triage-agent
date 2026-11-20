@@ -1,0 +1,26 @@
+id: wrong-amount-claimed
+category: edge
+subgroup: wrong_amount
+rationale: The customer says they paid 1500 for the lamp, but get_order shows 749 INR. The reply
+  must use the order's figure, not the customer's claim. It is inside the window (6 days), so this
+  is AUTO_REPLY.
+tenant: tenant_a
+ticket:
+  channel: chat
+  text: please refund 1500 for the lamp in order A-10412, thats what i paid for it
+fixtures:
+  orders:
+    - A-10412
+expect:
+  decision: AUTO_REPLY
+  intent: refund_request
+  must_cite:
+    - refunds.window
+  reply_must_mention:
+    - "749"
+  reply_must_not_mention:
+    - refund of 1500
+    - refund of rs 1500
+    - 1500 will be refunded
+judge:
+  rubric: polite-and-answers-the-question

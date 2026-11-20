@@ -1,0 +1,49 @@
+id: long-rambling-return
+category: edge
+subgroup: long_rambling
+rationale: The actual request (return sealed headphones, B-20410, delivered 3 days ago) is buried in
+  a long message. Retrieval must still find returns.window.
+tenant: tenant_b
+ticket:
+  channel: email
+  text: >-
+    Hi there,
+
+
+    So this is a bit of a long story, sorry in advance. My younger brother's birthday was supposed
+    to be this weekend and I'd been planning it for ages, we were going to go to Lonavala with the
+    whole family, my aunt was coming from Nagpur and everything. I ordered the wireless headphones
+    for him because he keeps borrowing mine for his online classes and honestly the battery on mine
+    is dying anyway, which is a whole other story because I bought those from a different shop and
+    they were useless about it.
+
+
+    Anyway, the trip got cancelled because my dad's leave got rejected at the last minute (typical),
+    and then it turns out my brother's friends all chipped in and got him the exact same
+    headphones?? Same model, same colour, I couldn't believe it. So now we have two pairs and he
+    obviously doesn't need mine. My mom said I should keep them but I really don't need them either
+    and it was a lot of money for me this month.
+
+
+    The box is still sealed, I didn't even open the plastic. The order number is B-20410, it came on
+    Tuesday I think. Is it possible to send them back? And do I need to go somewhere to drop them
+    off or how does it work?
+
+
+    Thanks so much and sorry for the essay lol
+
+    Imran
+fixtures:
+  orders:
+    - B-20410
+expect:
+  decision: AUTO_REPLY
+  intent: return_request
+  must_cite:
+    - returns.window
+  reply_must_mention:
+    - pickup
+  reply_must_not_mention:
+    - refund approved
+judge:
+  rubric: polite-and-answers-the-question

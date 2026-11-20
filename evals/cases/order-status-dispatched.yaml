@@ -1,0 +1,24 @@
+id: order-status-dispatched
+category: normal
+subgroup: order_status
+rationale: A-10407 was dispatched on 2026-11-18 and is not yet delivered. The facts are confirmed by
+  get_order, so the agent can answer directly. delivery.estimates gives the expected window without inventing a date.
+tenant: tenant_a
+ticket:
+  channel: chat
+  text: hi i ordered a blender on 17th, order no A-10407. any update when it will reach?? thx
+fixtures:
+  orders:
+    - A-10407
+expect:
+  decision: AUTO_REPLY
+  intent: order_status
+  must_cite:
+    - delivery.estimates
+  reply_must_mention:
+    - dispatched
+  reply_must_not_mention:
+    - has been delivered
+    - was delivered
+judge:
+  rubric: polite-and-answers-the-question

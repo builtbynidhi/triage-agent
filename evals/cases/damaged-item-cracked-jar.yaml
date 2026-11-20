@@ -1,0 +1,22 @@
+id: damaged-item-cracked-jar
+category: normal
+subgroup: damaged_escalation
+rationale: Damage reported on A-10409, delivered today. damaged.resolution says every damaged-goods
+  case is verified by a human, so the agent escalates and must not promise a refund or replacement.
+tenant: tenant_a
+ticket:
+  channel: email
+  text:
+    The blender jar arrived CRACKED. outer box was crushed too. Order A-10409, delivered today. I
+    have photos. What now?
+fixtures:
+  orders:
+    - A-10409
+expect:
+  decision: ESCALATE
+  intent: damaged_item
+  must_cite:
+    - damaged.resolution
+  reply_must_not_mention:
+    - refund approved
+    - replacement approved

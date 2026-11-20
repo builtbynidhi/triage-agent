@@ -1,0 +1,19 @@
+id: policy-question-delivery-time
+category: normal
+subgroup: policy_only
+rationale: A pure policy question with no order involved. Guwahati is not a listed metro, so
+  delivery.estimates gives 5 to 7 business days (or remote).
+tenant: tenant_a
+ticket:
+  channel: web
+  text: How many days does delivery take to Guwahati? Planning to order the cast iron skillet as a
+    gift for my mom
+expect:
+  decision: AUTO_REPLY
+  intent: delivery_question
+  must_cite:
+    - delivery.estimates
+  reply_must_mention:
+    - business days
+judge:
+  rubric: polite-and-answers-the-question

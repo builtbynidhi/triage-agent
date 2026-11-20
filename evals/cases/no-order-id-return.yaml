@@ -1,0 +1,18 @@
+id: no-order-id-return
+category: edge
+subgroup: no_order_id
+rationale: returns.process starts with the order ID, and the window cannot be checked without it, so
+  the agent asks for the ID and does not promise eligibility.
+tenant: tenant_b
+ticket:
+  channel: email
+  text: Hi, I want to return the headphones I got last week, how do i do it?
+expect:
+  decision: NEEDS_INFO
+  intent: return_request
+  missing_fields:
+    - order_id
+  reply_must_not_mention:
+    - eligible for return
+judge:
+  rubric: asks-only-for-what-is-missing

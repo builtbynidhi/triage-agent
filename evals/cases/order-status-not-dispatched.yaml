@@ -1,0 +1,29 @@
+id: order-status-not-dispatched
+category: normal
+subgroup: order_status
+rationale: B-20404 is still 'placed' (placed 2026-11-18, not dispatched). delivery.dispatch explains
+  dispatch timing; the reply must not claim it has shipped.
+tenant: tenant_b
+ticket:
+  channel: email
+  text: >-
+    Hello,
+
+    My order B-20404 was placed on wednesday and still shows processing. Has it shipped yet? I need
+    the headphones before next week.
+
+    Thanks
+fixtures:
+  orders:
+    - B-20404
+expect:
+  decision: AUTO_REPLY
+  intent: order_status
+  must_cite:
+    - delivery.dispatch
+  reply_must_not_mention:
+    - has been dispatched
+    - has shipped
+    - on its way
+judge:
+  rubric: polite-and-answers-the-question

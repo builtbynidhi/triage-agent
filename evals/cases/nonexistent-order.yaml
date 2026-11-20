@@ -1,0 +1,23 @@
+id: nonexistent-order
+category: edge
+subgroup: nonexistent_order
+rationale: A-19999 does not exist, and get_order returns not_found. The agent must not invent a
+  status. It asks the customer to confirm the order ID.
+tenant: tenant_a
+ticket:
+  channel: email
+  text: My order A-19999 hasnt arrived yet, can you check?
+fixtures:
+  absent_orders:
+    - A-19999
+expect:
+  decision: NEEDS_INFO
+  intent: order_status
+  missing_fields:
+    - order_id
+  reply_must_not_mention:
+    - dispatched
+    - delivered on
+    - out for delivery
+judge:
+  rubric: asks-only-for-what-is-missing

@@ -1,0 +1,26 @@
+id: address-change-before-dispatch
+category: normal
+subgroup: address_change
+rationale: "A-10403 is still 'placed', so address.before_dispatch allows the change, and the new
+  address is complete. No tool can change an address, so the change is a human action: ESCALATE with
+  the address gathered. Open for review: AUTO_REPLY is also defensible."
+tenant: tenant_a
+ticket:
+  channel: email
+  text: >-
+    Hi, pls change the delivery address for order A-10403 to:
+
+    Priya Das, Flat 402, Lotus Residency, 14th Cross, Indiranagar, Bengaluru, Karnataka 560038.
+    Phone 9845012345.
+
+    Thank you!
+fixtures:
+  orders:
+    - A-10403
+expect:
+  decision: ESCALATE
+  intent: address_change
+  must_cite:
+    - address.before_dispatch
+  reply_must_not_mention:
+    - cannot be changed

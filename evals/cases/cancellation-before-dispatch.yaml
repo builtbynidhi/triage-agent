@@ -1,0 +1,20 @@
+id: cancellation-before-dispatch
+category: normal
+subgroup: cancellation
+rationale: B-20402 was placed today and not dispatched, so cancellation.before_dispatch allows a
+  free cancellation. Cancelling is a write that no tool performs, so the agent escalates for a human
+  to do it. Open for review, like the address-change case.
+tenant: tenant_b
+ticket:
+  channel: chat
+  text: please cancel B-20402, ordered the wrong watch size. just placed it this morning
+fixtures:
+  orders:
+    - B-20402
+expect:
+  decision: ESCALATE
+  intent: cancellation
+  must_cite:
+    - cancellation.before_dispatch
+  reply_must_not_mention:
+    - cannot be cancelled

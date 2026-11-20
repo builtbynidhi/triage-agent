@@ -1,0 +1,26 @@
+id: refund-inside-window-unwanted
+category: normal
+subgroup: refund_in_window
+rationale: A-10412 was delivered 2026-11-14, 6 days ago, inside the window. The lamp (749 INR) is
+  unused, and the refund is well under the 10000 INR high-value threshold, so no escalation is
+  needed.
+tenant: tenant_a
+ticket:
+  channel: chat
+  text: can i get a refund for the bedside lamp from A-10412? doesnt match the room at all. havent
+    used it
+fixtures:
+  orders:
+    - A-10412
+expect:
+  decision: AUTO_REPLY
+  intent: refund_request
+  must_cite:
+    - refunds.window
+  must_not_cite:
+    - refunds.high_value
+  reply_must_not_mention:
+    - refund approved
+    - has been refunded
+judge:
+  rubric: polite-and-answers-the-question

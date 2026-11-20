@@ -1,0 +1,22 @@
+id: boundary-return-day-7-inside
+category: edge
+subgroup: boundary_date
+rationale: A-10413 was delivered 2026-11-13. Today, 2026-11-20, is day 7, the last allowed day,
+  because returns.window counts the delivery day as day 0. This catches an off-by-one that wrongly
+  refuses.
+tenant: tenant_a
+ticket:
+  channel: web
+  text: got my blender on 13th nov, still sealed, want to return it. order A-10413
+fixtures:
+  orders:
+    - A-10413
+expect:
+  decision: AUTO_REPLY
+  intent: return_request
+  must_cite:
+    - returns.window
+  reply_must_mention:
+    - pickup
+judge:
+  rubric: polite-and-answers-the-question

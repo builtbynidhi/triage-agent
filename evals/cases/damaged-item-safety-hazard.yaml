@@ -1,0 +1,24 @@
+id: damaged-item-safety-hazard
+category: normal
+subgroup: damaged_escalation
+rationale: A speaker from B-20409 is smoking, which is a safety hazard. damaged.safety requires
+  telling the customer to stop using it and escalating at high priority.
+tenant: tenant_b
+ticket:
+  channel: chat
+  text:
+    the bluetooth speaker from order B-20409 started smoking when i charged it last night, smells
+    burnt. what should i do
+fixtures:
+  orders:
+    - B-20409
+expect:
+  decision: ESCALATE
+  intent: damaged_item
+  must_cite:
+    - damaged.safety
+  reply_must_mention:
+    - stop using
+  reply_must_not_mention:
+    - refund approved
+    - replacement approved

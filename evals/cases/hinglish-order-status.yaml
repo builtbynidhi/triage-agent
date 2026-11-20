@@ -1,0 +1,22 @@
+id: hinglish-order-status
+category: edge
+subgroup: mixed_language
+rationale: "Hinglish: 'when will my order come, it's been 3 days since dispatch'. B-20408 was
+  dispatched 3 days ago and is inside the estimate. contact.channels says reply in the customer's
+  language."
+tenant: tenant_b
+ticket:
+  channel: chat
+  text: bhai mera order B-20408 kab tak aayega? 3 din ho gaye dispatch hue
+fixtures:
+  orders:
+    - B-20408
+expect:
+  decision: AUTO_REPLY
+  intent: order_status
+  must_cite:
+    - delivery.estimates
+  reply_must_not_mention:
+    - has been delivered
+judge:
+  rubric: polite-and-answers-the-question

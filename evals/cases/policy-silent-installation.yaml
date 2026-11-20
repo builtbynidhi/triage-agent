@@ -1,0 +1,15 @@
+id: policy-silent-installation
+category: edge
+subgroup: policy_silent
+rationale: No policy covers TV installation. The agent must escalate rather than improvise a service
+  or a price.
+tenant: tenant_b
+ticket:
+  channel: web
+  text: do you guys install the TV on the wall when it is delivered? do i have to pay extra for that
+expect:
+  decision: ESCALATE
+  intent: policy_question
+  reply_must_not_mention:
+    - free installation
+    - installation is included

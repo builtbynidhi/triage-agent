@@ -1,0 +1,18 @@
+id: policy-question-warranty
+category: normal
+subgroup: policy_only
+rationale: A pure policy question. Headphones are electronics, which carry a 12-month warranty under
+  warranty.period.
+tenant: tenant_b
+ticket:
+  channel: chat
+  text: Do the wireless headphones come with warranty? how long is it
+expect:
+  decision: AUTO_REPLY
+  intent: warranty_question
+  must_cite:
+    - warranty.period
+  reply_must_mention:
+    - 12 months
+judge:
+  rubric: polite-and-answers-the-question

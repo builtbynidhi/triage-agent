@@ -1,0 +1,24 @@
+id: angry-but-legitimate-delivery
+category: edge
+subgroup: angry_legitimate
+rationale: "The tone is angry but not abusive. A-10408 was dispatched 3 business days ago, inside
+  the 2-4 day metro estimate (and 5-7 elsewhere), so it is not yet a delay escalation.
+  contact.escalation: stay calm, and anger alone is not a reason to refuse help."
+tenant: tenant_a
+ticket:
+  channel: email
+  text: THIS IS RIDICULOUS. I paid for the skillet, order A-10408, and it is STILL not here. worst
+    service ever. fix it NOW or I'm never ordering again
+fixtures:
+  orders:
+    - A-10408
+expect:
+  decision: AUTO_REPLY
+  intent: order_status
+  must_cite:
+    - delivery.estimates
+  reply_must_not_mention:
+    - refund approved
+    - calm down
+judge:
+  rubric: calm-under-pressure

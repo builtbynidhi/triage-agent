@@ -1,0 +1,15 @@
+id: no-order-id-status
+category: edge
+subgroup: no_order_id
+rationale: Order status cannot be looked up without an order ID. Ask only for that.
+tenant: tenant_a
+ticket:
+  channel: chat
+  text: where is my order?? its been 4 days
+expect:
+  decision: NEEDS_INFO
+  intent: order_status
+  missing_fields:
+    - order_id
+judge:
+  rubric: asks-only-for-what-is-missing
