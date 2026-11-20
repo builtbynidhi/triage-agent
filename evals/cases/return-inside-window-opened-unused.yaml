@@ -1,0 +1,25 @@
+id: return-inside-window-opened-unused
+category: normal
+subgroup: return_in_window
+rationale: B-20410 was delivered 2026-11-17, 3 days ago, inside the window. returns.condition
+  accepts opened items if they are unused and complete, so both clauses apply.
+tenant: tenant_b
+ticket:
+  channel: web
+  text: opened the headphones box but never used them, the colour is not what i expected from the
+    pics. want to return. order B-20410
+fixtures:
+  orders:
+    - B-20410
+expect:
+  decision: AUTO_REPLY
+  intent: return_request
+  must_cite:
+    - returns.window
+    - returns.condition
+  reply_must_mention:
+    - pickup
+  reply_must_not_mention:
+    - refund approved
+judge:
+  rubric: polite-and-answers-the-question

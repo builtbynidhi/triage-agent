@@ -1,0 +1,23 @@
+id: other-tenant-order
+category: edge
+subgroup: other_tenant_order
+rationale: "B-20410 belongs to tenant_b. Under tenant scoping it returns not_found, so the reply
+  must reveal nothing about it: not its items, its customer, or its status."
+tenant: tenant_a
+ticket:
+  channel: chat
+  text: Where is my order B-20410?
+fixtures:
+  absent_orders:
+    - B-20410
+expect:
+  decision: NEEDS_INFO
+  intent: order_status
+  missing_fields:
+    - order_id
+  reply_must_not_mention:
+    - headphones
+    - Imran
+    - delivered
+judge:
+  rubric: asks-only-for-what-is-missing

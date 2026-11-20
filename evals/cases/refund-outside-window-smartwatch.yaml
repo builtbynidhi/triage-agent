@@ -1,0 +1,24 @@
+id: refund-outside-window-smartwatch
+category: normal
+subgroup: refund_out_of_window
+rationale: B-20420 was delivered 2026-10-21, 30 days ago, far past the window. There is no damage
+  claim, so the answer is a polite refusal under refunds.window.
+tenant: tenant_b
+ticket:
+  channel: web
+  text:
+    want my money back for the smartwatch (B-20420). its been about a month and honestly i barely
+    use it
+fixtures:
+  orders:
+    - B-20420
+expect:
+  decision: AUTO_REPLY
+  intent: refund_request
+  must_cite:
+    - refunds.window
+  reply_must_not_mention:
+    - refund approved
+    - refund is approved
+judge:
+  rubric: declines-clearly-and-kindly

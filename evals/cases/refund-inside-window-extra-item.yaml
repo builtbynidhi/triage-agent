@@ -1,0 +1,27 @@
+id: refund-inside-window-extra-item
+category: normal
+subgroup: refund_in_window
+rationale: A-10411 was delivered 2026-11-16, 4 days ago, inside both the return and refund windows.
+  A refund follows an accepted return, so the reply explains the process and timeline
+  (refunds.window, refunds.timeline) without saying the refund is approved.
+tenant: tenant_a
+ticket:
+  channel: email
+  text: Hi team, i want a refund for order A-10411. I ordered 2 frying pans by mistake, only needed
+    one. Can I send one back and get the money for it?
+fixtures:
+  orders:
+    - A-10411
+expect:
+  decision: AUTO_REPLY
+  intent: refund_request
+  must_cite:
+    - refunds.window
+    - refunds.timeline
+  reply_must_mention:
+    - business days
+  reply_must_not_mention:
+    - refund approved
+    - has been refunded
+judge:
+  rubric: polite-and-answers-the-question

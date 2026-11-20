@@ -1,0 +1,19 @@
+id: two-questions-defect-and-warranty
+category: edge
+subgroup: two_questions
+rationale: One of the two questions is a defect report on a high-value TV (B-20412, 35297 INR).
+  Damage needs a human, so the whole ticket escalates instead of silently dropping one question.
+tenant: tenant_b
+ticket:
+  channel: web
+  text: the TV from B-20412 has a vertical line of dead pixels on the left side. also when does the
+    warranty start, from order date or delivery?
+fixtures:
+  orders:
+    - B-20412
+expect:
+  decision: ESCALATE
+  intent: damaged_item
+  reply_must_not_mention:
+    - replacement approved
+    - refund approved

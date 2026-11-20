@@ -1,0 +1,23 @@
+id: boundary-return-day-8-outside
+category: edge
+subgroup: boundary_date
+rationale: A-10414 was delivered 2026-11-12. Today is day 8, one day past the window. This catches
+  an off-by-one that wrongly accepts. A polite refusal is AUTO_REPLY.
+tenant: tenant_a
+ticket:
+  channel: email
+  text: I want to return the pan and skillet from A-10414, received on 12 Nov, both unused, still in
+    the box
+fixtures:
+  orders:
+    - A-10414
+expect:
+  decision: AUTO_REPLY
+  intent: return_request
+  must_cite:
+    - returns.window
+  reply_must_not_mention:
+    - return approved
+    - we will arrange a pickup
+judge:
+  rubric: declines-clearly-and-kindly

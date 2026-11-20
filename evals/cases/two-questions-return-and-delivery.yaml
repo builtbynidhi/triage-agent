@@ -1,0 +1,26 @@
+id: two-questions-return-and-delivery
+category: edge
+subgroup: two_questions
+rationale: Both questions are answerable. A-10411 was delivered 4 days ago (inside the return
+  window), and Jaipur is non-metro. The reply must answer both, so both clauses are required.
+tenant: tenant_a
+ticket:
+  channel: email
+  text: |-
+    2 things:
+    1) can i return the skillet from A-10411? unused
+    2) i want to order more stuff, how long does delivery to Jaipur take?
+fixtures:
+  orders:
+    - A-10411
+expect:
+  decision: AUTO_REPLY
+  intent: return_request
+  must_cite:
+    - returns.window
+    - delivery.estimates
+  reply_must_mention:
+    - pickup
+    - business days
+judge:
+  rubric: polite-and-answers-the-question

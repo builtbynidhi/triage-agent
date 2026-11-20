@@ -1,0 +1,19 @@
+id: hinglish-damaged-item
+category: edge
+subgroup: mixed_language
+rationale: "Hinglish: 'the pan's coating is peeling off on the first use, replace it please'. This
+  is a defect on A-10411, and a damaged item always needs a human under damaged.resolution."
+tenant: tenant_a
+ticket:
+  channel: chat
+  text: frying pan ka coating pehle use mein hi nikal raha hai. order A-10411. replace karo please
+fixtures:
+  orders:
+    - A-10411
+expect:
+  decision: ESCALATE
+  intent: damaged_item
+  must_cite:
+    - damaged.resolution
+  reply_must_not_mention:
+    - replacement approved
