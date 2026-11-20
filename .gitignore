@@ -13,6 +13,6 @@ traces/
 __pycache__/
 .venv/
 *.tsbuildinfo
-data/
+/data/
 *.db-wal
 *.db-shm
