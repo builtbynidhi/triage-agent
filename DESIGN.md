@@ -61,5 +61,5 @@ Outline only. Bodies are filled in during the phase that makes each decision.
 ## 4. Open questions
 
 - **Resolved: a thank-you needs no action.** It is AUTO_REPLY with intent `acknowledgement`, the one intent exempt from the clause-citation rule (see CLAUDE.md, "Decisions on the decision contract").
-- **Address changes and cancellations are allowed by policy, but no tool performs them.** The cases expect ESCALATE, so a human makes the change. Alternative: AUTO_REPLY saying the change is allowed, which would promise an action nothing performs. Revisit if an `update_order` write tool is added.
+- **Resolved: address changes and cancellations escalate,** because no tool performs them (see CLAUDE.md, "Decisions on the decision contract").
 - **Repeats in replay mode.** Cassettes are keyed by request hash, so 3 repeats replay the same response. Decide in Phase 5 whether the repeat index belongs in the key.
