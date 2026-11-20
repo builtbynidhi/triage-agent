@@ -1,0 +1,14 @@
+{
+  "name": "@triage/evals",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "schema:write": "node src/write-schema.ts"
+  },
+  "dependencies": {
+    "@triage/data": "workspace:*",
+    "yaml": "^2.9.1",
+    "zod": "^4.6.7"
+  }
+}

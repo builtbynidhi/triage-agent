@@ -5,3 +5,4 @@ dist
 evals/cassettes
 evals/report
 traces
+evals/case.schema.json
