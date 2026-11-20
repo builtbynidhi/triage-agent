@@ -1,13 +1,14 @@
 id: thank-you-no-action
 category: normal
 subgroup: thank_you
-rationale: "Nothing to do. REJECT is the only decision that drafts no reply and creates no work.
-  AUTO_REPLY would need a policy citation that a thank-you does not have. Open spec question: the
-  four-decision contract has no 'no action' outcome."
+rationale: "A thank-you with nothing to act on. AUTO_REPLY with a short acknowledgement: the
+  customer gets a courteous close, no work is invented, and no escalation is created. Intent
+  acknowledgement is the one intent exempt from the clause-citation rule, because no policy is
+  involved."
 tenant: tenant_a
 ticket:
   channel: email
   text: got the pickup done yesterday, thanks a lot for the quick help!!
 expect:
-  decision: REJECT
+  decision: AUTO_REPLY
   intent: acknowledgement

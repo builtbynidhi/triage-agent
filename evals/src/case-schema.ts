@@ -170,8 +170,11 @@ export const CaseSchema = z
     if (e.decision !== "NEEDS_INFO" && e.missing_fields.length > 0) {
       issue(["expect", "missing_fields"], "only NEEDS_INFO may list missing fields");
     }
-    if (e.decision === "AUTO_REPLY" && e.must_cite.length === 0) {
-      issue(["expect", "must_cite"], "AUTO_REPLY must cite at least one clause (validator rule)");
+    if (e.decision === "AUTO_REPLY" && e.intent !== "acknowledgement" && e.must_cite.length === 0) {
+      issue(
+        ["expect", "must_cite"],
+        "AUTO_REPLY must cite at least one clause (validator rule; only intent acknowledgement is exempt)",
+      );
     }
     if (e.decision === "REJECT" && e.reply_must_mention.length > 0) {
       issue(["expect", "reply_must_mention"], "REJECT drafts no reply, so nothing can be required");
