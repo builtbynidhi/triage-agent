@@ -28,11 +28,32 @@ Outline only. Bodies are filled in during the phase that makes each decision.
 
 **Deterministic seed.** All dates derive from a fixed `SEED_TODAY` (2026-11-20), not the wall clock, so window arithmetic and eval fixtures give the same answer on every machine and every day. Delivered orders sit at 6/7/8 and 13/14/15 days ago, so the 7-day return and 14-day refund boundaries are both exercised, with the delivery day counted as day 0. Seeding wipes every table, runs included, because a partial reseed could leave runs pointing at orders that no longer exist.
 
+### 2.2 packages/mcp-server (Phase 3)
+
+**Shape.** One tool registry (`src/tools/`, one file per tool, schemas beside the handler) feeds both transports. `createTriageServer({ store, tenantId, today, searchPolicies })` builds one MCP server bound to one tenant. `stdio.ts` calls it once per connection via `serveStdio`. `http.ts` calls it per request via `createMcpHandler`. Built on MCP TypeScript SDK v2 (ADR 0002).
+
+**What a tool may touch.** A `ToolContext` with the `TriageStore` interface (never the database), the bound tenant ID, an injected `today()`, and a `searchPolicies()` function. Tenant and date are fixed when the server is built, never taken from tool input, so a ticket cannot steer them. A test asserts that no tool schema has a tenant field, and that unknown fields are rejected.
+
+**One call, one path.** `invokeTool()` validates input with the tool's Zod schema, runs the handler, validates the tool's _own_ output (a malformed success is a bug, never sent), and maps every failure to the shared error shape. Expected failures (`not_found`) are returned. An unexpected exception becomes `upstream_error` (retryable), with the detail logged to stderr and never put in the result. MCP calls and unit tests go through the same function.
+
+**Why the strict schema is advertised but not enforced by the SDK.** SDK 2.4 answers a schema violation with a free-text `isError` result. The agent must branch on `code`, so `advertiseOnly()` hands the SDK a wrapper that exposes the strict schema's JSON Schema (via `~standard.jsonSchema`) and accepts any value. `invokeTool` then validates and returns `invalid_input`. Clients still see the full schema (`top_k` maximum 8, `additionalProperties: false`, enums, patterns), and tests check that.
+
+**Results.** Success: `{ ok: true, ... }` as `structuredContent`, with the same JSON as a text block for clients that only read text. Failure: `{ ok: false, code, message, retryable }` with `isError: true`. The SDK and the client both skip output-schema validation on `isError` results (confirmed in the installed SDK source), so failures can carry the structured error.
+
+**Tenant scoping, twice.** Every store query takes the tenant ID and filters on it in SQL. The tools then return one message for "missing" and "another tenant's", so the two are byte-for-byte identical (tested for every one of the 50 orders, and for customers by ID and by email).
+
+**search_policy, for now.** FTS5 with BM25 (title weighted 2x over text), behind `ctx.searchPolicies` so Phase 4 can swap in hybrid retrieval, and Phase 7 can wrap it to plant the poisoned-policy fixture. User text never reaches `MATCH` raw: `toFtsQuery` keeps only words (letters, combining marks and digits, so Devanagari survives), quotes each one, and ORs them. FTS operators in a ticket become plain words.
+
+**HTTP transport security until Phase 10.** The tenant comes from an `x-triage-tenant` header, which is only acceptable on loopback. `startHttpServer` therefore refuses to bind to a non-loopback address, rejects requests whose Host or browser Origin is not localhost (DNS-rebinding protection from `@modelcontextprotocol/node`), and returns 401 for a missing or unknown tenant. Phase 10 replaces the header with a verified JWT claim.
+
+**Resources.** Each policy file is an MCP resource, `policy://{doc}`, served as committed (frontmatter included), so a person in a client can read exactly what the agent cites.
+
 ## 3. Trade-offs
 
 - Hand-written state machine vs a framework (and the LangGraph port)
-- Eligibility as code, not a model call
-- PII masked at the tool boundary
+- Eligibility as code, not a model call: ADR 0004
+- PII masked at the tool boundary: ADR 0003
+- Tools behind an MCP server: ADR 0002
 - SQLite queue vs Redis; two stores, no third (no MongoDB)
 
 ### 3.1 SQLite jobs table instead of Redis (Phase 1)
@@ -63,3 +84,6 @@ Outline only. Bodies are filled in during the phase that makes each decision.
 - **Resolved: a thank-you needs no action.** It is AUTO_REPLY with intent `acknowledgement`, the one intent exempt from the clause-citation rule (see CLAUDE.md, "Decisions on the decision contract").
 - **Resolved: address changes and cancellations escalate,** because no tool performs them (see CLAUDE.md, "Decisions on the decision contract").
 - **Repeats in replay mode.** Cassettes are keyed by request hash, so 3 repeats replay the same response. Decide in Phase 5 whether the repeat index belongs in the key.
+- **Eligibility clause IDs and the citation rule (Phase 6).** The validator fails any cited clause not returned by `search_policy` this run. `check_eligibility` also returns authoritative clause IDs the reply must cite, so the validator should accept those too. Otherwise a correct reply could fail validation.
+- **Tenant-scoped retrieval (Phase 4).** SECURITY.md (LLM09) calls for retrieval scoped per tenant, but today both merchants share one policy set. Decide whether policies gain a `tenant_id`, or whether the threat model says "shared, version-controlled, nothing ingested at runtime" instead.
+- **"Remote" delivery locations are undefined** in `delivery.estimates`, so the Guwahati case accepts either band. A policy edit could pin it down.
