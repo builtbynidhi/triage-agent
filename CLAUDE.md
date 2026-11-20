@@ -67,3 +67,12 @@ Prompt structure: role, rules and schema in the system prompt (a versioned file)
 - Repo root is this folder; GitHub name will be `triage-agent`.
 - Scope includes the optional pieces (Supabase hosted mode, LangGraph port). Optional pieces not yet built must be listed honestly as not built.
 - Known spec gaps to raise at the relevant phase (discuss before deviating): repeat index in cassette key; cassette churn on prompt changes; Vercel cannot run SQLite natives (needs JSON snapshot); held-out retrieval question set; judge from a different model family; tune confidence threshold on data.
+
+## Conventions added in Phase 1
+
+- **No build step, no tsx.** Scripts run TypeScript directly via Node's native type stripping, so relative imports use the `.ts` extension and only erasable syntax is allowed (no enums, no constructor parameter properties). `erasableSyntaxOnly` in `tsconfig.base.json` enforces it.
+- **Database:** `openDb(path)` loads sqlite-vec, enables foreign keys and WAL, and runs migrations. Migrations are append-only in `packages/data/src/sqlite/migrations.ts`; never edit an applied one. `:memory:` is used in tests. Default file: `data/triage.db` (gitignored); override with `DATABASE_PATH`.
+- **Seed is deterministic** and anchored to `SEED_TODAY = 2026-11-20`, not the wall clock. `seed(db)` wipes all tables (runs included) and rebuilds reference data plus the policy FTS index. Delivered orders sit at 6/7/8 and 13/14/15 days to exercise the return (7-day) and refund (14-day) boundaries. Delivery day is day 0.
+- **Policies:** `policies/*.md`, YAML frontmatter lists clause IDs; the body has one `## <clause_id>` section per clause. IDs are `<doc>.<name>`, globally unique. The loader fails if frontmatter and sections disagree.
+- Embeddings are 384-dimensional (`EMBEDDING_DIM`); `policy_vec` is created but empty until Phase 4.
+- Commands: `pnpm db:reset && pnpm db:seed`, `pnpm test`, `pnpm typecheck`, `pnpm lint`.
