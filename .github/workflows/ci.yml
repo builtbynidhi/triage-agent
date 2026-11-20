@@ -1,4 +1,4 @@
-# Phase 1 baseline: install, lint, typecheck, unit tests.
+# Install, secret scan, lint, format, typecheck, seed and index from clean, then all tests.
 # Phase 12 adds npm audit, the replay-mode eval suite, the baseline gate and the PR scorecard comment.
 name: ci
 
@@ -32,6 +32,14 @@ jobs:
       - run: pnpm lint
       - run: pnpm format:check
       - run: pnpm typecheck
+      # Local embedding and reranker models (about 60 MB), downloaded once from the public
+      # Hugging Face hub, then restored from the cache. No API keys, no cost.
+      - name: Cache local models
+        uses: actions/cache@v4
+        with:
+          path: .cache/models
+          key: models-${{ hashFiles('packages/data/src/retrieval/defaults.ts', 'packages/data/src/retrieval/embedder.ts', 'packages/data/src/retrieval/rerank.ts') }}
+          restore-keys: models-
+      - name: db reset, seed and vector index from clean
+        run: pnpm db:reset && pnpm db:seed && pnpm db:index
       - run: pnpm test
-      - name: db reset and seed from clean
-        run: pnpm db:reset && pnpm db:seed
