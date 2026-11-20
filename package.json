@@ -19,7 +19,8 @@
     "eval:schema": "pnpm --filter @triage/evals schema:write",
     "mcp:stdio": "pnpm --filter @triage/mcp-server mcp:stdio",
     "mcp:http": "pnpm --filter @triage/mcp-server mcp:http",
-    "eval:retrieval": "pnpm --filter @triage/evals retrieval"
+    "eval:retrieval": "pnpm --filter @triage/evals retrieval",
+    "db:index": "pnpm --filter @triage/data db:index"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
