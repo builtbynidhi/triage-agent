@@ -52,7 +52,7 @@ describe("policy access", () => {
     expect(returns.markdown.startsWith("---\ndoc: returns")).toBe(true);
   });
   it("keyword search returns ranked clauses, best first", async () => {
-    const hits = await store.searchPoliciesKeyword("cancel before dispatch", 3);
+    const hits = await store.searchPoliciesKeyword("tenant_a", "cancel before dispatch", 3);
     expect(hits[0]?.clauseId).toBe("cancellation.before_dispatch");
     expect(hits.map((h) => h.score)).toEqual([...hits.map((h) => h.score)].sort((x, y) => y - x));
   });
