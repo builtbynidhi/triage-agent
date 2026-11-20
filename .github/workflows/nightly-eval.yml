@@ -1,0 +1,15 @@
+# Placeholder until Phase 12, which adds the daily schedule, the live-provider eval run
+# and the issue opened when live results diverge from replay. Manual trigger only for now.
+name: nightly-eval
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  placeholder:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Nightly live eval is added in Phase 12."
