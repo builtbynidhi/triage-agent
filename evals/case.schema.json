@@ -1,0 +1,261 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+      "description": "Unique; must equal the file name without .yaml"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "normal",
+        "edge",
+        "adversarial"
+      ]
+    },
+    "subgroup": {
+      "type": "string",
+      "enum": [
+        "order_status",
+        "return_in_window",
+        "refund_in_window",
+        "refund_out_of_window",
+        "damaged_escalation",
+        "address_change",
+        "cancellation",
+        "policy_only",
+        "thank_you",
+        "no_order_id",
+        "nonexistent_order",
+        "other_tenant_order",
+        "two_questions",
+        "mixed_language",
+        "long_rambling",
+        "near_empty",
+        "angry_legitimate",
+        "boundary_date",
+        "wrong_amount",
+        "policy_silent",
+        "ignore_instructions",
+        "fake_system_message",
+        "other_customer_data",
+        "system_prompt_request",
+        "unapproved_refund_pressure",
+        "quoted_email_injection",
+        "policy_block_injection"
+      ],
+      "description": "Sub-group from the spec's coverage table"
+    },
+    "rationale": {
+      "type": "string",
+      "minLength": 20,
+      "description": "Why the expected decision is correct, citing the policy or seed fact"
+    },
+    "tenant": {
+      "type": "string",
+      "enum": [
+        "tenant_a",
+        "tenant_b"
+      ],
+      "description": "The tenant the ticket arrives on"
+    },
+    "ticket": {
+      "type": "object",
+      "properties": {
+        "channel": {
+          "type": "string",
+          "enum": [
+            "email",
+            "chat",
+            "web",
+            "voice"
+          ]
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1
+        },
+        "order_id": {
+          "description": "Set only when the channel supplies it separately",
+          "type": "string",
+          "pattern": "^[A-Z]-\\d{5}$"
+        }
+      },
+      "required": [
+        "channel",
+        "text"
+      ],
+      "additionalProperties": false
+    },
+    "fixtures": {
+      "default": {
+        "orders": [],
+        "customers": [],
+        "absent_orders": []
+      },
+      "type": "object",
+      "properties": {
+        "orders": {
+          "default": [],
+          "description": "Must exist and belong to the case tenant",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Z]-\\d{5}$"
+          }
+        },
+        "customers": {
+          "default": [],
+          "description": "Must exist in the case tenant",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "absent_orders": {
+          "default": [],
+          "description": "Must NOT be visible to the case tenant (non-existent or another tenant's)",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Z]-\\d{5}$"
+          }
+        },
+        "planted_policy": {
+          "description": "A fake policy chunk the harness adds to retrieval for this case only. Its ID must not exist in policies/",
+          "type": "object",
+          "properties": {
+            "clause_id": {
+              "type": "string",
+              "pattern": "^[a-z]+\\.[a-z_]+$"
+            },
+            "title": {
+              "type": "string"
+            },
+            "text": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "clause_id",
+            "title",
+            "text"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "expect": {
+      "type": "object",
+      "properties": {
+        "decision": {
+          "type": "string",
+          "enum": [
+            "AUTO_REPLY",
+            "NEEDS_INFO",
+            "ESCALATE",
+            "REJECT"
+          ]
+        },
+        "intent": {
+          "type": "string",
+          "enum": [
+            "order_status",
+            "return_request",
+            "refund_request",
+            "damaged_item",
+            "address_change",
+            "cancellation",
+            "delivery_question",
+            "warranty_question",
+            "policy_question",
+            "acknowledgement",
+            "data_request",
+            "other"
+          ]
+        },
+        "missing_fields": {
+          "default": [],
+          "description": "NEEDS_INFO only: fields the reply must ask for, and nothing else",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "order_id",
+              "email",
+              "order_date",
+              "issue_details",
+              "address_details"
+            ]
+          }
+        },
+        "must_cite": {
+          "default": [],
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z]+\\.[a-z_]+$"
+          }
+        },
+        "must_not_cite": {
+          "default": [],
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z]+\\.[a-z_]+$"
+          }
+        },
+        "reply_must_mention": {
+          "default": [],
+          "description": "Case-insensitive substrings",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "reply_must_not_mention": {
+          "default": [],
+          "description": "Case-insensitive substrings",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "required": [
+        "decision"
+      ],
+      "additionalProperties": false
+    },
+    "judge": {
+      "type": "object",
+      "properties": {
+        "rubric": {
+          "type": "string",
+          "pattern": "^[a-z0-9-]+$"
+        }
+      },
+      "required": [
+        "rubric"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "id",
+    "category",
+    "subgroup",
+    "rationale",
+    "tenant",
+    "ticket",
+    "expect"
+  ],
+  "additionalProperties": false,
+  "title": "triage-agent eval case",
+  "$comment": "Generated from evals/src/case-schema.ts. Do not edit."
+}
