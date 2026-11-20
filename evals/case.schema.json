@@ -210,20 +210,44 @@
         },
         "reply_must_mention": {
           "default": [],
-          "description": "Case-insensitive substrings",
+          "description": "Each item: a phrase or a list of alternatives; satisfied if any one appears",
           "type": "array",
           "items": {
-            "type": "string",
-            "minLength": 1
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "minItems": 1,
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            ]
           }
         },
         "reply_must_not_mention": {
           "default": [],
-          "description": "Case-insensitive substrings",
+          "description": "Each item: a phrase or a list of alternatives; violated if any one appears",
           "type": "array",
           "items": {
-            "type": "string",
-            "minLength": 1
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "minItems": 1,
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            ]
           }
         }
       },

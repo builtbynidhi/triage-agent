@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { existsSync, readFileSync } from "node:fs";
 import { loadPolicies, openDb, seed } from "@triage/data";
-import { CaseSchema, SUBGROUP_COUNTS } from "./case-schema.ts";
+import { CaseSchema, SUBGROUP_COUNTS, alternatives } from "./case-schema.ts";
 import { loadCases } from "./load-cases.ts";
 import { SCHEMA_PATH, caseJsonSchema } from "./write-schema.ts";
 
@@ -106,4 +106,32 @@ describe("case schema", () => {
     expect(existsSync(SCHEMA_PATH)).toBe(true);
     expect(readFileSync(SCHEMA_PATH, "utf8")).toBe(caseJsonSchema());
   });
+});
+
+describe("phrase checks with alternatives", () => {
+  const base = {
+    id: "x",
+    category: "normal",
+    subgroup: "order_status",
+    rationale: "a rationale that is long enough",
+    tenant: "tenant_a",
+    ticket: { channel: "chat", text: "hi" },
+  };
+  const parse = (expectBlock: object) =>
+    CaseSchema.safeParse({
+      ...base,
+      expect: { decision: "AUTO_REPLY", must_cite: ["returns.window"], ...expectBlock },
+    });
+
+  it("accepts a list of alternatives per item", () => {
+    const r = parse({
+      reply_must_mention: [["7 days", "seven days"]],
+      reply_must_not_mention: [["a", "b"]],
+    });
+    expect(r.success).toBe(true);
+    expect(alternatives(r.data!.expect.reply_must_mention[0]!)).toEqual(["7 days", "seven days"]);
+  });
+
+  it("rejects an empty alternatives list", () =>
+    expect(parse({ reply_must_mention: [[]] }).success).toBe(false));
 });
