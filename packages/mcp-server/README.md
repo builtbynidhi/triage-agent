@@ -30,13 +30,20 @@ The policy documents are also MCP **resources**: `policy://returns`, `policy://r
 
 The tenant is fixed when the server starts. It is never a tool argument, so no ticket can steer a tool to another merchant's data. Another merchant's order returns exactly the same `not_found` as a missing one.
 
-| Variable        | Required    | Meaning                                                                                                                        |
-| --------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| `TRIAGE_TENANT` | yes (stdio) | `tenant_a` (Kaveri Home & Kitchen) or `tenant_b` (Nilgiri Electronics)                                                         |
-| `DATABASE_PATH` | no          | SQLite file. Defaults to `data/triage.db` at the repo root                                                                     |
-| `TRIAGE_TODAY`  | no          | Pin "today" (`YYYY-MM-DD`). The seed is anchored to `2026-11-20`, so set this to get the same eligibility answers as the evals |
+| Variable           | Required    | Meaning                                                                                                                        |
+| ------------------ | ----------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `TRIAGE_TENANT`    | yes (stdio) | `tenant_a` (Kaveri Home & Kitchen) or `tenant_b` (Nilgiri Electronics)                                                         |
+| `DATABASE_PATH`    | no          | SQLite file. Defaults to `data/triage.db` at the repo root                                                                     |
+| `TRIAGE_TODAY`     | no          | Pin "today" (`YYYY-MM-DD`). The seed is anchored to `2026-11-20`, so set this to get the same eligibility answers as the evals |
+| `TRIAGE_RETRIEVAL` | no          | `keyword` skips the local models; hybrid is the default                                                                        |
 
-Seed the database first: `pnpm db:reset && pnpm db:seed`.
+Seed the database and build the policy index first:
+
+```bash
+pnpm db:reset && pnpm db:seed && pnpm db:index
+```
+
+`db:index` downloads the two local retrieval models once (about 60 MB, into `.cache/models`) and builds the vector index, so the first search is instant. `search_policy` uses hybrid search (keyword plus vector, fused, then reranked by a local cross-encoder). Set `TRIAGE_RETRIEVAL=keyword` to skip the models entirely. See [docs/retrieval.md](../../docs/retrieval.md).
 
 ## Use it from Claude Code
 
