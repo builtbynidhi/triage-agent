@@ -3,5 +3,20 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "main": "src/index.ts"
+  "dependencies": {
+    "@modelcontextprotocol/node": "^2.1.2",
+    "@modelcontextprotocol/server": "^2.4.0",
+    "@triage/data": "workspace:*",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@modelcontextprotocol/client": "^2.4.0"
+  },
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "mcp:stdio": "node src/stdio.ts",
+    "mcp:http": "node src/http.ts"
+  }
 }
