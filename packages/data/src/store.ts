@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { parse } from "yaml";
 import type { Db } from "./sqlite/db.ts";
 import { defaultPoliciesDir } from "./policies.ts";
+import { contentWords } from "./retrieval/text.ts";
 
 /**
  * The storage interface every other package uses. It hides SQLite so a hosted adapter
@@ -104,14 +105,13 @@ export interface PolicyDocument {
 }
 
 /**
- * Turn free text into a safe FTS5 query: words only, each quoted, OR-ed together.
- * Raw user text must never reach MATCH, because FTS5 syntax (quotes, AND/OR/NOT,
- * column filters, `*`) would either throw or change the query's meaning.
+ * Turn free text into a safe FTS5 query: content words only (stopwords dropped, see
+ * retrieval/text.ts), each quoted, OR-ed together. Raw user text must never reach MATCH,
+ * because FTS5 syntax (quotes, AND/OR/NOT, column filters, `*`) would either throw or
+ * change the query's meaning.
  */
 export function toFtsQuery(text: string): string | null {
-  // \p{M} keeps combining marks inside a word: Devanagari vowel signs (रिफंड) are marks, not separators.
-  const words = text.toLowerCase().match(/[\p{L}\p{M}\p{N}]+/gu) ?? [];
-  const unique = [...new Set(words)].slice(0, 32);
+  const unique = [...new Set(contentWords(text))].slice(0, 32);
   return unique.length ? unique.map((w) => `"${w}"`).join(" OR ") : null;
 }
 

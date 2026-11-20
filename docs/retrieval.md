@@ -11,33 +11,33 @@ A question is a **hit@4** when a correct clause is in the top 4, the number the 
 
 ## Result
 
-Configuration chosen by the rule fixed before measuring (best eval-derived hit@4, then MRR, then the cheaper reranker): **hybrid: multilingual-MiniLM-L12-v2 + RRF + no rerank**.
+Configuration chosen by the rule fixed before measuring (best eval-derived hit@4, then MRR, then the cheaper reranker): **hybrid: bge-small-en-v1.5 + RRF + no rerank**.
 
 | Method | Eval-derived hit@4 | Held-out hit@4 | Eval-derived MRR@10 | Median latency |
 |---|---|---|---|---|
-| Keyword only (FTS5/BM25) | 11/27 (40.7%) | 22/32 (68.8%) | 0.232 | 0.1 ms |
-| Best vector only (bge-small-en-v1.5) | 19/27 (70.4%) | 30/32 (93.8%) | 0.490 | 2.5 ms |
-| **Chosen hybrid** (multilingual-MiniLM-L12-v2, none rerank) | **16/27 (59.3%)** | **24/32 (75%)** | **0.461** | 2.2 ms |
+| Keyword only (FTS5/BM25) | 11/27 (40.7%) | 23/32 (71.9%) | 0.251 | 0 ms |
+| Best vector only (bge-small-en-v1.5) | 19/27 (70.4%) | 30/32 (93.8%) | 0.490 | 2.6 ms |
+| **Chosen hybrid** (bge-small-en-v1.5, none rerank) | **16/27 (59.3%)** | **28/32 (87.5%)** | **0.453** | 2.6 ms |
 
-On the eval-derived set the chosen hybrid beats keyword only (59.3% vs 40.7%) and **loses to** the best vector-only method (59.3% vs 70.4%). On the held-out set the chosen hybrid beats keyword only (75% vs 68.8%) and **loses to** the best vector-only method (75% vs 93.8%).
+On the eval-derived set the chosen hybrid beats keyword only (59.3% vs 40.7%) and **loses to** the best vector-only method (59.3% vs 70.4%). On the held-out set the chosen hybrid beats keyword only (87.5% vs 71.9%) and **loses to** the best vector-only method (87.5% vs 93.8%).
 
 ## Every configuration measured
 
 | Configuration | Eval hit@1 | Eval hit@4 | Eval MRR@10 | Held-out hit@1 | Held-out hit@4 | Held-out MRR@10 | Median latency |
 |---|---|---|---|---|---|---|---|
-| keyword only (FTS5/BM25) | 7.4% | 40.7% | 0.232 | 37.5% | 68.8% | 0.536 | 0.1 ms |
-| vector only (bge-small-en-v1.5) | 29.6% | 70.4% | 0.490 | 71.9% | 93.8% | 0.814 | 2.5 ms |
-| hybrid: bge-small-en-v1.5 + RRF + no rerank | 33.3% | 55.6% | 0.471 | 68.8% | 84.4% | 0.755 | 2.8 ms |
-| hybrid: bge-small-en-v1.5 + RRF + heuristic rerank | 22.2% | 55.6% | 0.400 | 43.8% | 81.3% | 0.622 | 2.6 ms |
-| hybrid: bge-small-en-v1.5 + RRF + cross-encoder rerank | 25.9% | 55.6% | 0.403 | 75% | 93.8% | 0.834 | 36.5 ms |
+| keyword only (FTS5/BM25) | 11.1% | 40.7% | 0.251 | 43.8% | 71.9% | 0.583 | 0 ms |
+| vector only (bge-small-en-v1.5) | 29.6% | 70.4% | 0.490 | 71.9% | 93.8% | 0.814 | 2.6 ms |
+| **hybrid: bge-small-en-v1.5 + RRF + no rerank** (chosen) | 33.3% | 59.3% | 0.453 | 62.5% | 87.5% | 0.739 | 2.6 ms |
+| hybrid: bge-small-en-v1.5 + RRF + heuristic rerank | 18.5% | 44.4% | 0.365 | 50% | 81.3% | 0.660 | 2.9 ms |
+| hybrid: bge-small-en-v1.5 + RRF + cross-encoder rerank | 25.9% | 51.9% | 0.370 | 75% | 96.9% | 0.846 | 38.4 ms |
 | vector only (all-MiniLM-L6-v2) | 29.6% | 70.4% | 0.480 | 65.6% | 90.6% | 0.755 | 1.3 ms |
-| hybrid: all-MiniLM-L6-v2 + RRF + no rerank | 33.3% | 55.6% | 0.454 | 65.6% | 78.1% | 0.734 | 1.3 ms |
-| hybrid: all-MiniLM-L6-v2 + RRF + heuristic rerank | 18.5% | 51.9% | 0.386 | 50% | 78.1% | 0.628 | 1.3 ms |
-| hybrid: all-MiniLM-L6-v2 + RRF + cross-encoder rerank | 25.9% | 48.1% | 0.411 | 71.9% | 87.5% | 0.789 | 33.6 ms |
-| vector only (multilingual-MiniLM-L12-v2) | 25.9% | 55.6% | 0.416 | 46.9% | 75% | 0.614 | 2.1 ms |
-| **hybrid: multilingual-MiniLM-L12-v2 + RRF + no rerank** (chosen) | 33.3% | 59.3% | 0.461 | 53.1% | 75% | 0.654 | 2.2 ms |
-| hybrid: multilingual-MiniLM-L12-v2 + RRF + heuristic rerank | 22.2% | 59.3% | 0.398 | 40.6% | 75% | 0.568 | 2.2 ms |
-| hybrid: multilingual-MiniLM-L12-v2 + RRF + cross-encoder rerank | 25.9% | 59.3% | 0.411 | 75% | 87.5% | 0.813 | 34.4 ms |
+| hybrid: all-MiniLM-L6-v2 + RRF + no rerank | 25.9% | 55.6% | 0.428 | 62.5% | 81.3% | 0.727 | 1.5 ms |
+| hybrid: all-MiniLM-L6-v2 + RRF + heuristic rerank | 18.5% | 51.9% | 0.380 | 53.1% | 81.3% | 0.667 | 1.6 ms |
+| hybrid: all-MiniLM-L6-v2 + RRF + cross-encoder rerank | 25.9% | 48.1% | 0.398 | 75% | 87.5% | 0.819 | 35.7 ms |
+| vector only (multilingual-MiniLM-L12-v2) | 25.9% | 55.6% | 0.416 | 46.9% | 75% | 0.614 | 2.4 ms |
+| hybrid: multilingual-MiniLM-L12-v2 + RRF + no rerank | 25.9% | 59.3% | 0.406 | 53.1% | 78.1% | 0.669 | 2.3 ms |
+| hybrid: multilingual-MiniLM-L12-v2 + RRF + heuristic rerank | 22.2% | 51.9% | 0.385 | 50% | 75% | 0.632 | 2.5 ms |
+| hybrid: multilingual-MiniLM-L12-v2 + RRF + cross-encoder rerank | 25.9% | 48.1% | 0.412 | 71.9% | 87.5% | 0.808 | 37.7 ms |
 
 ## Misses of the chosen configuration
 
@@ -45,29 +45,25 @@ Questions whose correct clause was not in the top 4. These are inputs for Phase 
 
 | Set | Question | Gold | Top 4 returned | Rank of gold |
 |---|---|---|---|---|
-| eval-derived | `angry-but-legitimate-delivery#delivery.estimates` | `delivery.estimates` | `refunds.method`, `cancellation.refund`, `damaged.resolution`, `address.before_dispatch` | not in top 10 |
-| eval-derived | `cancellation-before-dispatch#cancellation.before_dispatch` | `cancellation.before_dispatch` | `cancellation.refund`, `damaged.reporting`, `delivery.dispatch`, `damaged.resolution` | 6 |
-| eval-derived | `damaged-item-cracked-jar#damaged.resolution` | `damaged.resolution` | `damaged.reporting`, `returns.window`, `refunds.damaged`, `warranty.period` | not in top 10 |
-| eval-derived | `hinglish-order-status#delivery.estimates` | `delivery.estimates` | `cancellation.after_dispatch`, `delivery.dispatch`, `cancellation.before_dispatch`, `cancellation.refund` | not in top 10 |
-| eval-derived | `long-rambling-return#returns.window` | `returns.window` | `cancellation.before_dispatch`, `returns.condition`, `delivery.dispatch`, `refunds.damaged` | 9 |
-| eval-derived | `order-status-dispatched#delivery.estimates` | `delivery.estimates` | `cancellation.before_dispatch`, `delivery.dispatch`, `address.requirements`, `contact.channels` | not in top 10 |
-| eval-derived | `refund-inside-window-extra-item#refunds.window` | `refunds.window` | `refunds.method`, `returns.process`, `cancellation.refund`, `refunds.timeline` | 9 |
-| eval-derived | `refund-outside-window-blender#refunds.window` | `refunds.window` | `returns.process`, `refunds.high_value`, `cancellation.refund`, `refunds.method` | 7 |
-| eval-derived | `refund-outside-window-smartwatch#refunds.window` | `refunds.window` | `warranty.period`, `refunds.timeline`, `refunds.method`, `damaged.safety` | 5 |
-| eval-derived | `return-inside-window-opened-unused#returns.window` | `returns.window` | `returns.condition`, `returns.exclusions`, `returns.process`, `warranty.period` | 7 |
-| eval-derived | `wrong-amount-claimed#refunds.window` | `refunds.window` | `refunds.timeline`, `returns.process`, `cancellation.refund`, `refunds.damaged` | 6 |
-| held-out | `heldout-1` | `returns.window` | `returns.process`, `cancellation.refund`, `refunds.method`, `refunds.damaged` | 9 |
-| held-out | `heldout-4` | `returns.process` | `refunds.damaged`, `cancellation.refund`, `returns.condition`, `returns.window` | not in top 10 |
-| held-out | `heldout-11` | `damaged.reporting` | `delivery.delayed`, `returns.window`, `returns.process`, `cancellation.refund` | 7 |
-| held-out | `heldout-13` | `damaged.resolution` | `returns.exclusions`, `refunds.damaged`, `refunds.method`, `delivery.delayed` | not in top 10 |
-| held-out | `heldout-22` | `delivery.delayed` | `refunds.timeline`, `cancellation.refund`, `returns.window`, `cancellation.before_dispatch` | 5 |
-| held-out | `heldout-26` | `warranty.claims` | `warranty.period`, `cancellation.refund`, `returns.process`, `cancellation.after_dispatch` | 9 |
-| held-out | `heldout-30` | `contact.escalation` | `refunds.method`, `refunds.timeline`, `damaged.safety`, `warranty.claims` | 5 |
-| held-out | `heldout-31` | `refunds.timeline` | `returns.window`, `returns.exclusions`, `returns.condition`, `refunds.window` | 6 |
+| eval-derived | `angry-but-legitimate-delivery#delivery.estimates` | `delivery.estimates` | `contact.never_asked`, `cancellation.refund`, `refunds.method`, `cancellation.before_dispatch` | not in top 10 |
+| eval-derived | `damaged-item-cracked-jar#damaged.resolution` | `damaged.resolution` | `damaged.reporting`, `delivery.delayed`, `refunds.damaged`, `cancellation.refund` | 6 |
+| eval-derived | `hinglish-damaged-item#damaged.resolution` | `damaged.resolution` | `contact.channels`, `damaged.safety`, `address.after_dispatch`, `returns.condition` | 9 |
+| eval-derived | `hinglish-order-status#delivery.estimates` | `delivery.estimates` | `delivery.dispatch`, `cancellation.refund`, `cancellation.before_dispatch`, `cancellation.after_dispatch` | 8 |
+| eval-derived | `long-rambling-return#returns.window` | `returns.window` | `cancellation.refund`, `refunds.method`, `cancellation.before_dispatch`, `cancellation.after_dispatch` | not in top 10 |
+| eval-derived | `order-status-dispatched#delivery.estimates` | `delivery.estimates` | `cancellation.refund`, `delivery.dispatch`, `refunds.method`, `cancellation.after_dispatch` | not in top 10 |
+| eval-derived | `policy-block-injection-refund#refunds.window` | `refunds.window` | `refunds.timeline`, `returns.window`, `returns.process`, `cancellation.refund` | 8 |
+| eval-derived | `quoted-email-injection#returns.window` | `returns.window` | `refunds.high_value`, `returns.process`, `cancellation.refund`, `refunds.timeline` | not in top 10 |
+| eval-derived | `refund-inside-window-extra-item#refunds.window` | `refunds.window` | `refunds.method`, `returns.process`, `refunds.high_value`, `refunds.exclusions` | 9 |
+| eval-derived | `refund-inside-window-extra-item#refunds.timeline` | `refunds.timeline` | `refunds.method`, `returns.process`, `refunds.high_value`, `refunds.exclusions` | not in top 10 |
+| eval-derived | `return-inside-window-opened-unused#returns.window` | `returns.window` | `returns.exclusions`, `returns.condition`, `contact.never_asked`, `refunds.method` | not in top 10 |
+| held-out | `heldout-4` | `returns.process` | `delivery.delayed`, `address.after_dispatch`, `returns.window`, `returns.exclusions` | 5 |
+| held-out | `heldout-11` | `damaged.reporting` | `delivery.delayed`, `returns.window`, `address.after_dispatch`, `delivery.dispatch` | 7 |
+| held-out | `heldout-13` | `damaged.resolution` | `refunds.damaged`, `refunds.method`, `returns.exclusions`, `delivery.delayed` | 8 |
+| held-out | `heldout-31` | `refunds.timeline` | `returns.window`, `returns.exclusions`, `returns.process`, `cancellation.after_dispatch` | not in top 10 |
 
 ## Setup
 
 - Pipeline: FTS5 (BM25, title weighted 2x) and sqlite-vec (exact KNN, cosine) each return their top 10, merged by reciprocal rank fusion (k = 60). The fused top 10 are reranked, and the top 4 returned.
 - Embedding models (all q8, 384 dimensions, run locally on the CPU): `bge-small-en-v1.5` (Xenova/bge-small-en-v1.5), `all-MiniLM-L6-v2` (Xenova/all-MiniLM-L6-v2), `multilingual-MiniLM-L12-v2` (Xenova/paraphrase-multilingual-MiniLM-L12-v2).
 - Rerankers: none (fusion order); `heuristic-v1` (fusion score plus query-term coverage); cross-encoder `Xenova/ms-marco-MiniLM-L-6-v2` (q8).
-- Chosen retriever ID: `hybrid(Xenova/paraphrase-multilingual-MiniLM-L12-v2@q8/mean, rrf, none)`.
+- Chosen retriever ID: `hybrid(Xenova/bge-small-en-v1.5@q8/cls, rrf, none)`.

@@ -5,6 +5,7 @@ import {
   type PreTrainedTokenizer,
 } from "@huggingface/transformers";
 import { configureLocalModels } from "./models.ts";
+import { contentWords } from "./text.ts";
 
 /** A fused candidate going into reranking. */
 export interface Candidate {
@@ -38,21 +39,11 @@ export const fusionOnly: Reranker = {
   },
 };
 
-const STOPWORDS = new Set(
-  (
-    "a an and are as at be been but by can could did do does for from had has have how i if in " +
-    "into is it its me my no not of on or our please so that the their them then there this " +
-    "to was we were what when where which who why will with would you your hai hain ka ki ke " +
-    "ko kya mera mere meri nahi se"
-  ).split(" "),
-);
-
-/** Lower-case words, stopwords dropped, crude suffix stripping so "returned" ~ "return". */
+/** Content words with crude suffix stripping, so "returned" ~ "return". */
 function terms(text: string): Set<string> {
-  const words = text.toLowerCase().match(/[\p{L}\p{M}\p{N}]+/gu) ?? [];
   return new Set(
-    words
-      .filter((w) => w.length > 2 && !STOPWORDS.has(w))
+    contentWords(text)
+      .filter((w) => w.length > 2)
       .map((w) => w.replace(/(ing|ed|es|s)$/u, "") || w),
   );
 }
