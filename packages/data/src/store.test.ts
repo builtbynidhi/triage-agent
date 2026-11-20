@@ -6,12 +6,18 @@ seed(db);
 const store = createSqliteStore(db);
 
 describe("toFtsQuery", () => {
-  it("quotes each word and ORs them, dropping FTS syntax", () => {
+  it("quotes each content word and ORs them, dropping FTS syntax and stopwords", () => {
     expect(toFtsQuery('refund" OR 1=1 -- NEAR(x) title:y*')).toBe(
-      '"refund" OR "or" OR "1" OR "near" OR "x" OR "title" OR "y"',
+      '"refund" OR "1" OR "near" OR "x" OR "title"', // "or" and "y" are stopwords
     );
   });
   it("returns null when there are no words", () => expect(toFtsQuery("?!? --")).toBeNull());
+  it("drops stopwords, but keeps them if they are all there is", () => {
+    expect(toFtsQuery("I want THE refund for my order")).toBe('"want" OR "refund" OR "order"');
+    expect(toFtsQuery("is it")).toBe('"is" OR "it"');
+  });
+  it("drops Hinglish function words too", () =>
+    expect(toFtsQuery("mera order kab aayega")).toBe('"order" OR "aayega"'));
   it("keeps non-Latin words", () => expect(toFtsQuery("रिफंड refund")).toBe('"रिफंड" OR "refund"'));
   it("caps very long queries at 32 distinct words", () => {
     const q = toFtsQuery(Array.from({ length: 100 }, (_, i) => `w${i}`).join(" "))!;
