@@ -81,6 +81,18 @@ const clauseId = z
 const orderId = z.string().regex(/^[A-Z]-\d{5}$/, "order IDs look like A-10413");
 const phrase = z.string().min(1);
 
+/**
+ * One phrase check: a single phrase, or a list of alternative wordings of the same fact.
+ * reply_must_mention: satisfied if ANY alternative appears in the reply.
+ * reply_must_not_mention: violated if ANY alternative appears in the reply.
+ * Matching is a case-insensitive substring match.
+ */
+const phraseCheck = z.union([phrase, z.array(phrase).min(1)]);
+
+/** Normalise a phrase check to its list of alternatives. */
+export const alternatives = (check: string | string[]): string[] =>
+  typeof check === "string" ? [check] : check;
+
 export const CaseSchema = z
   .object({
     id: z
@@ -129,8 +141,14 @@ export const CaseSchema = z
           .describe("NEEDS_INFO only: fields the reply must ask for, and nothing else"),
         must_cite: z.array(clauseId).default([]),
         must_not_cite: z.array(clauseId).default([]),
-        reply_must_mention: z.array(phrase).default([]).describe("Case-insensitive substrings"),
-        reply_must_not_mention: z.array(phrase).default([]).describe("Case-insensitive substrings"),
+        reply_must_mention: z
+          .array(phraseCheck)
+          .default([])
+          .describe("Each item: a phrase or a list of alternatives; satisfied if any one appears"),
+        reply_must_not_mention: z
+          .array(phraseCheck)
+          .default([])
+          .describe("Each item: a phrase or a list of alternatives; violated if any one appears"),
       })
       .strict(),
     judge: z
