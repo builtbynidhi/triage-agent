@@ -4,7 +4,8 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "schema:write": "node src/write-schema.ts"
+    "schema:write": "node src/write-schema.ts",
+    "retrieval": "node src/retrieval-eval.ts"
   },
   "dependencies": {
     "@triage/data": "workspace:*",
