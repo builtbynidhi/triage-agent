@@ -25,7 +25,9 @@ describe("SQLite store tenant scoping", () => {
     expect(await store.getOrder("tenant_b", "A-10413")).toBeNull();
   });
   it("returns a customer to its own tenant only, by ID and by case-insensitive email", async () => {
-    expect((await store.getCustomerByEmail("tenant_a", "ASHA.Sharma1@example.com"))?.id).toBe("cust_a_01");
+    expect((await store.getCustomerByEmail("tenant_a", "ASHA.Sharma1@example.com"))?.id).toBe(
+      "cust_a_01",
+    );
     expect(await store.getCustomerByEmail("tenant_b", "asha.sharma1@example.com")).toBeNull();
     expect(await store.getCustomerById("tenant_b", "cust_a_01")).toBeNull();
   });

@@ -119,10 +119,7 @@ const toCustomer = (r: CustomerRow): CustomerRecord => ({
   tier: r.tier,
 });
 
-export function createSqliteStore(
-  db: Db,
-  options: { policiesDir?: string } = {},
-): TriageStore {
+export function createSqliteStore(db: Db, options: { policiesDir?: string } = {}): TriageStore {
   const policiesDir = options.policiesDir ?? defaultPoliciesDir();
   const q = {
     tenant: db.prepare("SELECT 1 FROM tenants WHERE id = ?"),
@@ -207,7 +204,11 @@ export function createSqliteStore(
           const markdown = readFileSync(join(policiesDir, f), "utf8");
           const front = /^---\n([\s\S]*?)\n---\n/.exec(markdown);
           if (!front) throw new Error(`${f}: missing frontmatter`);
-          const meta = parse(front[1]!) as { doc: string; title: string; clauses: { id: string }[] };
+          const meta = parse(front[1]!) as {
+            doc: string;
+            title: string;
+            clauses: { id: string }[];
+          };
           return {
             doc: meta.doc,
             title: meta.title,
