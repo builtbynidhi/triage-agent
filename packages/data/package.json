@@ -3,5 +3,17 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "main": "src/index.ts"
+  "main": "src/index.ts",
+  "dependencies": {
+    "better-sqlite3": "^13.2.0",
+    "sqlite-vec": "^0.1.9",
+    "yaml": "^2.9.1"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^9.6.0"
+  },
+  "scripts": {
+    "db:reset": "node src/cli.ts reset",
+    "db:seed": "node src/cli.ts seed"
+  }
 }

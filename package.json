@@ -12,7 +12,9 @@
     "format:check": "prettier --check .",
     "typecheck": "tsc -b",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "db:reset": "pnpm --filter @triage/data db:reset",
+    "db:seed": "pnpm --filter @triage/data db:seed"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
