@@ -1,0 +1,71 @@
+# Held-out retrieval questions. Written and committed BEFORE any retrieval was measured,
+# so retrieval choices cannot have been tuned to them. Never edit these to raise a score.
+#
+# One question per policy clause (30), plus Hinglish variants, phrased the way customers
+# write: short, typo'd, sometimes mixed-language. None is copied from evals/cases/.
+# `gold` lists the acceptable clause(s); a question is a hit if any gold clause is in the top 4.
+questions:
+  - q: how long do i have to send back something i bought?
+    gold: [returns.window]
+  - q: the box is opened but i never actually used the mixer, can it still go back
+    gold: [returns.condition]
+  - q: can i return a gift card i got
+    gold: [returns.exclusions]
+  - q: do i have to courier the item to you myself for a return??
+    gold: [returns.process]
+  - q: can i still get a refund if it was delivered 10 days ago
+    gold: [refunds.window]
+  - q: i paid cash on delivery, how will i get my money back
+    gold: [refunds.method]
+  - q: will you refund the shipping charges also
+    gold: [refunds.exclusions]
+  - q: who approves a refund for a 15000 rupee fridge
+    gold: [refunds.high_value]
+  - q: you sent me the wrong colour, what happens now
+    gold: [damaged.resolution, refunds.damaged]
+  - q: after you get my return, when will the money show in my account
+    gold: [refunds.timeline]
+  - q: parcel came smashed, i have pics. how many days do i have to tell you
+    gold: [damaged.reporting]
+  - q: the iron sparks when i plug it in
+    gold: [damaged.safety]
+  - q: item arrived broken, do i get a new one or money back
+    gold: [damaged.resolution]
+  - q: i want to cancel my order, it hasnt shipped yet
+    gold: [cancellation.before_dispatch]
+  - q: its already been shipped but i dont want it any more, can i still cancel
+    gold: [cancellation.after_dispatch]
+  - q: when do i get my money back for a cancelled prepaid order
+    gold: [cancellation.refund]
+  - q: please deliver to my office instead of home, the order is not shipped yet
+    gold: [address.before_dispatch]
+  - q: the courier already has my parcel, can you change where it goes
+    gold: [address.after_dispatch]
+  - q: what details do you need from me for the new address
+    gold: [address.requirements]
+  - q: how many days to deliver to chennai
+    gold: [delivery.estimates]
+  - q: if i order at 5pm today when will it get dispatched
+    gold: [delivery.dispatch]
+  - q: its been a week past the expected date and nothing has come
+    gold: [delivery.delayed]
+  - q: where can i see the live location of my parcel
+    gold: [delivery.tracking]
+  - q: is there any guarantee on the charging cable
+    gold: [warranty.period]
+  - q: dropped my speaker in water, is that covered
+    gold: [warranty.exclusions]
+  - q: headphones stopped working after 3 months, how do i claim
+    gold: [warranty.claims]
+  - q: what time does your support team work on saturday
+    gold: [contact.hours]
+  - q: do you reply in hindi?
+    gold: [contact.channels]
+  - q: someone from your company called and asked for my OTP, is that really you
+    gold: [contact.never_asked]
+  - q: i am going to take you to consumer court for this
+    gold: [contact.escalation]
+  - q: return ke baad paisa kab tak wapas aayega
+    gold: [refunds.timeline]
+  - q: order cancel karna hai, abhi ship nahi hua
+    gold: [cancellation.before_dispatch]
