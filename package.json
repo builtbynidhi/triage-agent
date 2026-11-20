@@ -16,7 +16,9 @@
     "test:watch": "vitest",
     "db:reset": "pnpm --filter @triage/data db:reset",
     "db:seed": "pnpm --filter @triage/data db:seed",
-    "eval:schema": "pnpm --filter @triage/evals schema:write"
+    "eval:schema": "pnpm --filter @triage/evals schema:write",
+    "mcp:stdio": "pnpm --filter @triage/mcp-server mcp:stdio",
+    "mcp:http": "pnpm --filter @triage/mcp-server mcp:http"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
