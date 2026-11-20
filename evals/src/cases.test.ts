@@ -96,6 +96,10 @@ describe("case schema", () => {
     expect(ok({ subgroup: "near_empty" })).toBe(false));
   it("rejects AUTO_REPLY with no required citation", () =>
     expect(ok({ expect: { decision: "AUTO_REPLY" } })).toBe(false));
+  it("exempts only intent acknowledgement from the citation rule", () => {
+    expect(ok({ expect: { decision: "AUTO_REPLY", intent: "acknowledgement" } })).toBe(true);
+    expect(ok({ expect: { decision: "AUTO_REPLY", intent: "order_status" } })).toBe(false);
+  });
   it("rejects NEEDS_INFO without missing fields", () =>
     expect(ok({ expect: { decision: "NEEDS_INFO" } })).toBe(false));
   it("rejects required phrases on REJECT", () =>

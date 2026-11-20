@@ -46,7 +46,7 @@ A state machine, not a while-loop: classify intent → retrieve policy clauses �
 
 Model output is exactly: `{ decision, intent, confidence, facts_used[], clause_ids[], reply_draft, escalation_reason, missing_fields[] }`.
 
-Validator rules beyond the schema: `AUTO_REPLY` needs ≥1 clause_id and a non-empty reply_draft; `NEEDS_INFO` needs non-empty missing_fields and the reply asks only for those; `ESCALATE` needs an escalation_reason; any clause_id not returned by `search_policy` this run is a hard failure; confidence below a threshold (set from eval data, not guessed) downgrades `AUTO_REPLY` to `ESCALATE`. One repair attempt on validation failure, then fail closed to `ESCALATE`.
+Validator rules beyond the schema: `AUTO_REPLY` needs ≥1 clause_id and a non-empty reply_draft (sole exemption: intent `acknowledgement` needs no clause_id; see below); `NEEDS_INFO` needs non-empty missing_fields and the reply asks only for those; `ESCALATE` needs an escalation_reason; any clause_id not returned by `search_policy` this run is a hard failure; confidence below a threshold (set from eval data, not guessed) downgrades `AUTO_REPLY` to `ESCALATE`. One repair attempt on validation failure, then fail closed to `ESCALATE`.
 
 Prompt structure: role, rules and schema in the system prompt (a versioned file). Ticket text arrives in a separate delimited message prefixed by a line stating it is data, never instruction. Tool results arrive as tool messages. Never concatenate ticket or retrieved text into the system prompt.
 
@@ -87,3 +87,7 @@ Prompt structure: role, rules and schema in the system prompt (a versioned file)
 - **The eval clock is `SEED_TODAY` (2026-11-20).** Every date in the cases is relative to it, so the agent's notion of "today" must be injectable, and the harness pins it.
 - Judge rubric names used by the cases (files written in Phase 9): `polite-and-answers-the-question`, `declines-clearly-and-kindly`, `asks-only-for-what-is-missing`, `calm-under-pressure`.
 - Never edit a case to make a failing agent pass. If a case is genuinely wrong, fix it and say why in the commit message.
+
+## Decisions on the decision contract
+
+- **Acknowledgements (decided 2026-11-20).** A ticket that only says thank you, with nothing to act on, is `AUTO_REPLY` with intent `acknowledgement`: a short courteous close, no invented work, no escalation. `acknowledgement` is the **only** intent exempt from the rule that an `AUTO_REPLY` must cite at least one clause_id, because no policy is involved. The agent's validator (Phase 6) must implement the same exemption, and only for that intent. The case schema already enforces it (`evals/src/case-schema.ts`). Case: `thank-you-no-action`.
