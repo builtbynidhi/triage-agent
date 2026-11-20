@@ -31,3 +31,9 @@ export type {
   RetrieverOptions,
   StageHit,
 } from "./retrieval/retriever.ts";
+export { STOPWORDS, contentWords } from "./retrieval/text.ts";
+export {
+  createDefaultRetriever,
+  DEFAULT_EMBEDDING_MODEL,
+  DEFAULT_RERANKER,
+} from "./retrieval/defaults.ts";
