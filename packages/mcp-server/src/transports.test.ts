@@ -44,7 +44,7 @@ describe("stdio transport (how Claude Desktop runs the server)", () => {
         stderr: "ignore",
       }),
     );
-  }, 20_000);
+  }, 60_000);
   afterAll(() => client?.close());
 
   it("lists the four tools and eight policy resources", async () => {
@@ -65,6 +65,17 @@ describe("stdio transport (how Claude Desktop runs the server)", () => {
     for (const r of results) expect(r.isError, firstText(r)).toBe(false);
     expect(results[3]!.structuredContent).toMatchObject({ eligible: true });
   });
+
+  it("serves search_policy with the production hybrid retriever (real local models)", async () => {
+    const r = await client.callTool({
+      name: "search_policy",
+      arguments: { query: "do I have to ship the return myself or do you pick it up?" },
+    });
+    const ids = (r.structuredContent as { results: { clause_id: string }[] }).results.map(
+      (x) => x.clause_id,
+    );
+    expect(ids).toContain("returns.process");
+  }, 60_000);
 
   it("is bound to the tenant from its environment", async () => {
     const r = await client.callTool({ name: "get_order", arguments: { order_id: "A-10413" } });

@@ -1,5 +1,5 @@
 import { McpServer } from "@modelcontextprotocol/server";
-import type { PolicyHit, TriageStore } from "@triage/data";
+import type { PolicyHit, PolicyRetriever, TriageStore } from "@triage/data";
 import { isIsoDate, todayInIndia } from "./dates.ts";
 import { registerTools, type ToolContext } from "./registry.ts";
 import { registerPolicyResources } from "./resources.ts";
@@ -12,7 +12,13 @@ export interface TriageServerOptions {
   tenantId: string;
   /** Fixed date (YYYY-MM-DD) for evals and demos; defaults to today in India. */
   today?: string;
-  /** Replace policy retrieval (Phase 4 hybrid search; Phase 7 per-case planted policy). */
+  /**
+   * Policy retrieval for search_policy, searched within this server's tenant. The transports
+   * pass the production hybrid retriever (createDefaultRetriever). Without one, search_policy
+   * falls back to keyword search, which keeps unit tests free of model downloads.
+   */
+  retriever?: PolicyRetriever;
+  /** Override retrieval entirely (Phase 7 wraps it to plant the poisoned-policy fixture). */
   searchPolicies?: (query: string, limit: number) => Promise<PolicyHit[]>;
 }
 
@@ -31,7 +37,10 @@ export async function createToolContext(opts: TriageServerOptions): Promise<Tool
     tenantId: opts.tenantId,
     today: fixed ? () => fixed : () => todayInIndia(),
     searchPolicies:
-      opts.searchPolicies ?? ((q, k) => opts.store.searchPoliciesKeyword(opts.tenantId, q, k)),
+      opts.searchPolicies ??
+      (opts.retriever
+        ? async (q, k) => (await opts.retriever!.search(opts.tenantId, q, k)).hits
+        : (q, k) => opts.store.searchPoliciesKeyword(opts.tenantId, q, k)),
   };
 }
 

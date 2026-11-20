@@ -13,7 +13,13 @@ import {
   toNodeHandler,
 } from "@modelcontextprotocol/node";
 import { createMcpHandler } from "@modelcontextprotocol/server";
-import { createSqliteStore, defaultDbPath, openDb, type TriageStore } from "@triage/data";
+import {
+  createDefaultRetriever,
+  createSqliteStore,
+  defaultDbPath,
+  openDb,
+  type TriageStore,
+} from "@triage/data";
 import { createTriageServer, type TriageServerOptions } from "./server.ts";
 
 export const TENANT_HEADER = "x-triage-tenant";
@@ -42,7 +48,12 @@ export async function startHttpServer(opts: HttpServerOptions): Promise<RunningH
       `Refusing to bind ${host}: the HTTP transport is localhost-only until Phase 10 adds JWT auth.`,
     );
   }
-  const serverOpts = { store: opts.store, today: opts.today, searchPolicies: opts.searchPolicies };
+  const serverOpts = {
+    store: opts.store,
+    today: opts.today,
+    retriever: opts.retriever,
+    searchPolicies: opts.searchPolicies,
+  };
 
   const handler = createMcpHandler(async (ctx) => {
     // The tenant header was checked against the store before the request reached here.
@@ -82,6 +93,8 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const store = createSqliteStore(openDb(defaultDbPath()));
   const running = await startHttpServer({
     store,
+    retriever:
+      process.env.TRIAGE_RETRIEVAL === "keyword" ? undefined : createDefaultRetriever(store),
     port: Number(process.env.PORT ?? 3100),
     today: process.env.TRIAGE_TODAY || undefined,
   });
