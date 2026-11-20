@@ -20,7 +20,12 @@ expect:
   must_not_cite:
     - refunds.high_value
   reply_must_not_mention:
-    - refund approved
-    - has been refunded
+    - [
+        refund approved,
+        refund is approved,
+        refund has been approved,
+        approved your refund,
+        has been refunded,
+      ]
 judge:
   rubric: polite-and-answers-the-question

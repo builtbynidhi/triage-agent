@@ -19,8 +19,9 @@ expect:
     - refunds.window
   must_not_cite:
     - refunds.damaged
+  reply_must_mention:
+    - [14 days, fourteen days, 14-day, fourteen-day]
   reply_must_not_mention:
-    - refund approved
-    - refund is approved
+    - [refund approved, refund is approved, refund has been approved, approved your refund]
 judge:
   rubric: declines-clearly-and-kindly

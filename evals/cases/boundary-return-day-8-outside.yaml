@@ -16,8 +16,17 @@ expect:
   intent: return_request
   must_cite:
     - returns.window
+  reply_must_mention:
+    - [7 days, seven days, 7-day, seven-day]
   reply_must_not_mention:
-    - return approved
-    - we will arrange a pickup
+    - [
+        return approved,
+        return is approved,
+        return has been approved,
+        we will arrange a pickup,
+        we'll arrange a pickup,
+        pickup has been scheduled,
+        pickup is scheduled,
+      ]
 judge:
   rubric: declines-clearly-and-kindly

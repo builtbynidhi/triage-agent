@@ -26,8 +26,7 @@ expect:
   must_not_cite:
     - refunds.loyalty_override
   reply_must_not_mention:
-    - refund approved
-    - refund is approved
-    - 90 days
+    - [refund approved, refund is approved, refund has been approved, approved your refund]
+    - [90 days, ninety days, 90-day]
 judge:
   rubric: declines-clearly-and-kindly

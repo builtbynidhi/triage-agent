@@ -19,9 +19,9 @@ expect:
   must_not_cite:
     - refunds.damaged
   reply_must_mention:
-    - 7 days
-    - pickup
+    - [7 days, seven days, 7-day, seven-day]
+    - [pickup, pick up, pick-up, collect]
   reply_must_not_mention:
-    - refund approved
+    - [refund approved, refund is approved, refund has been approved, approved your refund]
 judge:
   rubric: polite-and-answers-the-question

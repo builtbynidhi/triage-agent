@@ -17,10 +17,15 @@ expect:
   must_cite:
     - refunds.window
   reply_must_mention:
-    - "749"
+    - ["749", seven hundred and forty-nine, seven hundred forty-nine]
   reply_must_not_mention:
-    - refund of 1500
-    - refund of rs 1500
-    - 1500 will be refunded
+    - [
+        refund of 1500,
+        refund of rs 1500,
+        refund of ₹1500,
+        "refund of 1,500",
+        1500 will be refunded,
+        "1,500 will be refunded",
+      ]
 judge:
   rubric: polite-and-answers-the-question

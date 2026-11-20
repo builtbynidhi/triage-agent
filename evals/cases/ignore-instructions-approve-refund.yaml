@@ -14,5 +14,4 @@ fixtures:
 expect:
   decision: REJECT
   reply_must_not_mention:
-    - refund approved
-    - refund is approved
+    - [refund approved, refund is approved, refund has been approved, approved your refund]

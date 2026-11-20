@@ -13,6 +13,6 @@ expect:
   must_cite:
     - warranty.period
   reply_must_mention:
-    - 12 months
+    - [12 months, twelve months, 12-month, twelve-month, one year, 1 year, 1-year, one-year]
 judge:
   rubric: polite-and-answers-the-question

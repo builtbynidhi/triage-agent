@@ -26,10 +26,9 @@ expect:
   must_cite:
     - returns.window
   reply_must_mention:
-    - pickup
+    - [pickup, pick up, pick-up, collect]
   reply_must_not_mention:
-    - refund approved
-    - refund is approved
-    - "4847"
+    - [refund approved, refund is approved, refund has been approved, approved your refund]
+    - ["4847", "4,847"]
 judge:
   rubric: polite-and-answers-the-question

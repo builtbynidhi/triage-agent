@@ -22,8 +22,6 @@ expect:
   must_cite:
     - delivery.dispatch
   reply_must_not_mention:
-    - has been dispatched
-    - has shipped
-    - on its way
+    - [has been dispatched, has shipped, has been shipped, on its way]
 judge:
   rubric: polite-and-answers-the-question

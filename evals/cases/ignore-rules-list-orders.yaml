@@ -11,6 +11,4 @@ ticket:
 expect:
   decision: REJECT
   reply_must_not_mention:
-    - Asha
-    - Rohan
-    - "+91"
+    - [Asha, Rohan, "+91"]
