@@ -8,15 +8,19 @@
  *  - held-out: evals/retrieval/heldout.yaml, committed before anything was measured.
  * A question is a hit@4 when any of its gold clauses is in the top 4.
  *
- * Selection rule, fixed before the first run: the default configuration is the hybrid
- * configuration with the best eval-derived hit@4 (ties: higher eval-derived MRR, then the
- * cheaper reranker). The held-out set plays no part in choosing; it only confirms.
+ * Selection rule, fixed before the first run: the hybrid configuration with the best
+ * eval-derived hit@4 (ties: higher eval-derived MRR, then the cheaper reranker). The report
+ * still shows what that rule picks. The production default (DEFAULT_EMBEDDING_MODEL +
+ * DEFAULT_RERANKER) was then decided from these measurements in ADR 0005, which explains
+ * why it differs from the rule's pick.
  */
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parse } from "yaml";
 import {
+  DEFAULT_EMBEDDING_MODEL,
+  DEFAULT_RERANKER,
   EMBEDDING_MODELS,
   createCrossEncoderReranker,
   createLocalEmbedder,
@@ -206,7 +210,13 @@ async function main() {
     console.error(`measured ${model}`);
   }
 
-  const chosen = pickDefault(runs);
+  const preRegistered = pickDefault(runs);
+  const chosen = runs.find(
+    (r) =>
+      r.config.mode === "hybrid" &&
+      r.config.embedding === DEFAULT_EMBEDDING_MODEL &&
+      r.config.reranker === DEFAULT_RERANKER,
+  )!;
   const keyword = runs.find((r) => r.config.mode === "keyword")!;
   // Compare against the BEST single vector method, not just the chosen model's own: beating a
   // weak baseline proves nothing. Best = eval-derived hit@4, then MRR (the selection metric).
@@ -246,7 +256,9 @@ A question is a **hit@4** when a correct clause is in the top 4, the number the 
 
 ## Result
 
-Configuration chosen by the rule fixed before measuring (best eval-derived hit@4, then MRR, then the cheaper reranker): **${chosen.config.name}**.
+Production configuration ([ADR 0005](adr/0005-retrieval-configuration.md)): **${chosen.config.name}**.
+
+The selection rule fixed before measuring (best eval-derived hit@4, then MRR, then the cheaper reranker) picks **${preRegistered.config.name}**${preRegistered === chosen ? ", the same configuration." : ". It is not used: ADR 0005 and the analysis below explain why."}
 
 | Method | Eval-derived hit@4 | Held-out hit@4 | Eval-derived MRR@10 | Median latency |
 |---|---|---|---|---|
@@ -282,7 +294,10 @@ Questions whose correct clause was not in the top 4. These are inputs for Phase 
 |---|---|---|---|---|
 ${misses(chosen).join("\n") || "| - | none | - | - | - |"}
 
-## Setup
+${(() => {
+  const notes = resolve(root, "evals/retrieval/analysis.md");
+  return existsSync(notes) ? readFileSync(notes, "utf8").trim() + "\n\n" : "";
+})()}## Setup
 
 - Pipeline: FTS5 (BM25, title weighted 2x) and sqlite-vec (exact KNN, cosine) each return their top 10, merged by reciprocal rank fusion (k = 60). The fused top 10 are reranked, and the top 4 returned.
 - Embedding models (all q8, 384 dimensions, run locally on the CPU): ${Object.entries(
@@ -301,6 +316,7 @@ ${misses(chosen).join("\n") || "| - | none | - | - | - |"}
     JSON.stringify(
       {
         date,
+        preRegistered: preRegistered.config.name,
         chosen: {
           name: chosen.config.name,
           embedding: chosen.config.embedding,
