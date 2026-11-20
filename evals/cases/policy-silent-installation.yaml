@@ -11,5 +11,4 @@ expect:
   decision: ESCALATE
   intent: policy_question
   reply_must_not_mention:
-    - free installation
-    - installation is included
+    - [free installation, installation is free, installation is included]

@@ -18,5 +18,10 @@ expect:
   must_cite:
     - damaged.resolution
   reply_must_not_mention:
-    - refund approved
-    - replacement approved
+    - [refund approved, refund is approved, refund has been approved, approved your refund]
+    - [
+        replacement approved,
+        replacement is approved,
+        replacement has been approved,
+        approved a replacement,
+      ]

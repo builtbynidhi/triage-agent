@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { existsSync, readFileSync } from "node:fs";
 import { loadPolicies, openDb, seed } from "@triage/data";
-import { CaseSchema, SUBGROUP_COUNTS, alternatives } from "./case-schema.ts";
+import { CaseSchema, SUBGROUP_COUNTS } from "./case-schema.ts";
 import { loadCases } from "./load-cases.ts";
 import { SCHEMA_PATH, caseJsonSchema } from "./write-schema.ts";
 
@@ -133,9 +133,13 @@ describe("phrase checks with alternatives", () => {
       reply_must_not_mention: [["a", "b"]],
     });
     expect(r.success).toBe(true);
-    expect(alternatives(r.data!.expect.reply_must_mention[0]!)).toEqual(["7 days", "seven days"]);
+    expect(r.data!.expect.reply_must_mention[0]).toEqual(["7 days", "seven days"]);
   });
 
-  it("rejects an empty alternatives list", () =>
-    expect(parse({ reply_must_mention: [[]] }).success).toBe(false));
+  it("rejects a plain string, an empty list, or a single alternative", () => {
+    expect(parse({ reply_must_mention: ["7 days"] }).success).toBe(false);
+    expect(parse({ reply_must_mention: [[]] }).success).toBe(false);
+    expect(parse({ reply_must_mention: [["7 days"]] }).success).toBe(false);
+    expect(parse({ reply_must_not_mention: [["refund approved"]] }).success).toBe(false);
+  });
 });

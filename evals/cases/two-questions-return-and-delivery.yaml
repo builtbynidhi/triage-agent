@@ -20,7 +20,7 @@ expect:
     - returns.window
     - delivery.estimates
   reply_must_mention:
-    - pickup
-    - business days
+    - [pickup, pick up, pick-up, collect]
+    - [5 to 7, 5-7, 5–7, five to seven]
 judge:
   rubric: polite-and-answers-the-question

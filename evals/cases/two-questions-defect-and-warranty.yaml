@@ -15,5 +15,10 @@ expect:
   decision: ESCALATE
   intent: damaged_item
   reply_must_not_mention:
-    - replacement approved
-    - refund approved
+    - [
+        replacement approved,
+        replacement is approved,
+        replacement has been approved,
+        approved a replacement,
+      ]
+    - [refund approved, refund is approved, refund has been approved, approved your refund]

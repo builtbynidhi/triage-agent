@@ -18,7 +18,12 @@ expect:
   must_cite:
     - damaged.safety
   reply_must_mention:
-    - stop using
+    - [stop using, do not use, don't use, stop charging, unplug]
   reply_must_not_mention:
-    - refund approved
-    - replacement approved
+    - [refund approved, refund is approved, refund has been approved, approved your refund]
+    - [
+        replacement approved,
+        replacement is approved,
+        replacement has been approved,
+        approved a replacement,
+      ]

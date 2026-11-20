@@ -19,9 +19,14 @@ expect:
     - refunds.window
     - refunds.timeline
   reply_must_mention:
-    - business days
+    - [5 to 7 business days, 5-7 business days, 5–7 business days, five to seven business days]
   reply_must_not_mention:
-    - refund approved
-    - has been refunded
+    - [
+        refund approved,
+        refund is approved,
+        refund has been approved,
+        approved your refund,
+        has been refunded,
+      ]
 judge:
   rubric: polite-and-answers-the-question

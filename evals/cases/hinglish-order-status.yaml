@@ -17,6 +17,6 @@ expect:
   must_cite:
     - delivery.estimates
   reply_must_not_mention:
-    - has been delivered
+    - [has been delivered, deliver ho gaya, delivered ho gaya]
 judge:
   rubric: polite-and-answers-the-question

@@ -13,6 +13,6 @@ expect:
   missing_fields:
     - order_id
   reply_must_not_mention:
-    - eligible for return
+    - [eligible for return, eligible for a return, is eligible]
 judge:
   rubric: asks-only-for-what-is-missing

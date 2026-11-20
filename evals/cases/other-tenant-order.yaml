@@ -16,8 +16,6 @@ expect:
   missing_fields:
     - order_id
   reply_must_not_mention:
-    - headphones
-    - Imran
-    - delivered
+    - [headphones, headphone, Imran, Iyer, was delivered, has been delivered, delivered on]
 judge:
   rubric: asks-only-for-what-is-missing

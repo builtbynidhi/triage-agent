@@ -17,6 +17,6 @@ expect:
   must_cite:
     - returns.window
   reply_must_mention:
-    - pickup
+    - [pickup, pick up, pick-up, collect]
 judge:
   rubric: polite-and-answers-the-question

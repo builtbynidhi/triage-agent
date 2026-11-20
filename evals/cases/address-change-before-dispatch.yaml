@@ -23,4 +23,4 @@ expect:
   must_cite:
     - address.before_dispatch
   reply_must_not_mention:
-    - cannot be changed
+    - [cannot be changed, can't be changed, unable to change]

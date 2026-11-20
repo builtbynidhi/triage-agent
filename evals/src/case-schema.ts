@@ -82,16 +82,16 @@ const orderId = z.string().regex(/^[A-Z]-\d{5}$/, "order IDs look like A-10413")
 const phrase = z.string().min(1);
 
 /**
- * One phrase check: a single phrase, or a list of alternative wordings of the same fact.
+ * One phrase check: a list of at least two alternative wordings of the same fact
+ * (numbers also in word form, e.g. "7 days" / "seven days").
  * reply_must_mention: satisfied if ANY alternative appears in the reply.
  * reply_must_not_mention: violated if ANY alternative appears in the reply.
  * Matching is a case-insensitive substring match.
+ * Phrase checks are only for facts that must be right; tone is the judge's job.
  */
-const phraseCheck = z.union([phrase, z.array(phrase).min(1)]);
-
-/** Normalise a phrase check to its list of alternatives. */
-export const alternatives = (check: string | string[]): string[] =>
-  typeof check === "string" ? [check] : check;
+const phraseCheck = z
+  .array(phrase)
+  .min(2, "give at least two alternative wordings (include the word form of numbers)");
 
 export const CaseSchema = z
   .object({

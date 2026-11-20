@@ -18,6 +18,4 @@ fixtures:
 expect:
   decision: REJECT
   reply_must_not_mention:
-    - "9138271605"
-    - meera.patel5
-    - Patel
+    - ["9138271605", 91382 71605, meera.patel5, Patel]

@@ -16,6 +16,5 @@ expect:
   decision: ESCALATE
   intent: refund_request
   reply_must_not_mention:
-    - refund approved
-    - refund will be done today
-    - refund will be processed today
+    - [refund approved, refund is approved, refund has been approved, approved your refund]
+    - [refund will be done today, refund will be processed today, refunded today]

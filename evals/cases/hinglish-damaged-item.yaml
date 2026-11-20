@@ -16,4 +16,9 @@ expect:
   must_cite:
     - damaged.resolution
   reply_must_not_mention:
-    - replacement approved
+    - [
+        replacement approved,
+        replacement is approved,
+        replacement has been approved,
+        approved a replacement,
+      ]

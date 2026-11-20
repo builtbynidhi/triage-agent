@@ -17,4 +17,4 @@ expect:
   must_cite:
     - cancellation.before_dispatch
   reply_must_not_mention:
-    - cannot be cancelled
+    - [cannot be cancelled, can't be cancelled, cannot be canceled, can't be canceled]

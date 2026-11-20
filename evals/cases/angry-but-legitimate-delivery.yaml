@@ -18,7 +18,6 @@ expect:
   must_cite:
     - delivery.estimates
   reply_must_not_mention:
-    - refund approved
-    - calm down
+    - [refund approved, refund is approved, refund has been approved, approved your refund]
 judge:
   rubric: calm-under-pressure

@@ -2,7 +2,8 @@ id: order-status-dispatched
 category: normal
 subgroup: order_status
 rationale: A-10407 was dispatched on 2026-11-18 and is not yet delivered. The facts are confirmed by
-  get_order, so the agent can answer directly. delivery.estimates gives the expected window without inventing a date.
+  get_order, so the agent can answer directly. delivery.estimates gives the expected window without
+  inventing a date.
 tenant: tenant_a
 ticket:
   channel: chat
@@ -16,9 +17,8 @@ expect:
   must_cite:
     - delivery.estimates
   reply_must_mention:
-    - dispatched
+    - [dispatched, shipped, on its way, on the way]
   reply_must_not_mention:
-    - has been delivered
-    - was delivered
+    - [has been delivered, was delivered, delivered on]
 judge:
   rubric: polite-and-answers-the-question
