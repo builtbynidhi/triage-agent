@@ -103,3 +103,14 @@ Prompt structure: role, rules and schema in the system prompt (a versioned file)
 - Not-found messages are shared constants (`ORDER_NOT_FOUND`, `CUSTOMER_NOT_FOUND`), so "missing" and "another tenant's" are identical. Keep it that way.
 - Run: `pnpm mcp:stdio` (needs `TRIAGE_TENANT`), `pnpm mcp:http` (port 3100). Client setup: `packages/mcp-server/README.md`.
 - Tests: `eligibility.test.ts` (every boundary), `pii.test.ts`, `tools.test.ts` (over a real MCP client), `transports.test.ts` (a real stdio subprocess and a real HTTP server). Five deliberate bugs were each caught by these tests before Phase 3 shipped.
+
+## Retrieval (Phase 4)
+
+- Code: `packages/data/src/retrieval/` (embedder, fusion, rerankers, retriever, defaults). Production config: `defaults.ts`, decided in ADR 0005 from `docs/retrieval.md`. **Change it only with a new `pnpm eval:retrieval` run and an ADR.**
+- `search_policy` uses `createDefaultRetriever` (hybrid: bge-small plus a cross-encoder) when a transport passes a `retriever`. Unit tests omit it and get keyword search, so they need no models. `TRIAGE_RETRIEVAL=keyword` does the same for the stdio and HTTP servers.
+- Models are local, CPU-only and free. They are cached in `.cache/models` (gitignored, and cached in CI); `MODELS_OFFLINE=1` forbids downloads. Run `pnpm db:index` after seeding to pre-download them and build the vector index.
+- The vector index maintains itself (`syncPolicyVectors`, keyed on rowid, model and text hash). Never write to `policy_vec` directly.
+- Retrieval is tenant-scoped: `policy_chunks.tenant_id` NULL = shared. Any new search path must filter on it.
+- Keyword queries go through `toFtsQuery`, which keeps content words only (the NLTK and Hinglish list in `retrieval/text.ts`). Never pass user text to `MATCH`.
+- `evals/retrieval/heldout.yaml` must never be edited to raise a score. `evals/src/retrieval.test.ts` gates hit@4 on the committed `evals/report/retrieval.json`.
+- pnpm build scripts are denied for `onnxruntime-node` (it would download CUDA libraries on Linux) and `protobufjs` in `pnpm-workspace.yaml`. Keep it that way.

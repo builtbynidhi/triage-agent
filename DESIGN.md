@@ -48,12 +48,27 @@ Outline only. Bodies are filled in during the phase that makes each decision.
 
 **Resources.** Each policy file is an MCP resource, `policy://{doc}`, served as committed (frontmatter included), so a person in a client can read exactly what the agent cites.
 
+### 2.3 Policy retrieval (Phase 4)
+
+**Pipeline.** `createPolicyRetriever` in `packages/data/src/retrieval/`. FTS5 keyword search (BM25, title weighted 2x, stopwords removed) and sqlite-vec vector search (exact KNN over unit vectors, scored as cosine) each return their top 10. They are merged by reciprocal rank fusion (k = 60), and the fused top 10 go to a swappable `Reranker`, which returns the top k. Every search returns a `RetrievalTrace` with each stage's ranking and timings, for the Phase 11 trace viewer.
+
+**Production configuration** (ADR 0005): `bge-small-en-v1.5` embeddings and the `ms-marco-MiniLM-L-6-v2` cross-encoder, both q8, run locally on the CPU through `@huggingface/transformers`. They load lazily, once per process, from `.cache/models`. `MODELS_OFFLINE=1` forbids downloads. `pnpm db:index` pre-downloads and builds the index.
+
+**Why RRF.** BM25 scores and cosine similarities live on unrelated scales. RRF uses only ranks, so it needs no calibration between them. Its known weakness is measured in `docs/retrieval.md`: with equal weight, a noisy keyword list can pull down a strong vector list. That is why the reranker, not the fusion order, has the last word.
+
+**A self-maintaining vector index.** `policy_vec_meta` records, for each clause, the rowid, embedding model and text hash its vector was built from. `syncPolicyVectors` re-embeds only what changed (edited text, a moved row, a new model) and drops vectors of deleted clauses. The retriever calls it lazily before its first vector search, so a policy edit, a reseed or a model swap can never leave stale vectors behind.
+
+**Tenant-scoped retrieval** (OWASP LLM09). `policy_chunks.tenant_id` is NULL for a policy every tenant shares, or a tenant ID for a policy only that tenant's searches may return. Both keyword and vector search filter on it, and tests prove a tenant-specific clause is invisible to the other tenant. Today all 8 policies are shared. The vector KNN covers every vector before the tenant filter, which is exact and cheap at hundreds of clauses; at the scale of many tenants with their own policies, a vec0 partition key would replace it.
+
+**Measured, not assumed.** `pnpm eval:retrieval` measures 13 configurations on 27 eval-derived and 32 held-out questions, and writes `docs/retrieval.md`. `evals/src/retrieval.test.ts` is a regression gate on the production configuration with the real models. Headline: hybrid with cross-encoder is best on short questions (96.9% hit@4), while vector-only is best on raw tickets (70.4%). That is why the `search_policy` description asks the agent for one short question per call.
+
 ## 3. Trade-offs
 
 - Hand-written state machine vs a framework (and the LangGraph port)
 - Eligibility as code, not a model call: ADR 0004
 - PII masked at the tool boundary: ADR 0003
 - Tools behind an MCP server: ADR 0002
+- Retrieval configuration (hybrid with cross-encoder, chosen from measurements): ADR 0005
 - SQLite queue vs Redis; two stores, no third (no MongoDB)
 
 ### 3.1 SQLite jobs table instead of Redis (Phase 1)
@@ -85,5 +100,6 @@ Outline only. Bodies are filled in during the phase that makes each decision.
 - **Resolved: address changes and cancellations escalate,** because no tool performs them (see CLAUDE.md, "Decisions on the decision contract").
 - **Repeats in replay mode.** Cassettes are keyed by request hash, so 3 repeats replay the same response. Decide in Phase 5 whether the repeat index belongs in the key.
 - **Eligibility clause IDs and the citation rule (Phase 6).** The validator fails any cited clause not returned by `search_policy` this run. `check_eligibility` also returns authoritative clause IDs the reply must cite, so the validator should accept those too. Otherwise a correct reply could fail validation.
-- **Tenant-scoped retrieval (Phase 4).** SECURITY.md (LLM09) calls for retrieval scoped per tenant, but today both merchants share one policy set. Decide whether policies gain a `tenant_id`, or whether the threat model says "shared, version-controlled, nothing ingested at runtime" instead.
+- **Resolved: tenant-scoped retrieval.** `policy_chunks.tenant_id` (NULL = shared), filtered in keyword and vector search (§2.3).
 - **"Remote" delivery locations are undefined** in `delivery.estimates`, so the Guwahati case accepts either band. A policy edit could pin it down.
+- **Check retrieval with the agent's real queries (Phase 7).** ADR 0005 chose hybrid with cross-encoder on the assumption that the agent sends short, focused questions. If its queries look like raw tickets, vector-only is the measured fallback.
