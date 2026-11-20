@@ -1,0 +1,37 @@
+# Phase 1 baseline: install, lint, typecheck, unit tests.
+# Phase 12 adds npm audit, the replay-mode eval suite, the baseline gate and the PR scorecard comment.
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 12
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: bash scripts/check-secrets.sh --all
+      - run: pnpm lint
+      - run: pnpm format:check
+      - run: pnpm typecheck
+      - run: pnpm test
+      - name: db reset and seed from clean
+        run: pnpm db:reset && pnpm db:seed
