@@ -51,6 +51,10 @@ describe("eval case files", () => {
 describe("case fixtures exist in the seed", () => {
   for (const { data: c } of cases) {
     it(c.id, () => {
+      expect(
+        db.prepare("SELECT 1 FROM tenants WHERE id = ?").get(c.tenant),
+        `tenant ${c.tenant}`,
+      ).toBeDefined();
       for (const id of c.fixtures.orders) {
         expect(orderTenant(id), `order ${id} must exist for ${c.tenant}`).toBe(c.tenant);
       }
