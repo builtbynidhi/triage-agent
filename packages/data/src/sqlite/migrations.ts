@@ -140,4 +140,23 @@ CREATE VIRTUAL TABLE policy_fts USING fts5(
 CREATE VIRTUAL TABLE policy_vec USING vec0(embedding float[${EMBEDDING_DIM}]);
 `,
   },
+  {
+    id: 3,
+    name: "tenant-scoped-retrieval",
+    sql: `
+-- Retrieval is scoped per tenant (OWASP LLM09). NULL = a shared policy every tenant sees;
+-- a tenant ID = a policy only that tenant's searches can return.
+ALTER TABLE policy_chunks ADD COLUMN tenant_id TEXT REFERENCES tenants(id);
+CREATE INDEX idx_policy_chunks_tenant ON policy_chunks(tenant_id);
+
+-- What each vector in policy_vec was built from, so the index re-embeds exactly the
+-- chunks whose text, position or embedding model changed, and nothing else.
+CREATE TABLE policy_vec_meta (
+  clause_id    TEXT PRIMARY KEY,
+  chunk_rowid  INTEGER NOT NULL,
+  model        TEXT NOT NULL,
+  text_hash    TEXT NOT NULL
+);
+`,
+  },
 ];

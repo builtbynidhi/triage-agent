@@ -30,7 +30,8 @@ export async function createToolContext(opts: TriageServerOptions): Promise<Tool
     store: opts.store,
     tenantId: opts.tenantId,
     today: fixed ? () => fixed : () => todayInIndia(),
-    searchPolicies: opts.searchPolicies ?? ((q, k) => opts.store.searchPoliciesKeyword(q, k)),
+    searchPolicies:
+      opts.searchPolicies ?? ((q, k) => opts.store.searchPoliciesKeyword(opts.tenantId, q, k)),
   };
 }
 

@@ -14,3 +14,20 @@ export type {
   PolicyHit,
   PolicyDocument,
 } from "./store.ts";
+export { policyEmbeddingText } from "./store.ts";
+export type { DocumentEmbedder } from "./store.ts";
+export { createLocalEmbedder, EMBEDDING_MODELS } from "./retrieval/embedder.ts";
+export type { Embedder, EmbeddingModelName, EmbeddingModelSpec } from "./retrieval/embedder.ts";
+export { reciprocalRankFusion, RRF_K } from "./retrieval/fusion.ts";
+export type { Fused } from "./retrieval/fusion.ts";
+export { fusionOnly, heuristicReranker, createCrossEncoderReranker } from "./retrieval/rerank.ts";
+export type { Candidate, Reranked, Reranker } from "./retrieval/rerank.ts";
+export { createPolicyRetriever } from "./retrieval/retriever.ts";
+export type {
+  PolicyRetriever,
+  RetrievalMode,
+  RetrievalResult,
+  RetrievalTrace,
+  RetrieverOptions,
+  StageHit,
+} from "./retrieval/retriever.ts";
