@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { loadPolicies, type TriageStore } from "@triage/data";
+import { loadPolicies, type PolicyRetriever, type TriageStore } from "@triage/data";
 import { ERROR_CODES, ToolErrorSchema, toolError } from "./errors.ts";
 import { READ_TOOLS } from "./tools/index.ts";
 import { connect, seededStore, type ConnectedClient } from "./test-helpers.ts";
@@ -242,6 +242,41 @@ describe("PII masking in get_customer", () => {
       }
     ).c;
     expect((r.structuredContent.customer as { order_count: number }).order_count).toBe(n);
+  });
+});
+
+describe("search_policy uses the configured retriever, within the bound tenant", () => {
+  it("passes the server's tenant, never one from input, and returns the retriever's hits", async () => {
+    const seen: string[] = [];
+    const retriever: PolicyRetriever = {
+      id: "fake",
+      async search(tenantId, query, k) {
+        seen.push(`${tenantId}|${query}|${k}`);
+        return {
+          hits: [
+            { clauseId: "returns.window", title: "Return window", text: "7 days.", score: 0.9 },
+          ],
+          trace: {
+            mode: "hybrid",
+            keyword: [],
+            vector: [],
+            fused: [],
+            reranked: [],
+            ms: { keyword: 0, vector: 0, rerank: 0, total: 0 },
+          },
+        };
+      },
+    };
+    const c = await connect(store, "tenant_b", { retriever });
+    const r = await c.call("search_policy", { query: "return window", top_k: 2 });
+    expect(seen).toEqual(["tenant_b|return window|2"]);
+    expect(r.structuredContent).toEqual({
+      ok: true,
+      results: [
+        { clause_id: "returns.window", title: "Return window", text: "7 days.", score: 0.9 },
+      ],
+    });
+    await c.close();
   });
 });
 
