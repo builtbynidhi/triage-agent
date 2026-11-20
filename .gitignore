@@ -1,0 +1,15 @@
+node_modules/
+dist/
+.next/
+coverage/
+.env
+.env.*
+!.env.example
+*.db
+*.db-journal
+*.sqlite
+traces/
+.DS_Store
+__pycache__/
+.venv/
+*.tsbuildinfo
