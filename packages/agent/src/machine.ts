@@ -117,6 +117,24 @@ const BUDGET_REASON: Record<BudgetExhausted, string> = {
   tokens: "token budget",
 };
 
+/**
+ * What the model is shown for a tool result. Identical to the structured result, except that
+ * search_policy relevance scores are dropped: the ranked order carries the relevance, and scores
+ * are floats that differ in the third decimal between CPUs (int8 model maths). Keeping them would
+ * change the request, and so the recording key, on every other machine. Measured: a run recorded
+ * on macOS arm64 missed every recording on the Linux x86 CI runner until scores were removed.
+ * The full result, scores included, stays in the step record.
+ */
+export function modelView(tool: string, structured: Record<string, unknown>): string {
+  if (tool === "search_policy" && Array.isArray(structured.results)) {
+    const results = (structured.results as Record<string, unknown>[]).map((r) =>
+      Object.fromEntries(Object.entries(r).filter(([k]) => k !== "score")),
+    );
+    return JSON.stringify({ ...structured, results });
+  }
+  return JSON.stringify(structured);
+}
+
 export async function runAgent(opts: AgentOptions): Promise<RunResult> {
   const prompt = opts.prompt ?? loadSystemPrompt();
   const budget = new Budget(opts.budget);
@@ -234,7 +252,12 @@ export async function runAgent(opts: AgentOptions): Promise<RunResult> {
           ms: Math.round(performance.now() - t0),
         });
         // Tool results go back as tool messages, never into the system prompt.
-        messages.push({ role: "tool", toolCallId: call.id, name: call.name, content: result.text });
+        messages.push({
+          role: "tool",
+          toolCallId: call.id,
+          name: call.name,
+          content: modelView(call.name, result.structured),
+        });
       }
     }
 

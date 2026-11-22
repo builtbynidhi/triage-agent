@@ -109,6 +109,28 @@ describe("a normal run, end to end", () => {
     }
   });
 
+  it("shows the model ranked policy clauses without the machine-dependent scores", async () => {
+    tools = await seededTools();
+    const router = scriptedRouter([
+      gatherReturn(),
+      reply({ text: "DONE" }),
+      reply({ text: decisionText({ clause_ids: ["returns.window"], reply_draft: "ok" }) }),
+    ]);
+    const r = await runAgent({ ticket, tools, router, today: TODAY });
+    const search = router.requests[1]!.messages.find(
+      (m) => m.role === "tool" && m.name === "search_policy",
+    );
+    const shown = JSON.parse(search && search.role === "tool" ? search.content : "{}") as {
+      results: Record<string, unknown>[];
+    };
+    expect(shown.results.length).toBeGreaterThan(0);
+    for (const res of shown.results) expect(res).not.toHaveProperty("score");
+    const recorded = r.steps.find((s) => s.name === "search_policy")!.output as {
+      results: { score: number }[];
+    };
+    expect(typeof recorded.results[0]!.score).toBe("number"); // the trace keeps them
+  });
+
   it("goes straight to the decision when the model needs no tools (2 model calls)", async () => {
     tools = await seededTools();
     const router = scriptedRouter([
