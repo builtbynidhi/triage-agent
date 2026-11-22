@@ -125,7 +125,8 @@ Prompt structure: role, rules and schema in the system prompt (a versioned file)
 
 ## Model providers (Phase 5)
 
-- Code: `packages/providers`. Use `createDefaultRouter()`, never an adapter directly. Route: `PRIMARY` gemini-3.6-flash, then `FALLBACK` Groq gpt-oss-120b (`src/index.ts`); see DESIGN.md §2.4.
+- Code: `packages/providers`. Use `createDefaultRouter()`, never an adapter directly. Route: `PRIMARY` Groq gpt-oss-120b, then `FALLBACK` gemini-3.6-flash (`src/index.ts`); see DESIGN.md §2.4. **Measured free limits:** Gemini 3.6 Flash 20 requests a day; Groq 1,000 requests and 200,000 tokens a day. Caps sit just below these.
+- A 429 is never retried; it opens a 15-minute circuit breaker for that provider. Recording keys ignore provider order (the sorted set of providers).
 - **The owner's rule: never pay, never exhaust the free tiers.** Do not add a model that is not in `RATES` (the router refuses it anyway). Never raise the caps in `DEFAULT_LIMITS` above the free limits. Never run `record` (overwrite) when `record-missing` will do. Before any live run, say how many calls it will make. Check today's usage in `.cache/usage/<date>.json`.
 - `PROVIDER_MODE`: `replay` (default; tests and CI), `record-missing`, `record`, `live`. A cassette miss in replay is an error, never a silent live call.
 - A request has `tools` or `responseSchema`, not both.

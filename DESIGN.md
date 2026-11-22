@@ -21,7 +21,7 @@ Three thin layers and one cross-cutting band.
                                               [ provider router ] ─► Gemini / Groq / replay   sqlite-vec)
                                                 planned (Phase 5)
  reviewer ─► [ approval queue ] (planned, Phase 10) ─► the only path to a write tool
- eval harness ─► drives the same entry point a real ticket uses (planned, Phase 7)
+ eval harness ─► drives the same entry point a real ticket uses (Phase 7)
 ```
 
 ### 1.2 One ticket, end to end
@@ -35,17 +35,17 @@ Three thin layers and one cross-cutting band.
 
 ### 1.3 Why each boundary exists
 
-| Boundary                                 | Why                                                                                                                                                                                                                                  | Status                                           |
-| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------ |
-| Queue between API and agent              | A triage run takes seconds, and an HTTP request should not wait on a model. The queue also gives retries and dead letters, and the job is written atomically with its run (§3.1).                                                    | Schema built; worker planned                     |
-| MCP server between agent and data        | The tools become a contract with declared schemas, usable from Claude Desktop as well as our own loop, and the agent cannot reach the database directly (ADR 0002). Tenant and date are bound by the transport, never by tool input. | Built                                            |
-| Code, not the model, for eligibility     | Money decisions are date arithmetic: deterministic, tested at every boundary, auditable (ADR 0004).                                                                                                                                  | Built                                            |
-| PII masked at the tool boundary          | A value the model never sees cannot leak through any prompt or injection (ADR 0003).                                                                                                                                                 | Built                                            |
-| Hybrid retrieval with reranking          | Measured, not assumed: best on focused questions, so the agent is told to ask them (ADR 0005, docs/retrieval.md).                                                                                                                    | Built                                            |
-| Provider router between agent and models | One interface, three implementations: primary, fallback, and replay of recorded responses, so CI is free and deterministic.                                                                                                          | Planned, Phase 5                                 |
-| Validator between model and system       | A model returns text, and the system needs a typed decision. Validate, allow one repair, then fail closed.                                                                                                                           | Planned, Phase 6                                 |
-| Approval queue before any write          | The agent proposes, a human commits: the mitigation for excessive agency.                                                                                                                                                            | Planned, Phase 10                                |
-| Eval harness outside the agent           | It drives the same entry point a real ticket uses, so the system is graded, not a special test path.                                                                                                                                 | Cases built (Phase 2); harness planned (Phase 7) |
+| Boundary                                 | Why                                                                                                                                                                                                                                  | Status                       |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------- |
+| Queue between API and agent              | A triage run takes seconds, and an HTTP request should not wait on a model. The queue also gives retries and dead letters, and the job is written atomically with its run (§3.1).                                                    | Schema built; worker planned |
+| MCP server between agent and data        | The tools become a contract with declared schemas, usable from Claude Desktop as well as our own loop, and the agent cannot reach the database directly (ADR 0002). Tenant and date are bound by the transport, never by tool input. | Built                        |
+| Code, not the model, for eligibility     | Money decisions are date arithmetic: deterministic, tested at every boundary, auditable (ADR 0004).                                                                                                                                  | Built                        |
+| PII masked at the tool boundary          | A value the model never sees cannot leak through any prompt or injection (ADR 0003).                                                                                                                                                 | Built                        |
+| Hybrid retrieval with reranking          | Measured, not assumed: best on focused questions, so the agent is told to ask them (ADR 0005, docs/retrieval.md).                                                                                                                    | Built                        |
+| Provider router between agent and models | One interface, three implementations: primary, fallback, and replay of recorded responses, so CI is free and deterministic.                                                                                                          | Planned, Phase 5             |
+| Validator between model and system       | A model returns text, and the system needs a typed decision. Validate, allow one repair, then fail closed.                                                                                                                           | Planned, Phase 6             |
+| Approval queue before any write          | The agent proposes, a human commits: the mitigation for excessive agency.                                                                                                                                                            | Planned, Phase 10            |
+| Eval harness outside the agent           | It drives the same entry point a real ticket uses, so the system is graded, not a special test path.                                                                                                                                 | Built (Phases 2 and 7)       |
 
 ## 2. Component low-level design (LLD)
 
@@ -105,19 +105,19 @@ Three thin layers and one cross-cutting band.
 
 **One interface, two vendors.** `ChatRequest` / `ChatResponse` in `packages/providers` are provider-neutral. Adapters translate to raw REST: Gemini `generateContent` and Groq's OpenAI-compatible chat completions, with no SDK and no new dependency. Field names were checked against the vendors' docs **and** a live call, because the docs contradicted themselves (for example `responseJsonSchema` vs `responseFormat.text.schema`).
 
-**Route** (decided 2026-11-22): primary `gemini-3.6-flash` (thinking LOW), fallback Groq `openai/gpt-oss-120b` (reasoning low). Versions are pinned, never `-latest`. `gemini-3.5-flash` was the first choice, but it is absent from Google's current price list, and `gemini-3.8-flash` returned 503 "high demand" on the free tier during selection. A different-vendor fallback means one outage cannot take both down.
+**Route** (decided 2026-11-22, revised the same day): primary Groq `openai/gpt-oss-120b` (reasoning low), fallback `gemini-3.6-flash` (thinking LOW). Versions are pinned, never `-latest`. Gemini was primary until Google's own 429 showed its free tier allows **20 requests a day** per project for this model, too few to record or re-run an eval suite (one recording pass is about 120 calls). Groq allows 1,000 requests and 200,000 tokens a day. A different-vendor fallback means one outage cannot take both down.
 
 **A request offers tools _or_ asks for a schema-shaped answer, never both.** Groq cannot combine structured outputs with tool use, and the split matches the agent's states: gather facts with tools, then decide with a schema.
 
 **Gemini 3 thought signatures.** In multi-turn tool use, Gemini requires its own previous parts back verbatim. Each response carries `providerState.raw`, which is replayed as is. A live tool round trip on both vendors verified it.
 
-**Failure handling.** Errors are classified (`rate_limited`, `unavailable`, `timeout`, `network`: retryable; `auth`, `billing`, `bad_request`, `blocked`, `bad_response`: not). Each provider gets at most 2 attempts, with backoff that honours `retry-after` (Groq sends it; Gemini does not), and then the router falls back. Gemini's 402 ("won't succeed until credits are added") is never retried. A Gemini answer emptied because thinking spent the output cap is an error, not an empty reply.
+**Failure handling.** A rate limit (429) is never retried: on the free tier it usually means the quota is spent, so the router falls back at once and skips that provider for 15 minutes (a circuit breaker). Other errors are classified (`rate_limited`, `unavailable`, `timeout`, `network`: retryable; `auth`, `billing`, `bad_request`, `blocked`, `bad_response`: not). Each provider gets at most 2 attempts, with backoff that honours `retry-after` (Groq sends it; Gemini does not), and then the router falls back. Gemini's 402 ("won't succeed until credits are added") is never retried. A Gemini answer emptied because thinking spent the output cap is an error, not an empty reply.
 
 **Free-tier guard: the owner's rule is never pay, never exhaust the quota.**
 
 - Only models in the priced, approved list (`RATES`) can be routed to, so a paid-only model is refused when the router is built.
 - Default mode `replay` never touches the network, so tests and CI cost nothing.
-- `UsageLedger`: daily call caps per provider, persisted in `.cache/usage/<date>.json` and shared across processes, set well below the free limits (Gemini 200, Groq 700 against 1,000). It also caps calls per process (150), enforces a minimum gap between calls, and keeps a tokens-per-minute window (Groq 6,000 against 8,000). Over a cap, the call is **refused before any request is sent**.
+- `UsageLedger`: daily call and token caps per provider, persisted in `.cache/usage/<date>.json` and shared across processes, set below the **measured** free limits (Gemini 18 calls against 20; Groq 700 calls against 1,000, and 180,000 tokens against 200,000). It also caps calls per process (150), enforces a minimum gap between calls, and keeps a tokens-per-minute window (Groq 6,000 against 8,000). Over a cap, the call is **refused before any request is sent**.
 - Low thinking and reasoning effort, and a response cache.
 
 **Record and replay.** Modes: `replay` (cassettes only; a miss throws with instructions), `record-missing` (the frugal default for recording: call only when no cassette exists), `record` (overwrite), `live` (through the cache, no cassettes). Cassettes are one JSON file per request in `evals/cassettes/`, committed, with keys, emails and phones redacted. Opaque vendor fields (`thoughtSignature`) are left byte-exact.
@@ -159,6 +159,20 @@ Below the confidence threshold (0.5 for now; Phase 8 sets it from data), an AUTO
 
 **Measured (first live run, 2026-11-22).** A sealed return returned AUTO_REPLY, valid first time: 3 model calls, 3 tool calls, 6,578 tokens, list price $0.0067. Recorded and committed; it replays with zero API calls.
 
+### 2.6 Eval harness (Phase 7)
+
+`pnpm eval` runs every case through the same path a real ticket takes: `runAgent` over a real MCP client, hybrid retrieval and the provider router. The harness supplies only the ticket, the tenant and the pinned date (`SEED_TODAY`). The poisoned-policy case gets its own in-memory database with the planted chunk scoped to its tenant, so no other case can retrieve it.
+
+**Three checks per run** (`evals/src/grade.ts`): the decision matches; grounding (every `must_cite` clause cited, no `must_not_cite`, nothing cited that `search_policy` did not return); the reply check (each required fact present in some wording, no forbidden wording). The judge model joins the reply check in Phase 9; until then the report says so on every scorecard.
+
+**Incomplete is not a score.** A run with no recording, or where every provider failed, is listed with its reason and excluded from every metric, and the CLI exits non-zero. A model mistake that a provider rejects (gpt-oss calling a non-existent `ESCALATE` tool, which Groq returns as a 400) currently lands here too, because the router cannot tell it from a bad request. Phase 8 decides whether that becomes an agent-level failure.
+
+**Metrics** (`metrics.ts`): pass rate overall and per group, decision accuracy, citation accuracy over AUTO_REPLY runs, escalation precision and recall, injection resistance (an adversarial case counts only if it held on every repeat), latency p50/p95 (recorded model latency plus tool time, never pacing waits), tokens, tool calls, repair rate, and list-price cost per 100 tickets. `evals/baseline.json` holds per-case pass rates; each run lists cases that improved or regressed against it.
+
+**Charts.** `scripts/report.py` recomputes the pass counts from the raw runs and refuses to draw if they disagree with the TypeScript scorecard; the cost chart colours each case by the model that answered it.
+
+**Recording reality.** One recording pass is about 3 model calls per case. Gemini 3.6 Flash's free tier turned out to allow 20 requests a day, so Groq became primary (§2.4); a 429 is never retried. Replay serves one recording per request, so the three repeats are identical in replay; true run-to-run variance needs per-repeat recordings (an open spec gap).
+
 ## 3. Trade-offs
 
 - Hand-written state machine vs a framework (and the LangGraph port): ADR 0001
@@ -199,5 +213,5 @@ Below the confidence threshold (0.5 for now; Phase 8 sets it from data), an AUTO
 - **Resolved: eligibility clause IDs are citable.** The validator accepts clause IDs from `search_policy` and `check_eligibility` alike (§2.5).
 - **Resolved: tenant-scoped retrieval.** `policy_chunks.tenant_id` (NULL = shared), filtered in keyword and vector search (§2.3).
 - **"Remote" delivery locations are undefined** in `delivery.estimates`, so the Guwahati case accepts either band. A policy edit could pin it down.
-- **Check retrieval with the agent's real queries (Phase 7).** ADR 0005 chose hybrid with cross-encoder on the assumption that the agent sends short, focused questions. If its queries look like raw tickets, vector-only is the measured fallback.
+- **Check retrieval with the agent's real queries (moved to Phase 8).** ADR 0005 chose hybrid with cross-encoder on the assumption that the agent sends short, focused questions. If its queries look like raw tickets, vector-only is the measured fallback.
 - **Phase 8 inputs from the first live run:** the reply invented a return step ("log into your account"; policy says support arranges pickup); the second gather turn often only says DONE (a third of the tokens); the confidence threshold is provisional.

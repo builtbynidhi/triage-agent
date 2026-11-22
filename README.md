@@ -21,18 +21,44 @@ It is **bounded**: a state machine with a step, tool-call and token budget; six 
 
 ## Status
 
-| Phase   | What                                                                                                  | Status  |
-| ------- | ----------------------------------------------------------------------------------------------------- | ------- |
-| 1       | SQLite schema, deterministic seed (2 merchants, 20 customers, 50 orders), 8 policy documents          | ✅      |
-| 2       | 40 eval cases, **written before the agent**: 15 normal, 15 edge, 10 adversarial                       | ✅      |
-| 3       | MCP server: 4 read-only tools, stdio and streamable HTTP, policies as resources                       | ✅      |
-| 4       | Hybrid retrieval: FTS5 + vector search, rank fusion, cross-encoder reranking                          | ✅      |
-| 5       | Provider router: Gemini → Groq fallback, retries, free-tier guard, record and replay, list-price cost | ✅      |
-| 6       | Agent core: bounded state machine through MCP, validator, one repair attempt, fail-closed ESCALATE    | ✅      |
-| 7       | Eval harness: run all 40 cases, record responses, first honest scorecard                              | next    |
-| 8 to 12 | Fixes, judge and adversarial hardening, API and approvals, UI and tracing, CI gate                    | planned |
+| Phase   | What                                                                                               | Status  |
+| ------- | -------------------------------------------------------------------------------------------------- | ------- |
+| 1       | SQLite schema, deterministic seed (2 merchants, 20 customers, 50 orders), 8 policy documents       | ✅      |
+| 2       | 40 eval cases, **written before the agent**: 15 normal, 15 edge, 10 adversarial                    | ✅      |
+| 3       | MCP server: 4 read-only tools, stdio and streamable HTTP, policies as resources                    | ✅      |
+| 4       | Hybrid retrieval: FTS5 + vector search, rank fusion, cross-encoder reranking                       | ✅      |
+| 5       | Provider router: Groq → Gemini fallback, free-tier guard, circuit breaker, record and replay, cost | ✅      |
+| 6       | Agent core: bounded state machine through MCP, validator, one repair attempt, fail-closed ESCALATE | ✅      |
+| 7       | Eval harness: run all 40 cases, record responses, first honest scorecard                           | ✅      |
+| 8 to 12 | Fixes, judge and adversarial hardening, API and approvals, UI and tracing, CI gate                 | planned |
 
 ## Measured so far
+
+**First eval scorecard** (Phase 7, untuned; full report: [evals/report/report.md](evals/report/report.md)). 39 of 40 cases × 3 repeats, replayed from recordings:
+
+| Metric                       | Result                                                |
+| ---------------------------- | ----------------------------------------------------- |
+| Pass rate                    | **64.1%** (75/117)                                    |
+| normal / edge / adversarial  | 42.9% / 66.7% / 90%                                   |
+| Decision accuracy            | 87.2%                                                 |
+| Citation accuracy            | 90% (of AUTO_REPLY runs)                              |
+| Escalation precision, recall | 87.5%, 87.5%                                          |
+| Injection resistance         | 9/10 adversarial cases held on every repeat           |
+| p50 / p95 latency            | 8.6 s / 76.8 s                                        |
+| Cost per 100 tickets         | $0.16 at list price (actual: $0, free tiers)          |
+| Judge agreement              | not measured yet (the judge model arrives in Phase 9) |
+
+![Pass rate by group](docs/images/pass-rate.png)
+
+What the score means, honestly:
+
+- **The judge is not run yet**, so the reply check is phrases only. The pass rate will move when it arrives.
+- **Normal tickets score lowest.** Mostly the replies leave out a required fact (the return window, the pickup step) or skip a required clause. Phase 8 works through these failures.
+- **One case is not scored** (`damaged-item-safety-hazard`): on that ticket gpt-oss-120b tries to call a tool named `ESCALATE` that does not exist, Groq rejects the request, and Gemini's free quota was spent for the day. It is reported as incomplete, not counted as a pass or a fail.
+- **Mostly one model.** gpt-oss-120b (Groq) answered 34 of the 39 scored cases, Gemini 3.6 Flash the other 5, from the first recording run before Groq became primary. Those five also drive the p95 latency and the higher cost bars below.
+- In replay, all three repeats of a case serve the same recording, so repeats test the pipeline, not model variance.
+
+![Cost per run](docs/images/cost-per-run.png)
 
 **Policy retrieval** (from [docs/retrieval.md](docs/retrieval.md)): is the correct policy clause in the top 4 results?
 
@@ -53,7 +79,7 @@ Hybrid wins on focused questions and loses to vector-only on raw tickets, so the
 - **PII is masked at the tool boundary**, so a full email or phone number never enters a prompt. ([ADR 0003](docs/adr/0003-pii-at-the-boundary.md))
 - **One structured error shape** (`{ ok, code, message, retryable }`), so the agent branches on codes, never on prose.
 - **Local models, zero cost.** Embeddings and reranking run on the CPU via ONNX.
-- **Model calls on free tiers only, and never wasted.** A router sends calls to Gemini and falls back to Groq. Daily caps are set below the free limits and enforced before any request is sent. Responses are recorded once and replayed, so tests and CI never call an API and need no keys.
+- **Model calls on free tiers only, and never wasted.** A router sends calls to Groq (gpt-oss-120b) and falls back to Gemini. Daily caps are set below the free limits and enforced before any request is sent. Responses are recorded once and replayed, so tests and CI never call an API and need no keys.
 
 Design, with the trade-offs: [DESIGN.md](DESIGN.md).
 
@@ -67,7 +93,8 @@ pnpm db:reset && pnpm db:seed   # SQLite database with the seeded merchants and 
 pnpm db:index                   # one-time ~60 MB local model download, builds the vector index
 pnpm test
 pnpm eval:retrieval             # re-measures retrieval and rewrites docs/retrieval.md
-pnpm agent:run --ticket "I got the blender on 18 Nov and it's still sealed. Can I return it? Order A-10410"
+pnpm eval                       # the scorecard: all 40 cases × 3, replayed (no keys, no calls)
+pnpm agent:run --ticket "got my blender on 13th nov, still sealed, want to return it. order A-10413"
                                 # runs the agent on a recorded ticket: no API keys, no calls
 ```
 
@@ -77,8 +104,9 @@ The MCP server works in any MCP client. Setup (one server per merchant): [packag
 
 ## What does not work yet
 
-- **There is no pass rate yet.** The 40 eval cases exist, but nothing runs them until Phase 7. The scorecard will be published here, including failures.
-- **The retrieval choice is unconfirmed.** It assumes the agent will search with short, focused questions. Phase 7 checks that against the agent's real queries.
+- **The agent is untuned.** The first score is 64.1%; Phase 8 fixes the failures above without editing the cases.
+- **No judge yet** (Phase 9), so reply quality is checked by required phrases only.
+- **The retrieval choice is unconfirmed.** It assumes the agent searches with short, focused questions; Phase 8 checks that against the agent's real queries.
 - **No API, UI or live demo yet** (Phases 10 and 11).
 
 ## Built with Claude Code
