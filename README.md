@@ -4,7 +4,7 @@ A bounded AI agent that triages customer-support tickets, drafts policy-grounded
 
 [![CI](https://github.com/builtbynidhi/triage-agent/actions/workflows/ci.yml/badge.svg)](https://github.com/builtbynidhi/triage-agent/actions/workflows/ci.yml)
 
-> **Work in progress.** Phases 1 to 5 of 12 are done: data, the 40-case eval suite, the MCP tool server, hybrid retrieval, and the model provider router. The agent itself and its scorecard come next. Every number on this page was measured; none is a target or an estimate.
+> **Work in progress.** Phases 1 to 6 of 12 are done: data, the 40-case eval suite, the MCP tool server, hybrid retrieval, the model provider router, and the agent itself. Its scorecard comes next. Every number on this page was measured; none is a target or an estimate.
 
 ## What it will do
 
@@ -28,8 +28,9 @@ It is **bounded**: a state machine with a step, tool-call and token budget; six 
 | 3       | MCP server: 4 read-only tools, stdio and streamable HTTP, policies as resources                       | ✅      |
 | 4       | Hybrid retrieval: FTS5 + vector search, rank fusion, cross-encoder reranking                          | ✅      |
 | 5       | Provider router: Gemini → Groq fallback, retries, free-tier guard, record and replay, list-price cost | ✅      |
-| 6       | Agent core: bounded state machine, validator, one repair attempt                                      | next    |
-| 7 to 12 | Eval harness, fixes, judge and adversarial hardening, API and approvals, UI and tracing, CI gate      | planned |
+| 6       | Agent core: bounded state machine through MCP, validator, one repair attempt, fail-closed ESCALATE    | ✅      |
+| 7       | Eval harness: run all 40 cases, record responses, first honest scorecard                              | next    |
+| 8 to 12 | Fixes, judge and adversarial hardening, API and approvals, UI and tracing, CI gate                    | planned |
 
 ## Measured so far
 
@@ -66,6 +67,8 @@ pnpm db:reset && pnpm db:seed   # SQLite database with the seeded merchants and 
 pnpm db:index                   # one-time ~60 MB local model download, builds the vector index
 pnpm test
 pnpm eval:retrieval             # re-measures retrieval and rewrites docs/retrieval.md
+pnpm agent:run --ticket "I got the blender on 18 Nov and it's still sealed. Can I return it? Order A-10410"
+                                # runs the agent on a recorded ticket: no API keys, no calls
 ```
 
 ## Use the tools from Claude Desktop or Claude Code
@@ -74,7 +77,6 @@ The MCP server works in any MCP client. Setup (one server per merchant): [packag
 
 ## What does not work yet
 
-- **There is no agent yet** (Phase 6). The tools, data and eval cases it will use are built and tested.
 - **There is no pass rate yet.** The 40 eval cases exist, but nothing runs them until Phase 7. The scorecard will be published here, including failures.
 - **The retrieval choice is unconfirmed.** It assumes the agent will search with short, focused questions. Phase 7 checks that against the agent's real queries.
 - **No API, UI or live demo yet** (Phases 10 and 11).

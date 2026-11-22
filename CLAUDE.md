@@ -132,3 +132,12 @@ Prompt structure: role, rules and schema in the system prompt (a versioned file)
 - **Changing an adapter's request mapping? Bump its `*_ADAPTER_VERSION`.** It is part of every request key, so stale cache entries and cassettes stop matching instead of being served.
 - Tests never touch the network: they use `fakeFetch` and `fakeClock` from `src/test-helpers.ts`.
 - Phase 5 live verification used 7 calls; together with 5 earlier smoke tests, the phase used 12 free calls in total.
+
+## Agent (Phase 6)
+
+- Code: `packages/agent`. State machine `src/machine.ts` (ADR 0001), validator `src/validate.ts`, contract `src/decision.ts` (the eval case schema imports its lists), prompt `src/prompts/system.v1.md`.
+- **The prompt is versioned.** Change behaviour with a new file (`system.v2.md`) and update `PROMPT_FILE`; every run records the version and hash. Never put eval fixture IDs or case-specific answers in the prompt (a test caught `A-10413` there once).
+- A step is a model call or a tool call (8 max; tool calls 6 max; 24k tokens). Gather is at most 2 model turns; then one decide turn and at most one repair.
+- Every non-decided outcome is ESCALATE with the gathered facts, except a CassetteMissError, which must propagate.
+- `pnpm agent:run --ticket "..."` replays by default. Record a new ticket once with `--mode record-missing`, which costs about 3 to 4 free calls; say so before running it. `--demo` uses `data/demo.db` and today's date.
+- Tests use `scriptedRouter` and real MCP tools (`src/test-helpers.ts`), with no network.

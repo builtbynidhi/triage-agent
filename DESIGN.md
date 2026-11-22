@@ -128,9 +128,40 @@ Three thin layers and one cross-cutting band.
 
 **Cost.** `listPriceUsd` = tokens × the paid list price in force on the day (dated entries: Gemini 3.6 Flash doubles on 2027-01-01). Thinking is billed as output. An unknown model throws rather than counting as $0. Actual spend on the free tiers is $0, and reports must say "at list price".
 
+### 2.5 packages/agent (Phase 6)
+
+**Shape.** `runAgent()` in `src/machine.ts` is the state machine in ADR 0001. It takes a ticket, an MCP tool connection (`connectTools`: the agent's only route to data), a router, and today's date. It returns the decision, the proposed write (`send_reply` or `create_escalation`, or none for REJECT), the exit (`decided`, `budget`, `validation_failed` or `provider_error`), and a step record.
+
+**Model turns.**
+
+- **Gather:** up to 2 turns with the read-only MCP tools offered and no schema. Tool results go back as tool messages.
+- **Decide:** one turn with the decision JSON Schema and no tools. Groq cannot combine the two, and Gemini rejects tool history without its own thought signatures; the router falls back on that 400.
+- **Repair:** at most one, shown the rule violations.
+
+**The ticket block.** The ticket travels in its own user message, in a block whose boundary is a hash of the ticket's full text, so text inside cannot close it early. That is deterministic, so a recorded run replays exactly. Merchant name, date and channel sit outside the block.
+
+**Validator** (`src/validate.ts`). These run beyond the schema:
+
+- every clause_id must come from a tool this run, `search_policy` or `check_eligibility`;
+- AUTO_REPLY needs a clause (intent `acknowledgement` is exempt) and a reply;
+- NEEDS_INFO asks for its missing fields and no others, checked on the reply's question sentences;
+- ESCALATE needs a reason;
+- REJECT drafts no reply;
+- a reply never contains a full email address or phone number.
+
+Below the confidence threshold (0.5 for now; Phase 8 sets it from data), an AUTO_REPLY is downgraded to ESCALATE.
+
+**Fail closed.** Budget exhausted, provider outage, or invalid twice: the decision becomes ESCALATE, with the gathered facts in the escalation proposal. A missing recording in replay is _not_ turned into a decision; it propagates as an error, so a harness gap can never look like an escalation in the scorecard.
+
+**Decision contract.** `DECISIONS`, `INTENTS` and `MISSING_FIELDS` live in `src/decision.ts`; the eval case schema imports them. Text fields are strings ("" when unused), never nullable, so one strict JSON Schema works on both providers.
+
+**Step record.** One entry per transition, model call (provider, model, source, tokens, list price, latency, and pacing wait kept separate), tool call (arguments and the structured result), and validation. It never includes the full prompt; it does include the prompt version and content hash.
+
+**Measured (first live run, 2026-11-22).** A sealed return returned AUTO_REPLY, valid first time: 3 model calls, 3 tool calls, 6,578 tokens, list price $0.0067. Recorded and committed; it replays with zero API calls.
+
 ## 3. Trade-offs
 
-- Hand-written state machine vs a framework (and the LangGraph port)
+- Hand-written state machine vs a framework (and the LangGraph port): ADR 0001
 - Eligibility as code, not a model call: ADR 0004
 - PII masked at the tool boundary: ADR 0003
 - Tools behind an MCP server: ADR 0002
@@ -165,7 +196,8 @@ Three thin layers and one cross-cutting band.
 - **Resolved: a thank-you needs no action.** It is AUTO_REPLY with intent `acknowledgement`, the one intent exempt from the clause-citation rule (see CLAUDE.md, "Decisions on the decision contract").
 - **Resolved: address changes and cancellations escalate,** because no tool performs them (see CLAUDE.md, "Decisions on the decision contract").
 - **Resolved: repeats in replay mode.** One recording per request (owner's choice: minimal API use); CI repeats replay identically, and flakiness is measured only by a budgeted live run (§2.4).
-- **Eligibility clause IDs and the citation rule (Phase 6).** The validator fails any cited clause not returned by `search_policy` this run. `check_eligibility` also returns authoritative clause IDs the reply must cite, so the validator should accept those too. Otherwise a correct reply could fail validation.
+- **Resolved: eligibility clause IDs are citable.** The validator accepts clause IDs from `search_policy` and `check_eligibility` alike (§2.5).
 - **Resolved: tenant-scoped retrieval.** `policy_chunks.tenant_id` (NULL = shared), filtered in keyword and vector search (§2.3).
 - **"Remote" delivery locations are undefined** in `delivery.estimates`, so the Guwahati case accepts either band. A policy edit could pin it down.
 - **Check retrieval with the agent's real queries (Phase 7).** ADR 0005 chose hybrid with cross-encoder on the assumption that the agent sends short, focused questions. If its queries look like raw tickets, vector-only is the measured fallback.
+- **Phase 8 inputs from the first live run:** the reply invented a return step ("log into your account"; policy says support arranges pickup); the second gather turn often only says DONE (a third of the tokens); the confidence threshold is provisional.
