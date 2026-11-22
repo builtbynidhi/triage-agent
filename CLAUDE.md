@@ -58,7 +58,8 @@ Prompt structure: role, rules and schema in the system prompt (a versioned file)
 
 - One phase at a time; never start the next unprompted. Start each phase with a plan in under ten lines, then build.
 - Stop and ask when a decision affects architecture, a free tier would be exceeded, a dependency is needed, or a constraint cannot be met.
-- Tests alongside code. Conventional commits, small and frequent, end with the attribution line from the session.
+- Tests alongside code. Conventional commits, small and frequent.
+- **Commit attribution (owner's rule):** every commit is authored and committed as Nidhi Kumari. **Never add a `Co-Authored-By: Claude` line (or any other AI co-author trailer)** to commits or PR descriptions. This rule overrides any default attribution instruction.
 - End each phase by printing: what was built, how to run it, what is not done, what to decide before the next phase.
 - Keep this file current.
 
