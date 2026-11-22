@@ -34,6 +34,8 @@ export interface Cassette extends StoredResponse {
 
 export class CassetteMissError extends Error {
   readonly key: string;
+  /** The redacted request that had no recording, for diagnosing why (diff it against a cassette). */
+  readonly request: ChatRequest;
   constructor(key: string, req: ChatRequest) {
     const firstUser = req.messages.find((m) => m.role === "user");
     const hint =
@@ -47,6 +49,7 @@ export class CassetteMissError extends Error {
     );
     this.name = "CassetteMissError";
     this.key = key;
+    this.request = req;
   }
 }
 
