@@ -101,6 +101,33 @@ Three thin layers and one cross-cutting band.
 
 **Measured, not assumed.** `pnpm eval:retrieval` measures 13 configurations on 27 eval-derived and 32 held-out questions, and writes `docs/retrieval.md`. `evals/src/retrieval.test.ts` is a regression gate on the production configuration with the real models. Headline: hybrid with cross-encoder is best on short questions (96.9% hit@4), while vector-only is best on raw tickets (70.4%). That is why the `search_policy` description asks the agent for one short question per call.
 
+### 2.4 Provider router (Phase 5)
+
+**One interface, two vendors.** `ChatRequest` / `ChatResponse` in `packages/providers` are provider-neutral. Adapters translate to raw REST: Gemini `generateContent` and Groq's OpenAI-compatible chat completions, with no SDK and no new dependency. Field names were checked against the vendors' docs **and** a live call, because the docs contradicted themselves (for example `responseJsonSchema` vs `responseFormat.text.schema`).
+
+**Route** (decided 2026-11-22): primary `gemini-3.6-flash` (thinking LOW), fallback Groq `openai/gpt-oss-120b` (reasoning low). Versions are pinned, never `-latest`. `gemini-3.5-flash` was the first choice, but it is absent from Google's current price list, and `gemini-3.8-flash` returned 503 "high demand" on the free tier during selection. A different-vendor fallback means one outage cannot take both down.
+
+**A request offers tools _or_ asks for a schema-shaped answer, never both.** Groq cannot combine structured outputs with tool use, and the split matches the agent's states: gather facts with tools, then decide with a schema.
+
+**Gemini 3 thought signatures.** In multi-turn tool use, Gemini requires its own previous parts back verbatim. Each response carries `providerState.raw`, which is replayed as is. A live tool round trip on both vendors verified it.
+
+**Failure handling.** Errors are classified (`rate_limited`, `unavailable`, `timeout`, `network`: retryable; `auth`, `billing`, `bad_request`, `blocked`, `bad_response`: not). Each provider gets at most 2 attempts, with backoff that honours `retry-after` (Groq sends it; Gemini does not), and then the router falls back. Gemini's 402 ("won't succeed until credits are added") is never retried. A Gemini answer emptied because thinking spent the output cap is an error, not an empty reply.
+
+**Free-tier guard: the owner's rule is never pay, never exhaust the quota.**
+
+- Only models in the priced, approved list (`RATES`) can be routed to, so a paid-only model is refused when the router is built.
+- Default mode `replay` never touches the network, so tests and CI cost nothing.
+- `UsageLedger`: daily call caps per provider, persisted in `.cache/usage/<date>.json` and shared across processes, set well below the free limits (Gemini 200, Groq 700 against 1,000). It also caps calls per process (150), enforces a minimum gap between calls, and keeps a tokens-per-minute window (Groq 6,000 against 8,000). Over a cap, the call is **refused before any request is sent**.
+- Low thinking and reasoning effort, and a response cache.
+
+**Record and replay.** Modes: `replay` (cassettes only; a miss throws with instructions), `record-missing` (the frugal default for recording: call only when no cassette exists), `record` (overwrite), `live` (through the cache, no cassettes). Cassettes are one JSON file per request in `evals/cassettes/`, committed, with keys, emails and phones redacted. Opaque vendor fields (`thoughtSignature`) are left byte-exact.
+
+**Keys are stable across record and replay.** The key is the sha256 of canonical JSON of {route, _redacted_ request}. A recording run returns the redacted answer it stored, so the next turn's request is identical whether it was recorded or replayed (tested on a two-turn tool conversation). Each adapter has a version number inside the route, so changing how a request is mapped invalidates old recordings instead of serving them. The live check found exactly that gap.
+
+**One recording per request.** The repeat number is not part of the key, which is the owner's choice for minimal API use. In replay, the eval's 3 repeats return the same answer, so CI measures correctness but not run-to-run variation. Flakiness has to be measured by a deliberate, budgeted live run (Phase 12's nightly job), not by CI.
+
+**Cost.** `listPriceUsd` = tokens × the paid list price in force on the day (dated entries: Gemini 3.6 Flash doubles on 2027-01-01). Thinking is billed as output. An unknown model throws rather than counting as $0. Actual spend on the free tiers is $0, and reports must say "at list price".
+
 ## 3. Trade-offs
 
 - Hand-written state machine vs a framework (and the LangGraph port)
@@ -137,7 +164,7 @@ Three thin layers and one cross-cutting band.
 
 - **Resolved: a thank-you needs no action.** It is AUTO_REPLY with intent `acknowledgement`, the one intent exempt from the clause-citation rule (see CLAUDE.md, "Decisions on the decision contract").
 - **Resolved: address changes and cancellations escalate,** because no tool performs them (see CLAUDE.md, "Decisions on the decision contract").
-- **Repeats in replay mode.** Cassettes are keyed by request hash, so 3 repeats replay the same response. Decide in Phase 5 whether the repeat index belongs in the key.
+- **Resolved: repeats in replay mode.** One recording per request (owner's choice: minimal API use); CI repeats replay identically, and flakiness is measured only by a budgeted live run (§2.4).
 - **Eligibility clause IDs and the citation rule (Phase 6).** The validator fails any cited clause not returned by `search_policy` this run. `check_eligibility` also returns authoritative clause IDs the reply must cite, so the validator should accept those too. Otherwise a correct reply could fail validation.
 - **Resolved: tenant-scoped retrieval.** `policy_chunks.tenant_id` (NULL = shared), filtered in keyword and vector search (§2.3).
 - **"Remote" delivery locations are undefined** in `delivery.estimates`, so the Guwahati case accepts either band. A policy edit could pin it down.

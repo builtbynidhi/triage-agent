@@ -4,7 +4,7 @@ A bounded AI agent that triages customer-support tickets, drafts policy-grounded
 
 [![CI](https://github.com/builtbynidhi/triage-agent/actions/workflows/ci.yml/badge.svg)](https://github.com/builtbynidhi/triage-agent/actions/workflows/ci.yml)
 
-> **Work in progress.** Phases 1 to 4 of 12 are done: data, the 40-case eval suite, the MCP tool server, and hybrid retrieval. The agent itself and its scorecard come next. Every number on this page was measured; none is a target or an estimate.
+> **Work in progress.** Phases 1 to 5 of 12 are done: data, the 40-case eval suite, the MCP tool server, hybrid retrieval, and the model provider router. The agent itself and its scorecard come next. Every number on this page was measured; none is a target or an estimate.
 
 ## What it will do
 
@@ -21,14 +21,15 @@ It is **bounded**: a state machine with a step, tool-call and token budget; six 
 
 ## Status
 
-| Phase   | What                                                                                                         | Status  |
-| ------- | ------------------------------------------------------------------------------------------------------------ | ------- |
-| 1       | SQLite schema, deterministic seed (2 merchants, 20 customers, 50 orders), 8 policy documents                 | ✅      |
-| 2       | 40 eval cases, **written before the agent**: 15 normal, 15 edge, 10 adversarial                              | ✅      |
-| 3       | MCP server: 4 read-only tools, stdio and streamable HTTP, policies as resources                              | ✅      |
-| 4       | Hybrid retrieval: FTS5 + vector search, rank fusion, cross-encoder reranking                                 | ✅      |
-| 5       | Provider router: Gemini and Groq free tiers, fallback, record and replay                                     | next    |
-| 6 to 12 | Agent core, eval harness, fixes, judge and adversarial hardening, API and approvals, UI and tracing, CI gate | planned |
+| Phase   | What                                                                                                  | Status  |
+| ------- | ----------------------------------------------------------------------------------------------------- | ------- |
+| 1       | SQLite schema, deterministic seed (2 merchants, 20 customers, 50 orders), 8 policy documents          | ✅      |
+| 2       | 40 eval cases, **written before the agent**: 15 normal, 15 edge, 10 adversarial                       | ✅      |
+| 3       | MCP server: 4 read-only tools, stdio and streamable HTTP, policies as resources                       | ✅      |
+| 4       | Hybrid retrieval: FTS5 + vector search, rank fusion, cross-encoder reranking                          | ✅      |
+| 5       | Provider router: Gemini → Groq fallback, retries, free-tier guard, record and replay, list-price cost | ✅      |
+| 6       | Agent core: bounded state machine, validator, one repair attempt                                      | next    |
+| 7 to 12 | Eval harness, fixes, judge and adversarial hardening, API and approvals, UI and tracing, CI gate      | planned |
 
 ## Measured so far
 
@@ -50,7 +51,8 @@ Hybrid wins on focused questions and loses to vector-only on raw tickets, so the
 - **Eligibility is code, not a model.** Return and refund windows are date arithmetic, tested at day 7 and day 8. ([ADR 0004](docs/adr/0004-eligibility-is-code.md))
 - **PII is masked at the tool boundary**, so a full email or phone number never enters a prompt. ([ADR 0003](docs/adr/0003-pii-at-the-boundary.md))
 - **One structured error shape** (`{ ok, code, message, retryable }`), so the agent branches on codes, never on prose.
-- **Local models, zero cost.** Embeddings and reranking run on the CPU via ONNX. No API keys are needed for anything built so far.
+- **Local models, zero cost.** Embeddings and reranking run on the CPU via ONNX.
+- **Model calls on free tiers only, and never wasted.** A router sends calls to Gemini and falls back to Groq. Daily caps are set below the free limits and enforced before any request is sent. Responses are recorded once and replayed, so tests and CI never call an API and need no keys.
 
 Design, with the trade-offs: [DESIGN.md](DESIGN.md).
 

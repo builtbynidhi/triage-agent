@@ -121,3 +121,13 @@ Prompt structure: role, rules and schema in the system prompt (a versioned file)
 - `data/triage.db` (`pnpm db:seed`) is anchored to `SEED_TODAY` (2026-11-20). Tests and evals use it, and pin `today` to that date so answers never drift.
 - `data/demo.db` (`pnpm db:demo`) is seeded relative to the **real** today in India, for live clients such as Claude Desktop. Its servers set **no** `TRIAGE_TODAY`. Pinning the date in a live client makes the tools contradict the client's calendar. Claude Desktop caught exactly that on 2026-11-22 and flagged the eligibility tool as "using the wrong date".
 - `seed(db, { today })` shifts every seeded date by the same amount, so ages and window boundaries are identical whatever the anchor (A-10413 is always day 7, A-10414 day 8).
+
+## Model providers (Phase 5)
+
+- Code: `packages/providers`. Use `createDefaultRouter()`, never an adapter directly. Route: `PRIMARY` gemini-3.6-flash, then `FALLBACK` Groq gpt-oss-120b (`src/index.ts`); see DESIGN.md §2.4.
+- **The owner's rule: never pay, never exhaust the free tiers.** Do not add a model that is not in `RATES` (the router refuses it anyway). Never raise the caps in `DEFAULT_LIMITS` above the free limits. Never run `record` (overwrite) when `record-missing` will do. Before any live run, say how many calls it will make. Check today's usage in `.cache/usage/<date>.json`.
+- `PROVIDER_MODE`: `replay` (default; tests and CI), `record-missing`, `record`, `live`. A cassette miss in replay is an error, never a silent live call.
+- A request has `tools` or `responseSchema`, not both.
+- **Changing an adapter's request mapping? Bump its `*_ADAPTER_VERSION`.** It is part of every request key, so stale cache entries and cassettes stop matching instead of being served.
+- Tests never touch the network: they use `fakeFetch` and `fakeClock` from `src/test-helpers.ts`.
+- Phase 5 live verification used 7 calls; together with 5 earlier smoke tests, the phase used 12 free calls in total.
