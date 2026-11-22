@@ -82,6 +82,8 @@ export interface Attempt {
   ok: boolean;
   status?: number;
   code?: string;
+  /** The provider's error message for a failed attempt (truncated), for diagnosis. */
+  message?: string;
   ms: number;
 }
 

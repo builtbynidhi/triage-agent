@@ -178,6 +178,7 @@ export function createRouter(opts: RouterOptions): Router {
             ok: false,
             status: pe?.status,
             code: pe?.code ?? "unknown",
+            message: (err as Error)?.message?.slice(0, 300),
             ms: clock.now() - started,
           });
           if (pe?.code === "rate_limited") {
@@ -194,8 +195,12 @@ export function createRouter(opts: RouterOptions): Router {
     const summary =
       attempts.map((a) => `${a.provider}:${a.ok ? "ok" : (a.code ?? "error")}`).join(", ") ||
       "no attempt made";
+    // Every attempt's own message, not just the last one: the last is often a mere cap notice
+    // that hides the real cause (a provider rejecting the model's output, say).
+    const details = attempts.filter((a) => a.message).map((a) => `[${a.provider}] ${a.message}`);
+    const finalNote = (lastError as Error)?.message ?? "unknown";
     const error = new Error(
-      `All providers failed (${summary}): ${(lastError as Error)?.message ?? "unknown"}`,
+      `All providers failed (${summary}): ${[...details, ...(details.some((d) => d.endsWith(finalNote)) ? [] : [finalNote])].join(" | ")}`,
     );
     (error as Error & { attempts: Attempt[] }).attempts = attempts;
     throw error;

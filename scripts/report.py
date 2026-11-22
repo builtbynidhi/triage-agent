@@ -18,6 +18,7 @@ import matplotlib
 
 matplotlib.use("Agg")  # files only, no display
 import matplotlib.pyplot as plt  # noqa: E402
+from matplotlib.patches import Patch  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 REPORT = ROOT / "evals" / "report" / "report.json"
@@ -68,13 +69,24 @@ def chart_pass_rate(counts: dict, meta: dict) -> Path:
 
 def chart_cost(report: dict) -> Path:
     per_case: dict[str, list[float]] = defaultdict(list)
+    answered_by: dict[str, str] = {}
     for run in report["runs"]:
         if run["complete"] and run.get("listPriceUsd") is not None:
             per_case[run["caseId"]].append(run["listPriceUsd"])
+            # The model that produced the decision: the last provider the run used.
+            answered_by[run["caseId"]] = (run.get("providers") or ["unknown"])[-1].split("/")[0]
     cases = list(per_case)
     costs = [1000 * sum(v) / len(v) for v in per_case.values()]  # USD per 1000 runs = milli-dollars per run
+    palette = {"groq": "#55A868", "gemini": "#C44E52"}
+    colors = [palette.get(answered_by[c], "#8C8C8C") for c in cases]
     fig, ax = plt.subplots(figsize=(8, 3.4), dpi=150)
-    ax.bar(range(len(cases)), costs, color="#55A868")
+    ax.bar(range(len(cases)), costs, color=colors)
+    handles = [
+        Patch(color=color, label=f"answered by {name} ({n})")
+        for name, color in palette.items()
+        if (n := sum(1 for c in cases if answered_by[c] == name))
+    ]
+    ax.legend(handles=handles, fontsize=8, frameon=False, loc="upper right")
     if costs:
         mean = sum(costs) / len(costs)
         ax.axhline(mean, color="#222222", linewidth=1, linestyle="--")
