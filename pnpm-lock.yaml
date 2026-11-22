@@ -34,6 +34,9 @@ importers:
 
   evals:
     dependencies:
+      '@triage/agent':
+        specifier: workspace:*
+        version: link:../packages/agent
       '@triage/data':
         specifier: workspace:*
         version: link:../packages/data
@@ -48,7 +51,23 @@ importers:
         specifier: ^8.20.0
         version: 8.20.0
 
-  packages/agent: {}
+  packages/agent:
+    dependencies:
+      '@modelcontextprotocol/client':
+        specifier: ^2.4.0
+        version: 2.4.0
+      '@triage/data':
+        specifier: workspace:*
+        version: link:../data
+      '@triage/mcp-server':
+        specifier: workspace:*
+        version: link:../mcp-server
+      '@triage/providers':
+        specifier: workspace:*
+        version: link:../providers
+      zod:
+        specifier: ^4.6.7
+        version: 4.6.7
 
   packages/data:
     dependencies:

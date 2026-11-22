@@ -89,6 +89,7 @@ export function createRouter(opts: RouterOptions): Router {
     source: ChatResponse["source"],
     ms: number,
     attempts: Attempt[],
+    waitMs = 0,
   ): ChatResponse => ({
     ...stored.result,
     provider: stored.provider,
@@ -96,19 +97,23 @@ export function createRouter(opts: RouterOptions): Router {
     source,
     key,
     listPriceUsd: listPriceUsd(stored.provider, stored.model, stored.result.usage, priceDate()),
-    latencyMs: Math.round(ms),
+    latencyMs: Math.round(ms - waitMs),
+    waitMs: Math.round(waitMs),
     attempts,
   });
 
   async function callLive(
     req: ChatRequest,
-  ): Promise<{ stored: StoredResponse; attempts: Attempt[] }> {
+  ): Promise<{ stored: StoredResponse; attempts: Attempt[]; waitMs: number }> {
+    let waitMs = 0; // time spent in our own pacing, reported apart from model latency
     const attempts: Attempt[] = [];
     let lastError: unknown;
     for (const provider of opts.providers) {
       for (let attempt = 1; attempt <= maxAttempts; attempt++) {
         try {
+          const w0 = clock.now();
           await opts.ledger!.acquire(provider.id, estimateTokens(req));
+          waitMs += clock.now() - w0;
         } catch (err) {
           if (err instanceof BudgetExceededError) {
             lastError = err;
@@ -131,7 +136,11 @@ export function createRouter(opts: RouterOptions): Router {
             ok: true,
             ms: clock.now() - started,
           });
-          return { stored: { provider: provider.id, model: provider.model, result }, attempts };
+          return {
+            stored: { provider: provider.id, model: provider.model, result },
+            attempts,
+            waitMs,
+          };
         } catch (err) {
           stats.liveCalls++;
           lastError = err;
@@ -183,7 +192,7 @@ export function createRouter(opts: RouterOptions): Router {
         }
       }
 
-      const { stored, attempts } = await callLive(req);
+      const { stored, attempts, waitMs } = await callLive(req);
       if (opts.mode === "record" || opts.mode === "record-missing") {
         // Return exactly what was stored, so the rest of this run matches a later replay.
         const redacted = redactDeep(stored);
@@ -194,10 +203,10 @@ export function createRouter(opts: RouterOptions): Router {
           request: redactDeep(req),
           ...redacted,
         });
-        return finish(key, redacted, "live", clock.now() - t0, attempts);
+        return finish(key, redacted, "live", clock.now() - t0, attempts, waitMs);
       }
       opts.cache?.set(key, stored);
-      return finish(key, stored, "live", clock.now() - t0, attempts);
+      return finish(key, stored, "live", clock.now() - t0, attempts, waitMs);
     },
     stats: () => ({ ...stats }),
   };

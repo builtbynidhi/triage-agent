@@ -95,7 +95,10 @@ export interface ChatResponse extends ProviderResult {
   key: string;
   /** Equivalent cost at the model's paid list price; actual spend on the free tier is $0. */
   listPriceUsd: number;
+  /** Time the provider(s) took, retries and backoff included, but NOT our own pacing wait. */
   latencyMs: number;
+  /** Time spent waiting on the free-tier pacing (UsageLedger) before calling. Never model latency. */
+  waitMs: number;
   attempts: Attempt[];
 }
 

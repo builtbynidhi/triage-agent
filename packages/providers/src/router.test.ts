@@ -41,13 +41,14 @@ function setup(
     mode?: ProviderMode;
     primary?: Parameters<typeof fakeFetch>[0];
     fallback?: Parameters<typeof fakeFetch>[0];
+    clock?: ReturnType<typeof fakeClock>;
     maxAttempts?: number;
     ledger?: ReturnType<typeof createLedger>;
   } = {},
 ) {
   const gemini = fakeFetch(opts.primary ?? [{ body: geminiOk("from gemini") }]);
   const groq = fakeFetch(opts.fallback ?? [{ body: groqOk("from groq") }]);
-  const clock = fakeClock();
+  const clock = opts.clock ?? fakeClock();
   const cassettes = createMemoryCassetteStore();
   const router = createRouter({
     providers: [
@@ -140,6 +141,23 @@ describe("fallback and bounded retry", () => {
       expect(groq.calls).toHaveLength(1);
       expect(r.provider).toBe("groq");
     }
+  });
+
+  it("falls back when Gemini rejects tool history without thought signatures (400)", async () => {
+    // Measured live: after a Groq-answered tool turn, Gemini refuses the next call with
+    // "Function call is missing a thought_signature" (400). Not retryable, but the fallback can serve it.
+    const { router, gemini, groq } = setup({
+      primary: [
+        {
+          status: 400,
+          body: { error: { message: "Function call is missing a thought_signature" } },
+        },
+      ],
+    });
+    const r = await router.complete(req());
+    expect(gemini.calls).toHaveLength(1);
+    expect(groq.calls).toHaveLength(1);
+    expect(r.provider).toBe("groq");
   });
 
   it("when every provider fails, throws with every attempt listed", async () => {
@@ -359,6 +377,21 @@ describe("free-tier guard", () => {
     await ledger.acquire("groq", 800); // gap first (3s), then the window is full: wait out the minute
     expect(clock.slept[0]).toBe(3000);
     expect(clock.slept.reduce((a, b) => a + b, 0)).toBeGreaterThanOrEqual(60_000);
+  });
+
+  it("reports pacing wait separately from model latency", async () => {
+    const clock = fakeClock();
+    const ledger = createLedger({ clock, limits: { gemini: { minIntervalMs: 6000 } } });
+    const { router } = setup({
+      ledger,
+      clock, // the router and the ledger must share one clock
+      primary: [{ body: geminiOk("a") }, { body: geminiOk("b") }],
+    });
+    const first = await router.complete(req("one"));
+    const second = await router.complete(req("two"));
+    expect(first.waitMs).toBe(0);
+    expect(second.waitMs).toBe(6000); // the pacing gap, not the model's time
+    expect(second.latencyMs).toBe(0); // the fake provider itself takes no time
   });
 
   it("only approved, priced models can be routed to", () => {

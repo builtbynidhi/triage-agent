@@ -6,31 +6,9 @@ import { z } from "zod";
  * (`pnpm --filter @triage/evals schema:write`) and a test fails if the two drift.
  */
 
-export const DECISIONS = ["AUTO_REPLY", "NEEDS_INFO", "ESCALATE", "REJECT"] as const;
-
-export const INTENTS = [
-  "order_status",
-  "return_request",
-  "refund_request",
-  "damaged_item",
-  "address_change",
-  "cancellation",
-  "delivery_question",
-  "warranty_question",
-  "policy_question",
-  "acknowledgement",
-  "data_request",
-  "other",
-] as const;
-
-/** Fields a NEEDS_INFO decision may ask for. */
-export const MISSING_FIELDS = [
-  "order_id",
-  "email",
-  "order_date",
-  "issue_details",
-  "address_details",
-] as const;
+// One source of truth: the agent's decision contract. The cases and the agent cannot drift apart.
+export { DECISIONS, INTENTS, MISSING_FIELDS } from "@triage/agent";
+import { DECISIONS, INTENTS, MISSING_FIELDS } from "@triage/agent";
 
 /** Exact sub-group counts required by the build spec (15 normal, 15 edge, 10 adversarial). */
 export const SUBGROUP_COUNTS = {
