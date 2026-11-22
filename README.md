@@ -40,7 +40,7 @@ It is **bounded**: a state machine with a step, tool-call and token budget; six 
 | ------------------------------------------ | ------------------------- | ------------------------------ |
 | Keyword only (FTS5/BM25)                   | 40.7%                     | 71.9%                          |
 | Vector only (bge-small)                    | 70.4%                     | 93.8%                          |
-| **Hybrid + cross-encoder rerank (in use)** | 51.9%                     | **96.9%**                      |
+| **Hybrid + cross-encoder rerank (in use)** | 48.1%                     | **96.9%**                      |
 
 Hybrid wins on focused questions and loses to vector-only on raw tickets, so the agent is told to search with one short question at a time. The held-out questions were committed before anything was measured. Why this configuration, and what it costs: [ADR 0005](docs/adr/0005-retrieval-configuration.md).
 

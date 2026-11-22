@@ -91,7 +91,7 @@ Three thin layers and one cross-cutting band.
 
 **Pipeline.** `createPolicyRetriever` in `packages/data/src/retrieval/`. FTS5 keyword search (BM25, title weighted 2x, stopwords removed) and sqlite-vec vector search (exact KNN over unit vectors, scored as cosine) each return their top 10. They are merged by reciprocal rank fusion (k = 60), and the fused top 10 go to a swappable `Reranker`, which returns the top k. Every search returns a `RetrievalTrace` with each stage's ranking and timings, for the Phase 11 trace viewer.
 
-**Production configuration** (ADR 0005): `bge-small-en-v1.5` embeddings and the `ms-marco-MiniLM-L-6-v2` cross-encoder, both q8, run locally on the CPU through `@huggingface/transformers`. They load lazily, once per process, from `.cache/models`. `MODELS_OFFLINE=1` forbids downloads. `pnpm db:index` pre-downloads and builds the index.
+**Production configuration** (ADR 0005): `bge-small-en-v1.5` embeddings and the `ms-marco-MiniLM-L-6-v2` cross-encoder, both **fp32**, run locally on the CPU through `@huggingface/transformers`. fp32 rather than q8 because int8 kernels differ between ARM and x86, so q8 rankings differed between macOS and the Linux CI runner and recordings would not replay across machines. They load lazily, once per process, from `.cache/models`. `MODELS_OFFLINE=1` forbids downloads. `pnpm db:index` pre-downloads and builds the index.
 
 **Why RRF.** BM25 scores and cosine similarities live on unrelated scales. RRF uses only ranks, so it needs no calibration between them. Its known weakness is measured in `docs/retrieval.md`: with equal weight, a noisy keyword list can pull down a strong vector list. That is why the reranker, not the fusion order, has the last word.
 
@@ -99,7 +99,7 @@ Three thin layers and one cross-cutting band.
 
 **Tenant-scoped retrieval** (OWASP LLM09). `policy_chunks.tenant_id` is NULL for a policy every tenant shares, or a tenant ID for a policy only that tenant's searches may return. Both keyword and vector search filter on it, and tests prove a tenant-specific clause is invisible to the other tenant. Today all 8 policies are shared. The vector KNN covers every vector before the tenant filter, which is exact and cheap at hundreds of clauses; at the scale of many tenants with their own policies, a vec0 partition key would replace it.
 
-**Measured, not assumed.** `pnpm eval:retrieval` measures 13 configurations on 27 eval-derived and 32 held-out questions, and writes `docs/retrieval.md`. `evals/src/retrieval.test.ts` is a regression gate on the production configuration with the real models. Headline: hybrid with cross-encoder is best on short questions (96.9% hit@4), while vector-only is best on raw tickets (70.4%). That is why the `search_policy` description asks the agent for one short question per call.
+**Measured, not assumed.** `pnpm eval:retrieval` measures 13 int8 configurations plus the fp32 production configuration on 27 eval-derived and 32 held-out questions, and writes `docs/retrieval.md`. `evals/src/retrieval.test.ts` is a regression gate on the production configuration with the real models. Headline: hybrid with cross-encoder is best on short questions (96.9% hit@4), while vector-only is best on raw tickets (70.4%). That is why the `search_policy` description asks the agent for one short question per call.
 
 ### 2.4 Provider router (Phase 5)
 

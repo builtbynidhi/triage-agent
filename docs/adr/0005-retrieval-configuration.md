@@ -25,6 +25,8 @@ The selection rule written before measuring ("best eval-derived hit@4 among hybr
 
 **Re-measured 2026-11-22**, after `delivery.estimates` gained a definition of remote locations: every number in the table is unchanged except the no-rerank hybrid, which moved by one question per set to 55.6% / 84.4%. The decision stands. The table above keeps the evidence as it was when the decision was made.
 
+**Precision changed to fp32 (2026-11-22).** With int8 weights, rankings differed between macOS arm64 and the Linux x86 CI runner (int8 kernels differ across CPUs). A run recorded on one machine missed its recordings on the other, which breaks the spec's promise that CI replays recordings made anywhere. Production now loads both models in fp32. Measured: 13/27 eval-derived (int8: 14/27, within one-question noise), 31/32 held-out (unchanged), about 87 ms per search (int8: 37 ms), and identical results on macOS and Linux. The models are about 220 MB instead of 60 MB, still local and free.
+
 ## Decision
 
 `search_policy` uses **hybrid search with `bge-small-en-v1.5` embeddings, RRF (k = 60), and the `ms-marco-MiniLM-L-6-v2` cross-encoder reranking the fused top 10 down to k**. The configuration lives in `packages/data/src/retrieval/defaults.ts`.

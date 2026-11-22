@@ -110,7 +110,7 @@ Prompt structure: role, rules and schema in the system prompt (a versioned file)
 
 - Code: `packages/data/src/retrieval/` (embedder, fusion, rerankers, retriever, defaults). Production config: `defaults.ts`, decided in ADR 0005 from `docs/retrieval.md`. **Change it only with a new `pnpm eval:retrieval` run and an ADR.**
 - `search_policy` uses `createDefaultRetriever` (hybrid: bge-small plus a cross-encoder) when a transport passes a `retriever`. Unit tests omit it and get keyword search, so they need no models. `TRIAGE_RETRIEVAL=keyword` does the same for the stdio and HTTP servers.
-- Models are local, CPU-only and free. They are cached in `.cache/models` (gitignored, and cached in CI); `MODELS_OFFLINE=1` forbids downloads. Run `pnpm db:index` after seeding to pre-download them and build the vector index.
+- Production retrieval models run in **fp32**, never q8: int8 rankings differ across CPUs and break cross-machine replay (ADR 0005). Models are local, CPU-only and free. They are cached in `.cache/models` (gitignored, and cached in CI); `MODELS_OFFLINE=1` forbids downloads. Run `pnpm db:index` after seeding to pre-download them and build the vector index.
 - The vector index maintains itself (`syncPolicyVectors`, keyed on rowid, model and text hash). Never write to `policy_vec` directly.
 - Retrieval is tenant-scoped: `policy_chunks.tenant_id` NULL = shared. Any new search path must filter on it.
 - Keyword queries go through `toFtsQuery`, which keeps content words only (the NLTK and Hinglish list in `retrieval/text.ts`). Never pass user text to `MATCH`.

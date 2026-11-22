@@ -10,12 +10,11 @@ import { evalDerivedQuestions, heldOutQuestions, type Question } from "./retriev
  * Fails if clause hit@4 falls below what docs/retrieval.md reports for the production
  * configuration, by more than the measured cross-platform spread.
  *
- * Why a tolerance at all: the local models run quantised (int8), and int8 kernels differ between
- * CPUs (macOS arm64 vs the Linux x86 CI runner). A question whose correct clause sits right at
- * the 4th/5th cut-off can flip. Measured 2026-11-22: eval-derived 14/27 on macOS vs 12/27 on
- * Linux (cut-off margins of 0.09 to 0.19 cross-encoder logits); held-out 31/32 on both. A real
- * regression (a broken index, a wrong model) drops far more than that. The gate prints the
- * misses, so any divergence can be diagnosed from the CI log.
+ * Why a tolerance at all: production runs fp32, and macOS arm64 and the Linux x86 CI runner
+ * measured identically on 2026-11-22 (13/27 eval-derived, 31/32 held-out). Under int8, where kernels
+ * differ across CPUs, Linux measured two questions lower, which is why production moved to fp32.
+ * One question of slack remains for any residual floating-point noise; a real regression (a
+ * broken index, a wrong model) drops far more. The gate prints its misses for diagnosis.
  * To improve the baseline, change retrieval, then re-run `pnpm eval:retrieval`.
  */
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
@@ -26,7 +25,7 @@ const report = JSON.parse(readFileSync(resolve(root, "evals/report/retrieval.jso
 const baseline = report.runs.find((r) => r.config.name === report.chosen.name)!;
 
 /** Questions allowed to flip across CPUs, per set (see above). */
-const TOLERANCE = { evalDerived: 2, heldOut: 1 } as const;
+const TOLERANCE = { evalDerived: 1, heldOut: 1 } as const;
 
 const db = openDb(":memory:");
 seed(db);

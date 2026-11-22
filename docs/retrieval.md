@@ -19,7 +19,7 @@ The selection rule fixed before measuring (best eval-derived hit@4, then MRR, th
 |---|---|---|---|---|
 | Keyword only (FTS5/BM25) | 11/27 (40.7%) | 23/32 (71.9%) | 0.225 | 0 ms |
 | Best vector only (bge-small-en-v1.5) | 19/27 (70.4%) | 30/32 (93.8%) | 0.511 | 2.6 ms |
-| **Chosen hybrid** (bge-small-en-v1.5, cross-encoder rerank) | **13/27 (48.1%)** | **31/32 (96.9%)** | **0.377** | 86.9 ms |
+| **Chosen hybrid** (bge-small-en-v1.5, cross-encoder rerank) | **13/27 (48.1%)** | **31/32 (96.9%)** | **0.377** | 92 ms |
 
 On the eval-derived set the chosen hybrid beats keyword only (48.1% vs 40.7%) and **loses to** the best vector-only method (48.1% vs 70.4%). On the held-out set the chosen hybrid beats keyword only (96.9% vs 71.9%) and beats the best vector-only method (96.9% vs 93.8%).
 
@@ -30,17 +30,17 @@ On the eval-derived set the chosen hybrid beats keyword only (48.1% vs 40.7%) an
 | keyword only (FTS5/BM25) | 7.4% | 40.7% | 0.225 | 46.9% | 71.9% | 0.596 | 0 ms |
 | vector only (bge-small-en-v1.5) | 33.3% | 70.4% | 0.511 | 68.8% | 93.8% | 0.798 | 2.6 ms |
 | hybrid: bge-small-en-v1.5 + RRF + no rerank | 33.3% | 55.6% | 0.445 | 71.9% | 84.4% | 0.782 | 2.5 ms |
-| hybrid: bge-small-en-v1.5 + RRF + heuristic rerank | 22.2% | 44.4% | 0.371 | 53.1% | 81.3% | 0.675 | 2.6 ms |
-| hybrid: bge-small-en-v1.5 + RRF + cross-encoder rerank | 25.9% | 51.9% | 0.370 | 75% | 96.9% | 0.849 | 41 ms |
+| hybrid: bge-small-en-v1.5 + RRF + heuristic rerank | 22.2% | 44.4% | 0.371 | 53.1% | 81.3% | 0.675 | 2.7 ms |
+| hybrid: bge-small-en-v1.5 + RRF + cross-encoder rerank | 25.9% | 51.9% | 0.370 | 75% | 96.9% | 0.849 | 40.8 ms |
 | vector only (all-MiniLM-L6-v2) | 29.6% | 63% | 0.462 | 65.6% | 90.6% | 0.758 | 1.2 ms |
 | hybrid: all-MiniLM-L6-v2 + RRF + no rerank | 22.2% | 51.9% | 0.394 | 62.5% | 81.3% | 0.731 | 1.2 ms |
-| hybrid: all-MiniLM-L6-v2 + RRF + heuristic rerank | 14.8% | 48.1% | 0.349 | 50% | 81.3% | 0.652 | 1.3 ms |
-| hybrid: all-MiniLM-L6-v2 + RRF + cross-encoder rerank | 25.9% | 48.1% | 0.399 | 75% | 90.6% | 0.824 | 37.1 ms |
-| vector only (multilingual-MiniLM-L12-v2) | 29.6% | 55.6% | 0.429 | 50% | 75% | 0.630 | 2.2 ms |
-| hybrid: multilingual-MiniLM-L12-v2 + RRF + no rerank | 25.9% | 48.1% | 0.381 | 59.4% | 78.1% | 0.694 | 2.2 ms |
-| hybrid: multilingual-MiniLM-L12-v2 + RRF + heuristic rerank | 22.2% | 48.1% | 0.372 | 50% | 75% | 0.633 | 2.1 ms |
-| hybrid: multilingual-MiniLM-L12-v2 + RRF + cross-encoder rerank | 25.9% | 48.1% | 0.414 | 71.9% | 87.5% | 0.802 | 40.2 ms |
-| **production: bge-small-en-v1.5 (fp32) + RRF + cross-encoder (fp32) rerank** (chosen) | 25.9% | 48.1% | 0.377 | 75% | 96.9% | 0.841 | 86.9 ms |
+| hybrid: all-MiniLM-L6-v2 + RRF + heuristic rerank | 14.8% | 48.1% | 0.349 | 50% | 81.3% | 0.652 | 1.4 ms |
+| hybrid: all-MiniLM-L6-v2 + RRF + cross-encoder rerank | 25.9% | 48.1% | 0.399 | 75% | 90.6% | 0.824 | 36.6 ms |
+| vector only (multilingual-MiniLM-L12-v2) | 29.6% | 55.6% | 0.429 | 50% | 75% | 0.630 | 2.1 ms |
+| hybrid: multilingual-MiniLM-L12-v2 + RRF + no rerank | 25.9% | 48.1% | 0.381 | 59.4% | 78.1% | 0.694 | 2.8 ms |
+| hybrid: multilingual-MiniLM-L12-v2 + RRF + heuristic rerank | 22.2% | 48.1% | 0.372 | 50% | 75% | 0.633 | 2.2 ms |
+| hybrid: multilingual-MiniLM-L12-v2 + RRF + cross-encoder rerank | 25.9% | 48.1% | 0.414 | 71.9% | 87.5% | 0.802 | 39.6 ms |
+| **production: bge-small-en-v1.5 (fp32) + RRF + cross-encoder (fp32) rerank** (chosen) | 25.9% | 48.1% | 0.377 | 75% | 96.9% | 0.841 | 92 ms |
 
 ## Misses of the chosen configuration
 
@@ -68,9 +68,9 @@ Questions whose correct clause was not in the top 4. These are inputs for Phase 
 
 Hand-written; the tables above are generated. The spec says Phase 4 is done when hybrid beats both single methods, _or you can explain in writing why it does not_. Here, it does on one question set and not on the other, and the reason is the most useful finding of the phase.
 
-**On short, focused questions (held-out), hybrid with cross-encoder reranking has the highest hit@4 of all 13 configurations (96.9%) and the joint-highest hit@1 (75%), against 93.8% / 71.9% for the best vector-only method and 71.9% / 43.8% for keyword only.
+**On short, focused questions (held-out), hybrid with cross-encoder reranking has the highest hit@4 of all configurations (96.9%) and the joint-highest hit@1 (75%), in both its int8 and its fp32 (production) form, against 93.8% / 71.9% for the best vector-only method and 71.9% / 43.8% for keyword only.
 
-**On raw customer tickets (eval-derived), it is not.** Vector-only bge-small reaches 70.4% hit@4; hybrid with the cross-encoder reaches 51.9%. Three things go wrong with a whole ticket as the query:
+**On raw customer tickets (eval-derived), it is not.** Vector-only bge-small reaches 70.4% hit@4; hybrid with the cross-encoder reaches 48.1% in production (fp32; 51.9% with int8 weights). Three things go wrong with a whole ticket as the query:
 
 1. **Keyword search latches onto filler.** Before stopwords were removed, the angry-delivery ticket ("THIS IS RIDICULOUS ... it is STILL not here ... I'm never ordering again") had `contact.never_asked` as its top keyword hit, matched on the word "never". Removing stopwords (iteration 2) helped keyword search on short questions (68.8% to 71.9% held-out hit@4; the 68.8% is in commit 6c00419's report), but not on tickets (40.7% before and after): the content words of a rant are still mostly not policy words.
 2. **Fusion lets a weak list pull down a strong one.** RRF weighs both lists equally by rank, so noisy keyword ranks displace good vector ranks. Hybrid without reranking falls from 70.4% (vector alone) to 55.6%.
@@ -82,7 +82,7 @@ Hand-written; the tables above are generated. The spec says Phase 4 is done when
 
 - **Eval-derived misses cluster on `refunds.window`** (it loses to `refunds.method`, `refunds.timeline` and `returns.process`, which share vocabulary), on `delivery.estimates` for "where is my order" tickets, and on `damaged.resolution` vs `damaged.reporting`. These are Phase 8 inputs.
 - **A multilingual model did not help Hinglish here.** paraphrase-multilingual-MiniLM was the weakest vector model overall. Romanised Hindi ("mera order kab aayega") is not what it was trained on (Devanagari). Both Hinglish held-out questions are worth watching in Phase 7.
-- **Numbers differ slightly across CPUs.** The local models run quantised (int8), and int8 maths differs between this Mac (arm64) and the Linux x86 CI runner. Three eval-derived questions sit within 0.2 cross-encoder logits of the top-4 cut-off, and on Linux two of them flip: 12/27 against 14/27 here, with held-out identical at 31/32. The CI gate allows for exactly that measured spread, and prints its misses.
+- **Production runs fp32, because int8 rankings differ across CPUs.** int8 maths differs between this Mac (arm64) and the Linux x86 CI runner: with int8, three eval-derived questions sat within 0.2 cross-encoder logits of the top-4 cut-off, and Linux flipped two of them (12/27 against 14/27). Worse, it reordered lower-ranked clauses, so agent runs recorded on one machine missed their recordings on the other. With fp32 weights, macOS and Linux measure identically (13/27 and 31/32), and recordings replay on both. The int8 rows above remain for the size and speed comparison.
 - **Measured on 59 questions.** One question is 3.7 points on the eval-derived set and 3.1 on the held-out set, so gaps of one or two questions are noise, not findings.
 
 ## Setup
