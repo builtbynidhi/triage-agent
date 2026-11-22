@@ -43,7 +43,7 @@ It is **bounded**: a state machine with a step, tool-call and token budget; six 
 
 Hybrid wins on focused questions and loses to vector-only on raw tickets, so the agent is told to search with one short question at a time. The held-out questions were committed before anything was measured. Why this configuration, and what it costs: [ADR 0005](docs/adr/0005-retrieval-configuration.md).
 
-**Tests:** about 250, run on every push. They cover tenant isolation for all 50 orders, PII masking for all 20 customers, eligibility at every date boundary, and a retrieval regression gate. Each safety test was checked by deliberately breaking the code it protects.
+**Tests:** over 300, run on every push, none of them calling a paid or live API. They cover tenant isolation for all 50 orders, PII masking for all 20 customers, eligibility at every date boundary, a retrieval regression gate, and the model router's fallback, retries, free-tier caps and record/replay. Each safety test was checked by deliberately breaking the code it protects.
 
 ## How it works (built so far)
 
