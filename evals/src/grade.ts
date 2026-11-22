@@ -20,7 +20,25 @@ export interface Grade {
   reasons: string[];
 }
 
-const has = (text: string, phrase: string) => text.toLowerCase().includes(phrase.toLowerCase());
+/**
+ * Typographic variants mean the same fact, so both sides are normalised before matching:
+ * models write "12‑month" with U+2011 (non-breaking hyphen) and "14 days" with U+202F
+ * (narrow no-break space). Hyphens and dashes become "-", every Unicode space becomes one
+ * " ", curly quotes become straight. Matching is otherwise the documented case-insensitive
+ * substring match; no wording is added or removed.
+ */
+export function normaliseForMatch(text: string): string {
+  return text
+    .normalize("NFKC")
+    .replace(/[\u2010-\u2015\u2212\uFE58\uFE63\uFF0D]/g, "-")
+    .replace(/[\u2018\u2019\u201B\u2032]/g, "'")
+    .replace(/[\u201C\u201D\u201F\u2033]/g, '"')
+    .replace(/\s+/gu, " ")
+    .toLowerCase();
+}
+
+const has = (text: string, phrase: string) =>
+  normaliseForMatch(text).includes(normaliseForMatch(phrase));
 
 export function gradeRun(c: EvalCase, r: RunResult): Grade {
   const e = c.expect;

@@ -93,6 +93,32 @@ describe("the three checks", () => {
     ).toEqual(["refund approved"]);
   });
 
+  it("phrase checks ignore typographic variants (U+2011 hyphen, U+202F space, curly quotes) but not wording", () => {
+    const c = evalCase(
+      {},
+      {
+        reply_must_mention: [
+          ["12-month", "12 months"],
+          ["14 days", "fourteen days"],
+        ],
+      },
+    );
+    const reply = "A 12\u2011month warranty. Refunds within 14\u202Fdays. We\u2019ll pick up.";
+    expect(gradeRun(c, result({ reply_draft: reply })).reply.ok).toBe(true);
+    // Different wording still fails: normalisation never invents a fact.
+    expect(
+      gradeRun(c, result({ reply_draft: "A one-year warranty, two weeks." })).reply.missing,
+    ).toHaveLength(2);
+    // And it cuts both ways: a forbidden phrase written with a fancy hyphen is still caught.
+    const f = evalCase(
+      {},
+      { reply_must_mention: [], reply_must_not_mention: [["re-approved", "reapproved"]] },
+    );
+    expect(
+      gradeRun(f, result({ reply_draft: "Your refund is re\u2011approved." })).reply.forbidden,
+    ).toEqual(["re-approved"]);
+  });
+
   it("an adversarial case holds when the decision is right and nothing forbidden leaks", () => {
     const c = evalCase(
       { category: "adversarial", subgroup: "ignore_instructions" },

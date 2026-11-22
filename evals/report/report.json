@@ -17,15 +17,15 @@
       "incomplete": 1
     },
     "passRate": {
-      "n": 75,
+      "n": 81,
       "of": 117,
-      "rate": 0.6410256410256411
+      "rate": 0.6923076923076923
     },
     "byGroup": {
       "normal": {
-        "n": 18,
+        "n": 24,
         "of": 42,
-        "rate": 0.42857142857142855
+        "rate": 0.5714285714285714
       },
       "edge": {
         "n": 30,
@@ -65,7 +65,7 @@
     },
     "latencyMs": {
       "p50": 8636,
-      "p95": 76755
+      "p95": 76753
     },
     "tokensPerRun": {
       "mean": 5026.615384615385
@@ -93,7 +93,7 @@
       "category": "normal",
       "repeat": 1,
       "complete": true,
-      "latencyMs": 58313,
+      "latencyMs": 58193,
       "grade": {
         "pass": true,
         "decision": {
@@ -150,7 +150,7 @@
       "category": "normal",
       "repeat": 2,
       "complete": true,
-      "latencyMs": 57593,
+      "latencyMs": 57581,
       "grade": {
         "pass": true,
         "decision": {
@@ -207,7 +207,7 @@
       "category": "normal",
       "repeat": 3,
       "complete": true,
-      "latencyMs": 57582,
+      "latencyMs": 57580,
       "grade": {
         "pass": true,
         "decision": {
@@ -263,120 +263,6 @@
       "caseId": "angry-but-legitimate-delivery",
       "category": "edge",
       "repeat": 1,
-      "complete": true,
-      "latencyMs": 68365,
-      "grade": {
-        "pass": true,
-        "decision": {
-          "ok": true,
-          "expected": "AUTO_REPLY",
-          "got": "AUTO_REPLY"
-        },
-        "grounding": {
-          "missing": [],
-          "forbidden": [],
-          "invented": [],
-          "ok": true
-        },
-        "reply": {
-          "missing": [],
-          "forbidden": [],
-          "ok": true
-        },
-        "judge": "not run (Phase 9)",
-        "reasons": []
-      },
-      "decision": {
-        "decision": "AUTO_REPLY",
-        "intent": "delivery_question",
-        "confidence": 0.95,
-        "facts_used": [
-          "order.order_id",
-          "order.status",
-          "order.dispatched_at"
-        ],
-        "clause_ids": [
-          "delivery.tracking",
-          "delivery.estimates"
-        ],
-        "reply_draft": "Your order A-10408 was dispatched on 2026-11-17 and is currently in transit. Delivery typically takes 2 to 4 business days for metro cities, 5 to 7 business days for non-metro cities, and 7 to 10 business days for remote locations from the dispatch date (excluding Sundays and public holidays). You can track your shipment using the tracking link sent to your registered email and SMS upon dispatch.",
-        "escalation_reason": "",
-        "missing_fields": []
-      },
-      "exit": "decided",
-      "repaired": false,
-      "usage": {
-        "steps": 6,
-        "toolCalls": 3,
-        "tokens": 6193,
-        "modelCalls": 3
-      },
-      "listPriceUsd": 0.00534075,
-      "providers": [
-        "gemini/gemini-3.6-flash"
-      ]
-    },
-    {
-      "caseId": "angry-but-legitimate-delivery",
-      "category": "edge",
-      "repeat": 2,
-      "complete": true,
-      "latencyMs": 68362,
-      "grade": {
-        "pass": true,
-        "decision": {
-          "ok": true,
-          "expected": "AUTO_REPLY",
-          "got": "AUTO_REPLY"
-        },
-        "grounding": {
-          "missing": [],
-          "forbidden": [],
-          "invented": [],
-          "ok": true
-        },
-        "reply": {
-          "missing": [],
-          "forbidden": [],
-          "ok": true
-        },
-        "judge": "not run (Phase 9)",
-        "reasons": []
-      },
-      "decision": {
-        "decision": "AUTO_REPLY",
-        "intent": "delivery_question",
-        "confidence": 0.95,
-        "facts_used": [
-          "order.order_id",
-          "order.status",
-          "order.dispatched_at"
-        ],
-        "clause_ids": [
-          "delivery.tracking",
-          "delivery.estimates"
-        ],
-        "reply_draft": "Your order A-10408 was dispatched on 2026-11-17 and is currently in transit. Delivery typically takes 2 to 4 business days for metro cities, 5 to 7 business days for non-metro cities, and 7 to 10 business days for remote locations from the dispatch date (excluding Sundays and public holidays). You can track your shipment using the tracking link sent to your registered email and SMS upon dispatch.",
-        "escalation_reason": "",
-        "missing_fields": []
-      },
-      "exit": "decided",
-      "repaired": false,
-      "usage": {
-        "steps": 6,
-        "toolCalls": 3,
-        "tokens": 6193,
-        "modelCalls": 3
-      },
-      "listPriceUsd": 0.00534075,
-      "providers": [
-        "gemini/gemini-3.6-flash"
-      ]
-    },
-    {
-      "caseId": "angry-but-legitimate-delivery",
-      "category": "edge",
-      "repeat": 3,
       "complete": true,
       "latencyMs": 68358,
       "grade": {
@@ -431,11 +317,11 @@
       ]
     },
     {
-      "caseId": "boundary-return-day-7-inside",
+      "caseId": "angry-but-legitimate-delivery",
       "category": "edge",
-      "repeat": 1,
+      "repeat": 2,
       "complete": true,
-      "latencyMs": 80608,
+      "latencyMs": 68351,
       "grade": {
         "pass": true,
         "decision": {
@@ -459,31 +345,87 @@
       },
       "decision": {
         "decision": "AUTO_REPLY",
-        "intent": "return_request",
+        "intent": "delivery_question",
         "confidence": 0.95,
         "facts_used": [
-          "order.delivered_at",
-          "order.items",
-          "eligibility.eligible"
+          "order.order_id",
+          "order.status",
+          "order.dispatched_at"
         ],
         "clause_ids": [
-          "returns.window",
-          "returns.condition",
-          "returns.process"
+          "delivery.tracking",
+          "delivery.estimates"
         ],
-        "reply_draft": "Your order A-10413 for the Stone blender 600W was delivered on November 13, 2026, and is eligible for return under our 7-day return window. Since the item is sealed and unused, we can process your return. A free pickup will be arranged from your delivery address within 2 to 3 business days. Please keep the item ready in its original packaging. After pickup and quality check, your refund will be processed according to our policy.",
+        "reply_draft": "Your order A-10408 was dispatched on 2026-11-17 and is currently in transit. Delivery typically takes 2 to 4 business days for metro cities, 5 to 7 business days for non-metro cities, and 7 to 10 business days for remote locations from the dispatch date (excluding Sundays and public holidays). You can track your shipment using the tracking link sent to your registered email and SMS upon dispatch.",
         "escalation_reason": "",
         "missing_fields": []
       },
       "exit": "decided",
       "repaired": false,
       "usage": {
-        "steps": 7,
-        "toolCalls": 4,
-        "tokens": 7244,
+        "steps": 6,
+        "toolCalls": 3,
+        "tokens": 6193,
         "modelCalls": 3
       },
-      "listPriceUsd": 0.007881,
+      "listPriceUsd": 0.00534075,
+      "providers": [
+        "gemini/gemini-3.6-flash"
+      ]
+    },
+    {
+      "caseId": "angry-but-legitimate-delivery",
+      "category": "edge",
+      "repeat": 3,
+      "complete": true,
+      "latencyMs": 68349,
+      "grade": {
+        "pass": true,
+        "decision": {
+          "ok": true,
+          "expected": "AUTO_REPLY",
+          "got": "AUTO_REPLY"
+        },
+        "grounding": {
+          "missing": [],
+          "forbidden": [],
+          "invented": [],
+          "ok": true
+        },
+        "reply": {
+          "missing": [],
+          "forbidden": [],
+          "ok": true
+        },
+        "judge": "not run (Phase 9)",
+        "reasons": []
+      },
+      "decision": {
+        "decision": "AUTO_REPLY",
+        "intent": "delivery_question",
+        "confidence": 0.95,
+        "facts_used": [
+          "order.order_id",
+          "order.status",
+          "order.dispatched_at"
+        ],
+        "clause_ids": [
+          "delivery.tracking",
+          "delivery.estimates"
+        ],
+        "reply_draft": "Your order A-10408 was dispatched on 2026-11-17 and is currently in transit. Delivery typically takes 2 to 4 business days for metro cities, 5 to 7 business days for non-metro cities, and 7 to 10 business days for remote locations from the dispatch date (excluding Sundays and public holidays). You can track your shipment using the tracking link sent to your registered email and SMS upon dispatch.",
+        "escalation_reason": "",
+        "missing_fields": []
+      },
+      "exit": "decided",
+      "repaired": false,
+      "usage": {
+        "steps": 6,
+        "toolCalls": 3,
+        "tokens": 6193,
+        "modelCalls": 3
+      },
+      "listPriceUsd": 0.00534075,
       "providers": [
         "gemini/gemini-3.6-flash"
       ]
@@ -491,7 +433,7 @@
     {
       "caseId": "boundary-return-day-7-inside",
       "category": "edge",
-      "repeat": 2,
+      "repeat": 1,
       "complete": true,
       "latencyMs": 80579,
       "grade": {
@@ -549,9 +491,67 @@
     {
       "caseId": "boundary-return-day-7-inside",
       "category": "edge",
+      "repeat": 2,
+      "complete": true,
+      "latencyMs": 80581,
+      "grade": {
+        "pass": true,
+        "decision": {
+          "ok": true,
+          "expected": "AUTO_REPLY",
+          "got": "AUTO_REPLY"
+        },
+        "grounding": {
+          "missing": [],
+          "forbidden": [],
+          "invented": [],
+          "ok": true
+        },
+        "reply": {
+          "missing": [],
+          "forbidden": [],
+          "ok": true
+        },
+        "judge": "not run (Phase 9)",
+        "reasons": []
+      },
+      "decision": {
+        "decision": "AUTO_REPLY",
+        "intent": "return_request",
+        "confidence": 0.95,
+        "facts_used": [
+          "order.delivered_at",
+          "order.items",
+          "eligibility.eligible"
+        ],
+        "clause_ids": [
+          "returns.window",
+          "returns.condition",
+          "returns.process"
+        ],
+        "reply_draft": "Your order A-10413 for the Stone blender 600W was delivered on November 13, 2026, and is eligible for return under our 7-day return window. Since the item is sealed and unused, we can process your return. A free pickup will be arranged from your delivery address within 2 to 3 business days. Please keep the item ready in its original packaging. After pickup and quality check, your refund will be processed according to our policy.",
+        "escalation_reason": "",
+        "missing_fields": []
+      },
+      "exit": "decided",
+      "repaired": false,
+      "usage": {
+        "steps": 7,
+        "toolCalls": 4,
+        "tokens": 7244,
+        "modelCalls": 3
+      },
+      "listPriceUsd": 0.007881,
+      "providers": [
+        "gemini/gemini-3.6-flash"
+      ]
+    },
+    {
+      "caseId": "boundary-return-day-7-inside",
+      "category": "edge",
       "repeat": 3,
       "complete": true,
-      "latencyMs": 80578,
+      "latencyMs": 80573,
       "grade": {
         "pass": true,
         "decision": {
@@ -665,7 +665,7 @@
       "category": "edge",
       "repeat": 2,
       "complete": true,
-      "latencyMs": 76755,
+      "latencyMs": 76753,
       "grade": {
         "pass": true,
         "decision": {
@@ -721,7 +721,7 @@
       "category": "edge",
       "repeat": 3,
       "complete": true,
-      "latencyMs": 76756,
+      "latencyMs": 76753,
       "grade": {
         "pass": true,
         "decision": {
@@ -777,7 +777,7 @@
       "category": "normal",
       "repeat": 1,
       "complete": true,
-      "latencyMs": 74221,
+      "latencyMs": 74220,
       "grade": {
         "pass": true,
         "decision": {
@@ -833,7 +833,7 @@
       "category": "normal",
       "repeat": 2,
       "complete": true,
-      "latencyMs": 74218,
+      "latencyMs": 74217,
       "grade": {
         "pass": true,
         "decision": {
@@ -889,7 +889,7 @@
       "category": "normal",
       "repeat": 3,
       "complete": true,
-      "latencyMs": 74222,
+      "latencyMs": 74216,
       "grade": {
         "pass": true,
         "decision": {
@@ -1748,7 +1748,7 @@
       "category": "edge",
       "repeat": 1,
       "complete": true,
-      "latencyMs": 13800,
+      "latencyMs": 13794,
       "grade": {
         "pass": true,
         "decision": {
@@ -1802,7 +1802,7 @@
       "category": "edge",
       "repeat": 2,
       "complete": true,
-      "latencyMs": 13795,
+      "latencyMs": 13793,
       "grade": {
         "pass": true,
         "decision": {
@@ -1856,7 +1856,7 @@
       "category": "edge",
       "repeat": 3,
       "complete": true,
-      "latencyMs": 13806,
+      "latencyMs": 13793,
       "grade": {
         "pass": true,
         "decision": {
@@ -2210,7 +2210,7 @@
       "category": "edge",
       "repeat": 1,
       "complete": true,
-      "latencyMs": 13856,
+      "latencyMs": 13855,
       "grade": {
         "pass": false,
         "decision": {
@@ -3119,7 +3119,7 @@
       "category": "normal",
       "repeat": 1,
       "complete": true,
-      "latencyMs": 14419,
+      "latencyMs": 14417,
       "grade": {
         "pass": true,
         "decision": {
@@ -3174,7 +3174,7 @@
       "category": "normal",
       "repeat": 2,
       "complete": true,
-      "latencyMs": 14419,
+      "latencyMs": 14418,
       "grade": {
         "pass": true,
         "decision": {
@@ -3229,7 +3229,7 @@
       "category": "normal",
       "repeat": 3,
       "complete": true,
-      "latencyMs": 14421,
+      "latencyMs": 14414,
       "grade": {
         "pass": true,
         "decision": {
@@ -4007,7 +4007,7 @@
       "category": "normal",
       "repeat": 1,
       "complete": true,
-      "latencyMs": 2559,
+      "latencyMs": 2555,
       "grade": {
         "pass": true,
         "decision": {
@@ -4059,7 +4059,7 @@
       "category": "normal",
       "repeat": 2,
       "complete": true,
-      "latencyMs": 2555,
+      "latencyMs": 2552,
       "grade": {
         "pass": true,
         "decision": {
@@ -4163,9 +4163,9 @@
       "category": "normal",
       "repeat": 1,
       "complete": true,
-      "latencyMs": 2647,
+      "latencyMs": 2646,
       "grade": {
-        "pass": false,
+        "pass": true,
         "decision": {
           "ok": true,
           "expected": "AUTO_REPLY",
@@ -4178,25 +4178,12 @@
           "ok": true
         },
         "reply": {
-          "missing": [
-            [
-              "12 months",
-              "twelve months",
-              "12-month",
-              "twelve-month",
-              "one year",
-              "1 year",
-              "1-year",
-              "one-year"
-            ]
-          ],
+          "missing": [],
           "forbidden": [],
-          "ok": false
+          "ok": true
         },
         "judge": "not run (Phase 9)",
-        "reasons": [
-          "reply missing required fact"
-        ]
+        "reasons": []
       },
       "decision": {
         "decision": "AUTO_REPLY",
@@ -4223,37 +4210,16 @@
       "listPriceUsd": 0.0010074,
       "providers": [
         "groq/openai/gpt-oss-120b"
-      ],
-      "failure": {
-        "promptHash": "8ccf719d6eb1",
-        "validation": [
-          {
-            "ok": true
-          }
-        ],
-        "budgetAtExit": {
-          "steps": 4,
-          "toolCalls": 1,
-          "tokens": 5795,
-          "modelCalls": 3
-        },
-        "retrievedClauseIds": [
-          "damaged.reporting",
-          "returns.window",
-          "warranty.claims",
-          "warranty.exclusions",
-          "warranty.period"
-        ]
-      }
+      ]
     },
     {
       "caseId": "policy-question-warranty",
       "category": "normal",
       "repeat": 2,
       "complete": true,
-      "latencyMs": 2645,
+      "latencyMs": 2642,
       "grade": {
-        "pass": false,
+        "pass": true,
         "decision": {
           "ok": true,
           "expected": "AUTO_REPLY",
@@ -4266,25 +4232,12 @@
           "ok": true
         },
         "reply": {
-          "missing": [
-            [
-              "12 months",
-              "twelve months",
-              "12-month",
-              "twelve-month",
-              "one year",
-              "1 year",
-              "1-year",
-              "one-year"
-            ]
-          ],
+          "missing": [],
           "forbidden": [],
-          "ok": false
+          "ok": true
         },
         "judge": "not run (Phase 9)",
-        "reasons": [
-          "reply missing required fact"
-        ]
+        "reasons": []
       },
       "decision": {
         "decision": "AUTO_REPLY",
@@ -4311,37 +4264,16 @@
       "listPriceUsd": 0.0010074,
       "providers": [
         "groq/openai/gpt-oss-120b"
-      ],
-      "failure": {
-        "promptHash": "8ccf719d6eb1",
-        "validation": [
-          {
-            "ok": true
-          }
-        ],
-        "budgetAtExit": {
-          "steps": 4,
-          "toolCalls": 1,
-          "tokens": 5795,
-          "modelCalls": 3
-        },
-        "retrievedClauseIds": [
-          "damaged.reporting",
-          "returns.window",
-          "warranty.claims",
-          "warranty.exclusions",
-          "warranty.period"
-        ]
-      }
+      ]
     },
     {
       "caseId": "policy-question-warranty",
       "category": "normal",
       "repeat": 3,
       "complete": true,
-      "latencyMs": 2645,
+      "latencyMs": 2643,
       "grade": {
-        "pass": false,
+        "pass": true,
         "decision": {
           "ok": true,
           "expected": "AUTO_REPLY",
@@ -4354,25 +4286,12 @@
           "ok": true
         },
         "reply": {
-          "missing": [
-            [
-              "12 months",
-              "twelve months",
-              "12-month",
-              "twelve-month",
-              "one year",
-              "1 year",
-              "1-year",
-              "one-year"
-            ]
-          ],
+          "missing": [],
           "forbidden": [],
-          "ok": false
+          "ok": true
         },
         "judge": "not run (Phase 9)",
-        "reasons": [
-          "reply missing required fact"
-        ]
+        "reasons": []
       },
       "decision": {
         "decision": "AUTO_REPLY",
@@ -4399,35 +4318,14 @@
       "listPriceUsd": 0.0010074,
       "providers": [
         "groq/openai/gpt-oss-120b"
-      ],
-      "failure": {
-        "promptHash": "8ccf719d6eb1",
-        "validation": [
-          {
-            "ok": true
-          }
-        ],
-        "budgetAtExit": {
-          "steps": 4,
-          "toolCalls": 1,
-          "tokens": 5795,
-          "modelCalls": 3
-        },
-        "retrievedClauseIds": [
-          "damaged.reporting",
-          "returns.window",
-          "warranty.claims",
-          "warranty.exclusions",
-          "warranty.period"
-        ]
-      }
+      ]
     },
     {
       "caseId": "policy-silent-installation",
       "category": "edge",
       "repeat": 1,
       "complete": true,
-      "latencyMs": 4604,
+      "latencyMs": 4601,
       "grade": {
         "pass": false,
         "decision": {
@@ -4508,7 +4406,7 @@
       "category": "edge",
       "repeat": 2,
       "complete": true,
-      "latencyMs": 4606,
+      "latencyMs": 4598,
       "grade": {
         "pass": false,
         "decision": {
@@ -4589,7 +4487,7 @@
       "category": "edge",
       "repeat": 3,
       "complete": true,
-      "latencyMs": 4604,
+      "latencyMs": 4599,
       "grade": {
         "pass": false,
         "decision": {
@@ -4832,7 +4730,7 @@
       "category": "normal",
       "repeat": 1,
       "complete": true,
-      "latencyMs": 2717,
+      "latencyMs": 2716,
       "grade": {
         "pass": false,
         "decision": {
@@ -4850,21 +4748,13 @@
           "ok": false
         },
         "reply": {
-          "missing": [
-            [
-              "5 to 7 business days",
-              "5-7 business days",
-              "5–7 business days",
-              "five to seven business days"
-            ]
-          ],
+          "missing": [],
           "forbidden": [],
-          "ok": false
+          "ok": true
         },
         "judge": "not run (Phase 9)",
         "reasons": [
-          "missing required clause",
-          "reply missing required fact"
+          "missing required clause"
         ]
       },
       "decision": {
@@ -4934,21 +4824,13 @@
           "ok": false
         },
         "reply": {
-          "missing": [
-            [
-              "5 to 7 business days",
-              "5-7 business days",
-              "5–7 business days",
-              "five to seven business days"
-            ]
-          ],
+          "missing": [],
           "forbidden": [],
-          "ok": false
+          "ok": true
         },
         "judge": "not run (Phase 9)",
         "reasons": [
-          "missing required clause",
-          "reply missing required fact"
+          "missing required clause"
         ]
       },
       "decision": {
@@ -5018,21 +4900,13 @@
           "ok": false
         },
         "reply": {
-          "missing": [
-            [
-              "5 to 7 business days",
-              "5-7 business days",
-              "5–7 business days",
-              "five to seven business days"
-            ]
-          ],
+          "missing": [],
           "forbidden": [],
-          "ok": false
+          "ok": true
         },
         "judge": "not run (Phase 9)",
         "reasons": [
-          "missing required clause",
-          "reply missing required fact"
+          "missing required clause"
         ]
       },
       "decision": {
@@ -5254,7 +5128,7 @@
       "complete": true,
       "latencyMs": 4040,
       "grade": {
-        "pass": false,
+        "pass": true,
         "decision": {
           "ok": true,
           "expected": "AUTO_REPLY",
@@ -5267,21 +5141,12 @@
           "ok": true
         },
         "reply": {
-          "missing": [
-            [
-              "14 days",
-              "fourteen days",
-              "14-day",
-              "fourteen-day"
-            ]
-          ],
+          "missing": [],
           "forbidden": [],
-          "ok": false
+          "ok": true
         },
         "judge": "not run (Phase 9)",
-        "reasons": [
-          "reply missing required fact"
-        ]
+        "reasons": []
       },
       "decision": {
         "decision": "AUTO_REPLY",
@@ -5309,24 +5174,7 @@
       "listPriceUsd": 0.0009504,
       "providers": [
         "groq/openai/gpt-oss-120b"
-      ],
-      "failure": {
-        "promptHash": "8ccf719d6eb1",
-        "validation": [
-          {
-            "ok": true
-          }
-        ],
-        "budgetAtExit": {
-          "steps": 4,
-          "toolCalls": 1,
-          "tokens": 5268,
-          "modelCalls": 3
-        },
-        "retrievedClauseIds": [
-          "refunds.window"
-        ]
-      }
+      ]
     },
     {
       "caseId": "refund-outside-window-blender",
@@ -5335,7 +5183,7 @@
       "complete": true,
       "latencyMs": 4038,
       "grade": {
-        "pass": false,
+        "pass": true,
         "decision": {
           "ok": true,
           "expected": "AUTO_REPLY",
@@ -5348,21 +5196,12 @@
           "ok": true
         },
         "reply": {
-          "missing": [
-            [
-              "14 days",
-              "fourteen days",
-              "14-day",
-              "fourteen-day"
-            ]
-          ],
+          "missing": [],
           "forbidden": [],
-          "ok": false
+          "ok": true
         },
         "judge": "not run (Phase 9)",
-        "reasons": [
-          "reply missing required fact"
-        ]
+        "reasons": []
       },
       "decision": {
         "decision": "AUTO_REPLY",
@@ -5390,24 +5229,7 @@
       "listPriceUsd": 0.0009504,
       "providers": [
         "groq/openai/gpt-oss-120b"
-      ],
-      "failure": {
-        "promptHash": "8ccf719d6eb1",
-        "validation": [
-          {
-            "ok": true
-          }
-        ],
-        "budgetAtExit": {
-          "steps": 4,
-          "toolCalls": 1,
-          "tokens": 5268,
-          "modelCalls": 3
-        },
-        "retrievedClauseIds": [
-          "refunds.window"
-        ]
-      }
+      ]
     },
     {
       "caseId": "refund-outside-window-blender",
@@ -5416,7 +5238,7 @@
       "complete": true,
       "latencyMs": 4038,
       "grade": {
-        "pass": false,
+        "pass": true,
         "decision": {
           "ok": true,
           "expected": "AUTO_REPLY",
@@ -5429,21 +5251,12 @@
           "ok": true
         },
         "reply": {
-          "missing": [
-            [
-              "14 days",
-              "fourteen days",
-              "14-day",
-              "fourteen-day"
-            ]
-          ],
+          "missing": [],
           "forbidden": [],
-          "ok": false
+          "ok": true
         },
         "judge": "not run (Phase 9)",
-        "reasons": [
-          "reply missing required fact"
-        ]
+        "reasons": []
       },
       "decision": {
         "decision": "AUTO_REPLY",
@@ -5471,24 +5284,7 @@
       "listPriceUsd": 0.0009504,
       "providers": [
         "groq/openai/gpt-oss-120b"
-      ],
-      "failure": {
-        "promptHash": "8ccf719d6eb1",
-        "validation": [
-          {
-            "ok": true
-          }
-        ],
-        "budgetAtExit": {
-          "steps": 4,
-          "toolCalls": 1,
-          "tokens": 5268,
-          "modelCalls": 3
-        },
-        "retrievedClauseIds": [
-          "refunds.window"
-        ]
-      }
+      ]
     },
     {
       "caseId": "refund-outside-window-smartwatch",
@@ -6307,12 +6103,6 @@
         "reply": {
           "missing": [
             [
-              "7 days",
-              "seven days",
-              "7-day",
-              "seven-day"
-            ],
-            [
               "pickup",
               "pick up",
               "pick-up",
@@ -6392,12 +6182,6 @@
         },
         "reply": {
           "missing": [
-            [
-              "7 days",
-              "seven days",
-              "7-day",
-              "seven-day"
-            ],
             [
               "pickup",
               "pick up",
@@ -6479,12 +6263,6 @@
         "reply": {
           "missing": [
             [
-              "7 days",
-              "seven days",
-              "7-day",
-              "seven-day"
-            ],
-            [
               "pickup",
               "pick up",
               "pick-up",
@@ -6848,7 +6626,7 @@
       "category": "edge",
       "repeat": 1,
       "complete": true,
-      "latencyMs": 2423,
+      "latencyMs": 2421,
       "grade": {
         "pass": true,
         "decision": {
@@ -6903,7 +6681,7 @@
       "category": "edge",
       "repeat": 2,
       "complete": true,
-      "latencyMs": 2424,
+      "latencyMs": 2420,
       "grade": {
         "pass": true,
         "decision": {
@@ -6958,7 +6736,7 @@
       "category": "edge",
       "repeat": 3,
       "complete": true,
-      "latencyMs": 2422,
+      "latencyMs": 2419,
       "grade": {
         "pass": true,
         "decision": {
@@ -7013,7 +6791,7 @@
       "category": "edge",
       "repeat": 1,
       "complete": true,
-      "latencyMs": 3101,
+      "latencyMs": 3096,
       "grade": {
         "pass": false,
         "decision": {
@@ -7099,7 +6877,7 @@
       "category": "edge",
       "repeat": 2,
       "complete": true,
-      "latencyMs": 3101,
+      "latencyMs": 3095,
       "grade": {
         "pass": false,
         "decision": {
@@ -7185,7 +6963,7 @@
       "category": "edge",
       "repeat": 3,
       "complete": true,
-      "latencyMs": 3114,
+      "latencyMs": 3094,
       "grade": {
         "pass": false,
         "decision": {
