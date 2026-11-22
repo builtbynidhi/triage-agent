@@ -180,7 +180,10 @@ export function createRouter(opts: RouterOptions): Router {
         const hit = opts.cassettes!.get(key);
         if (hit) {
           stats.fromCassette++;
-          return finish(key, hit, "cassette", clock.now() - t0, []);
+          return {
+            ...finish(key, hit, "cassette", clock.now() - t0, []),
+            ...(hit.latencyMs !== undefined ? { recordedLatencyMs: hit.latencyMs } : {}),
+          };
         }
         if (opts.mode === "replay") throw new CassetteMissError(key, redactDeep(req));
       }
@@ -201,6 +204,7 @@ export function createRouter(opts: RouterOptions): Router {
           key,
           recordedAt: new Date(clock.now()).toISOString(),
           request: redactDeep(req),
+          latencyMs: Math.round(clock.now() - t0 - waitMs),
           ...redacted,
         });
         return finish(key, redacted, "live", clock.now() - t0, attempts, waitMs);

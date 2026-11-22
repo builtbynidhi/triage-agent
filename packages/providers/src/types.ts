@@ -99,6 +99,8 @@ export interface ChatResponse extends ProviderResult {
   latencyMs: number;
   /** Time spent waiting on the free-tier pacing (UsageLedger) before calling. Never model latency. */
   waitMs: number;
+  /** For answers served from a cassette: the provider latency measured when it was recorded. */
+  recordedLatencyMs?: number;
   attempts: Attempt[];
 }
 

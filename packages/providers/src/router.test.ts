@@ -182,6 +182,15 @@ describe("replay mode", () => {
     expect(gemini.calls.length + groq.calls.length).toBe(0);
   });
 
+  it("stores the live latency in the cassette and reports it on replay", async () => {
+    const { router, cassettes } = setup({ mode: "record-missing" });
+    const live = await router.complete(req());
+    const replayed = await router.complete(req());
+    expect(cassettes.all()[0]!.latencyMs).toBe(live.latencyMs);
+    expect(replayed.source).toBe("cassette");
+    expect(replayed.recordedLatencyMs).toBe(live.latencyMs);
+  });
+
   it("serves a recorded answer with no network at all", async () => {
     const dir = mkdtempSync(join(tmpdir(), "cassettes-"));
     const live = fakeFetch([{ body: geminiOk("recorded answer") }]);

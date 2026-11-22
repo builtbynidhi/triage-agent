@@ -55,6 +55,8 @@ export interface StepRecord {
   ms: number;
   /** For model calls: time spent waiting on our own pacing before calling. */
   waitMs?: number;
+  /** For replayed model calls: the provider latency measured when the answer was recorded. */
+  recordedMs?: number;
   /** For model calls. */
   provider?: string;
   model?: string;
@@ -189,6 +191,7 @@ export async function runAgent(opts: AgentOptions): Promise<RunResult> {
       name: stage,
       ms: res.latencyMs,
       waitMs: res.waitMs,
+      ...(res.recordedLatencyMs !== undefined ? { recordedMs: res.recordedLatencyMs } : {}),
       provider: res.provider,
       model: res.model,
       source: res.source,

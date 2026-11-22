@@ -30,6 +30,8 @@ export interface Cassette extends StoredResponse {
   recordedAt: string;
   /** The redacted request, so a reviewer can see exactly what was asked. */
   request: ChatRequest;
+  /** Provider latency when recorded (excluding pacing), so replayed runs can report real latency. */
+  latencyMs?: number;
 }
 
 export class CassetteMissError extends Error {
