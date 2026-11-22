@@ -14,7 +14,7 @@ clauses:
 
 ## delivery.estimates
 
-Delivery takes 2 to 4 business days to metro cities (Delhi, Mumbai, Bengaluru, Chennai, Kolkata, Hyderabad, Pune), 5 to 7 business days to other cities, and 7 to 10 business days to remote locations. Estimates count business days from dispatch and exclude Sundays and public holidays.
+Delivery takes 2 to 4 business days to metro cities (Delhi, Mumbai, Bengaluru, Chennai, Kolkata, Hyderabad, Pune), 5 to 7 business days to other cities, and 7 to 10 business days to remote locations. Remote locations are the Andaman and Nicobar Islands, Lakshadweep, Ladakh, and remote hill and border areas. All other cities, including state capitals not in the metro list, get 5 to 7 business days. Estimates count business days from dispatch and exclude Sundays and public holidays.
 
 ## delivery.dispatch
 

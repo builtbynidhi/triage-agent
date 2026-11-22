@@ -23,6 +23,8 @@ The two sets disagree:
 
 The selection rule written before measuring ("best eval-derived hit@4 among hybrid configurations") picks hybrid with no reranker. That configuration is worse than vector-only on _both_ sets, and it is not the pipeline the spec describes.
 
+**Re-measured 2026-11-22**, after `delivery.estimates` gained a definition of remote locations: every number in the table is unchanged except the no-rerank hybrid, which moved by one question per set to 55.6% / 84.4%. The decision stands. The table above keeps the evidence as it was when the decision was made.
+
 ## Decision
 
 `search_policy` uses **hybrid search with `bge-small-en-v1.5` embeddings, RRF (k = 60), and the `ms-marco-MiniLM-L-6-v2` cross-encoder reranking the fused top 10 down to k**. The configuration lives in `packages/data/src/retrieval/defaults.ts`.
