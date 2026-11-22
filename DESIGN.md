@@ -159,6 +159,8 @@ Below the confidence threshold (0.5 for now; Phase 8 sets it from data), an AUTO
 
 **Measured (first live run, 2026-11-22).** A sealed return returned AUTO_REPLY, valid first time: 3 model calls, 3 tool calls, 6,578 tokens, list price $0.0067. Recorded and committed; it replays with zero API calls.
 
+**Retrieval is enforced (Phase 8).** The first gather turn is sent with `toolChoice: { name: "search_policy" }`, so every run reads policy text before it decides; the model still writes the query. Before this, 27 of 39 eval runs never searched: they cited clause IDs from `check_eligibility` without reading the clauses and invented process steps (docs/failures.md, G1). The cost is one tool call and about 500 input tokens per run.
+
 ### 2.6 Eval harness (Phase 7)
 
 `pnpm eval` runs every case through the same path a real ticket takes: `runAgent` over a real MCP client, hybrid retrieval and the provider router. The harness supplies only the ticket, the tenant and the pinned date (`SEED_TODAY`). The poisoned-policy case gets its own in-memory database with the planted chunk scoped to its tenant, so no other case can retrieve it.

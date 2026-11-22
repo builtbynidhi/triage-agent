@@ -38,6 +38,12 @@ export interface ChatRequest {
   system: string;
   messages: Message[];
   tools?: ToolSpec[];
+  /**
+   * Which tool the model may call. "auto" (default): any tool, or none. { name }: the model
+   * must call exactly that tool this turn (Groq `tool_choice`, Gemini `functionCallingConfig`
+   * mode ANY with one allowed name). Requires `tools` containing that name.
+   */
+  toolChoice?: "auto" | { name: string };
   responseSchema?: { name: string; schema: JsonSchema };
   /** Visible output cap. Defaults to 1024. */
   maxOutputTokens?: number;

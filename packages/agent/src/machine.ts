@@ -22,7 +22,7 @@ import {
  * The bounded agent: a state machine, not a loop that keeps calling the model until something
  * looks right.
  *
- *   CLASSIFY ─► RETRIEVE / GATHER (≤ 2 model turns, ≤ 6 tool calls) ─► DECIDE ─► VALIDATE
+ *   CLASSIFY (forced search_policy) ─► RETRIEVE / GATHER (≤ 2 model turns, ≤ 6 tool calls) ─► DECIDE ─► VALIDATE
  *        └─────────────── budget hit / provider down ───────────────┐     │ fail: one REPAIR
  *                                                                   ▼     ▼ fail again
  *   PROPOSE (await human approval) ─► CLOSED            ESCALATE with the facts gathered so far
@@ -229,10 +229,15 @@ export async function runAgent(opts: AgentOptions): Promise<RunResult> {
     transition("classify", "start → classify");
 
     // CLASSIFY, then RETRIEVE / GATHER: the model chooses tools; the machine executes them.
+    // RETRIEVE is enforced: the first turn must call search_policy (the model writes the query).
+    // Without this, 27 of 39 eval runs never read a policy and cited or invented clauses from
+    // memory (docs/failures.md, G1). Later turns choose freely.
+    const canSearch = opts.tools.specs.some((t) => t.name === "search_policy");
     for (let round = 0; round < maxRounds; round++) {
       const turn = await model(round === 0 ? "classify" : "gather", "gather", {
         messages,
         tools: opts.tools.specs,
+        ...(round === 0 && canSearch ? { toolChoice: { name: "search_policy" } } : {}),
         maxOutputTokens: 512,
       });
       if (!turn.toolCalls.length) break;

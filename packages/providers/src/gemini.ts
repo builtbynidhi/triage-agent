@@ -85,7 +85,8 @@ export const THINKING_HEADROOM = 1024;
  * Bump when the request mapping changes. It is part of every request key, so old cache entries
  * and cassettes are never served for a request the adapter would now send differently.
  */
-export const GEMINI_ADAPTER_VERSION = 2;
+// 3: functionCallingConfig can force one named tool (Phase 8).
+export const GEMINI_ADAPTER_VERSION = 3;
 
 export function buildGeminiBody(req: ChatRequest, thinkingLevel: string): Record<string, unknown> {
   const generationConfig: Record<string, unknown> = {
@@ -115,7 +116,12 @@ export function buildGeminiBody(req: ChatRequest, thinkingLevel: string): Record
         })),
       },
     ];
-    body.toolConfig = { functionCallingConfig: { mode: "AUTO" } };
+    body.toolConfig = {
+      functionCallingConfig:
+        typeof req.toolChoice === "object"
+          ? { mode: "ANY", allowedFunctionNames: [req.toolChoice.name] }
+          : { mode: "AUTO" },
+    };
   }
   return body;
 }

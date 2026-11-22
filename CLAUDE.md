@@ -151,3 +151,12 @@ Prompt structure: role, rules and schema in the system prompt (a versioned file)
 - The judge is Phase 9: until then the reply check is phrases only, and the report says so.
 - Recording costs free-tier calls (about 3 per case). Always state the count and get the owner's go-ahead before a recording run. **Both accounts must stay on free plans; never add credits anywhere.** grok-api.com ("GrokAPI") is unrelated to Groq and is not used.
 - Phase 7 is the honest first score: no prompt or agent tuning until Phase 8.
+
+## Fixing failures (Phase 8)
+
+- `docs/failures.md` is the record: failures grouped by cause, each with the fix, its expected effect and the measured before/after. **Never edit an eval case to make it pass.**
+- Phrase checks normalise typography first (`normaliseForMatch` in `evals/src/grade.ts`: dashes, Unicode spaces, curly quotes). Wording is never added or removed.
+- **Retrieval is enforced:** the first gather turn is sent with `toolChoice: { name: "search_policy" }`. `ChatRequest.toolChoice` maps to Groq `tool_choice` and Gemini `functionCallingConfig` (ANY plus one allowed name); the router refuses a toolChoice naming a tool that was not offered.
+- The active prompt is `system.v2.md`. A test fails if any prompt version contains an eval case's order ID, case name or planted clause ID.
+- **Budget rule:** model-request changes are batched into one version and recorded in one run (about 40 × 6,000 to 7,000 tokens, more than a day of Groq's free tier). Request-neutral fixes are measured in replay, per commit.
+- Work that invalidates recordings is done on a branch and merged once recorded, so `main` always replays.

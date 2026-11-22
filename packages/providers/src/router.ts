@@ -58,6 +58,12 @@ function validate(req: ChatRequest) {
     );
   }
   if (!req.messages.length) throw new Error("A request needs at least one message.");
+  if (typeof req.toolChoice === "object") {
+    const forced = req.toolChoice.name;
+    if (!req.tools?.some((t) => t.name === forced)) {
+      throw new Error(`toolChoice names "${forced}", which is not among the request's tools.`);
+    }
+  }
 }
 
 /** Rough pre-call token estimate (4 characters a token) for tokens-per-minute pacing. */

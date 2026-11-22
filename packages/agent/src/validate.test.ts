@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { DECISION_JSON_SCHEMA, DecisionSchema, type Decision } from "./decision.ts";
-import { loadSystemPrompt } from "./prompts/index.ts";
+import { readdirSync, readFileSync } from "node:fs";
+import { join } from "node:path";
+import { loadSystemPrompt, PROMPT_FILE } from "./prompts/index.ts";
 import { applyConfidence, parseDecision, validateDecision } from "./validate.ts";
 
 const d = (over: Partial<Decision>): Decision => ({
@@ -140,7 +142,7 @@ describe("the decision schema sent to the model", () => {
 describe("the versioned system prompt", () => {
   const p = loadSystemPrompt();
   it("has a version and a content hash for every run's record", () => {
-    expect(p.version).toBe("system.v1");
+    expect(p.version).toBe(PROMPT_FILE.replace(/\.md$/, ""));
     expect(p.hash).toMatch(/^[0-9a-f]{12}$/);
   });
   it("composes the shared rules with each stage's instructions", () => {
@@ -154,5 +156,23 @@ describe("the versioned system prompt", () => {
       expect(text).toContain(marker);
     }
     expect(p.forStage("gather")).not.toContain("Now: decide");
+  });
+  it("no prompt version contains an eval case's order ID, case name or planted clause (no teaching to the test)", () => {
+    const casesDir = join(import.meta.dirname, "../../../evals/cases");
+    const promptsDir = join(import.meta.dirname, "prompts");
+    const caseFiles = readdirSync(casesDir).filter((f) => f.endsWith(".yaml"));
+    const forbidden = new Set<string>();
+    for (const f of caseFiles) {
+      const text = readFileSync(join(casesDir, f), "utf8");
+      forbidden.add(f.replace(/\.yaml$/, ""));
+      for (const m of text.matchAll(/\b[A-Z]-\d{5}\b/g)) forbidden.add(m[0]);
+      for (const m of text.matchAll(/clause_id:\s*(\S+)/g)) forbidden.add(m[1]!);
+    }
+    expect(forbidden.size).toBeGreaterThan(40);
+    for (const file of readdirSync(promptsDir).filter((f) => /^system\.v\d+\.md$/.test(f))) {
+      const prompt = readFileSync(join(promptsDir, file), "utf8");
+      const leaked = [...forbidden].filter((x) => prompt.includes(x));
+      expect(leaked, file).toEqual([]);
+    }
   });
 });

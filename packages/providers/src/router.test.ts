@@ -463,6 +463,13 @@ describe("free-tier guard", () => {
     expect([a.provider, b.provider]).toEqual(["gemini", "groq"]); // order still decides who answers
   });
 
+  it("refuses a toolChoice that names a tool the request does not offer", async () => {
+    const { router } = setup({});
+    await expect(
+      router.complete({ ...req(), tools: [], toolChoice: { name: "search_policy" } }),
+    ).rejects.toThrow(/not among the request's tools/);
+  });
+
   it("only approved, priced models can be routed to", () => {
     expect(() =>
       createRouter({

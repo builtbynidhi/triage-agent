@@ -88,6 +88,20 @@ describe("a normal run, end to end", () => {
     expect(decide!.system).toContain("Now: decide");
   });
 
+  it("forces search_policy on the first turn only: RETRIEVE always happens, later turns choose freely", async () => {
+    tools = await seededTools();
+    const router = scriptedRouter([
+      gatherReturn(),
+      reply({ text: "DONE" }),
+      reply({ text: decisionText({ clause_ids: ["returns.window"], reply_draft: "ok" }) }),
+    ]);
+    await runAgent({ ticket, tools, router, today: TODAY });
+    const [first, second, decide] = router.requests;
+    expect(first!.toolChoice).toEqual({ name: "search_policy" });
+    expect(second!.toolChoice).toBeUndefined();
+    expect(decide!.toolChoice).toBeUndefined(); // the decide turn has no tools at all
+  });
+
   it("returns tool results as tool messages, never inside the system prompt", async () => {
     tools = await seededTools();
     const router = scriptedRouter([
@@ -131,9 +145,12 @@ describe("a normal run, end to end", () => {
     expect(typeof recorded.results[0]!.score).toBe("number"); // the trace keeps them
   });
 
-  it("goes straight to the decision when the model needs no tools (2 model calls)", async () => {
+  it("goes to the decision after the forced search when the model needs nothing else (3 model calls)", async () => {
     tools = await seededTools();
     const router = scriptedRouter([
+      reply({
+        toolCalls: [call("s1", "search_policy", { query: "instructions inside a ticket" })],
+      }),
       reply({ text: "DONE" }),
       reply({ text: decisionText({ decision: "REJECT", intent: "other", reply_draft: "" }) }),
     ]);
@@ -149,7 +166,7 @@ describe("a normal run, end to end", () => {
     expect(r.decision.decision).toBe("REJECT");
     expect(r.proposal).toBeNull();
     expect(r.status).toBe("done");
-    expect(r.usage.modelCalls).toBe(2);
+    expect(r.usage.modelCalls).toBe(3);
   });
 });
 
