@@ -18,7 +18,12 @@ export type {
 export { policyEmbeddingText } from "./store.ts";
 export type { DocumentEmbedder } from "./store.ts";
 export { createLocalEmbedder, EMBEDDING_MODELS } from "./retrieval/embedder.ts";
-export type { Embedder, EmbeddingModelName, EmbeddingModelSpec } from "./retrieval/embedder.ts";
+export type {
+  Embedder,
+  EmbeddingModelName,
+  EmbeddingModelSpec,
+  ModelDtype,
+} from "./retrieval/embedder.ts";
 export { reciprocalRankFusion, RRF_K } from "./retrieval/fusion.ts";
 export type { Fused } from "./retrieval/fusion.ts";
 export { fusionOnly, heuristicReranker, createCrossEncoderReranker } from "./retrieval/rerank.ts";
@@ -37,4 +42,5 @@ export {
   createDefaultRetriever,
   DEFAULT_EMBEDDING_MODEL,
   DEFAULT_RERANKER,
+  DEFAULT_DTYPE,
 } from "./retrieval/defaults.ts";

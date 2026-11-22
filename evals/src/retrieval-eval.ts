@@ -19,6 +19,7 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parse } from "yaml";
 import {
+  DEFAULT_DTYPE,
   DEFAULT_EMBEDDING_MODEL,
   DEFAULT_RERANKER,
   EMBEDDING_MODELS,
@@ -31,6 +32,7 @@ import {
   openDb,
   seed,
   type EmbeddingModelName,
+  type ModelDtype,
   type RetrievalMode,
   type Reranker,
 } from "@triage/data";
@@ -78,6 +80,10 @@ interface Config {
   mode: RetrievalMode;
   embedding: EmbeddingModelName | null;
   reranker: string | null;
+  /** Weight precision of the local models (the comparison rows use q8; production is fp32). */
+  dtype?: ModelDtype;
+  /** True for the configuration createDefaultRetriever builds. */
+  production?: boolean;
 }
 
 interface QuestionResult {
@@ -117,7 +123,7 @@ async function runConfig(
 ) {
   const retriever = createPolicyRetriever({
     store,
-    embedder: createLocalEmbedder(embedding),
+    embedder: createLocalEmbedder(embedding, config.dtype ?? "q8"),
     reranker,
   });
   await retriever.search(TENANT, "warm up", DEPTH, config.mode); // load models and build the index first
@@ -154,7 +160,7 @@ const RERANK_COST: Record<string, number> = { none: 0, heuristic: 1, "cross-enco
 
 export function pickDefault(runs: Run[]): Run {
   return runs
-    .filter((r) => r.config.mode === "hybrid")
+    .filter((r) => r.config.mode === "hybrid" && !r.config.production)
     .sort(
       (a, b) =>
         b.evalDerived.hit4 - a.evalDerived.hit4 ||
@@ -210,13 +216,33 @@ async function main() {
     console.error(`measured ${model}`);
   }
 
+  // The production configuration itself: fp32 weights (identical rankings on every CPU).
+  {
+    const db = openDb(":memory:");
+    seed(db);
+    const store = createSqliteStore(db);
+    const name = `production: ${DEFAULT_EMBEDDING_MODEL} (${DEFAULT_DTYPE}) + RRF + cross-encoder (${DEFAULT_DTYPE}) rerank`;
+    runs.push(
+      await runConfig(
+        {
+          name,
+          mode: "hybrid",
+          embedding: DEFAULT_EMBEDDING_MODEL,
+          reranker: DEFAULT_RERANKER,
+          dtype: DEFAULT_DTYPE,
+          production: true,
+        },
+        questions,
+        store,
+        DEFAULT_EMBEDDING_MODEL,
+        createCrossEncoderReranker(undefined, DEFAULT_DTYPE),
+      ),
+    );
+    console.error("measured production configuration");
+  }
+
   const preRegistered = pickDefault(runs);
-  const chosen = runs.find(
-    (r) =>
-      r.config.mode === "hybrid" &&
-      r.config.embedding === DEFAULT_EMBEDDING_MODEL &&
-      r.config.reranker === DEFAULT_RERANKER,
-  )!;
+  const chosen = runs.find((r) => r.config.production)!;
   const keyword = runs.find((r) => r.config.mode === "keyword")!;
   // Compare against the BEST single vector method, not just the chosen model's own: beating a
   // weak baseline proves nothing. Best = eval-derived hit@4, then MRR (the selection metric).

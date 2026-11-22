@@ -3,7 +3,7 @@
   "platform": "darwin-arm64",
   "preRegistered": "hybrid: bge-small-en-v1.5 + RRF + no rerank",
   "chosen": {
-    "name": "hybrid: bge-small-en-v1.5 + RRF + cross-encoder rerank",
+    "name": "production: bge-small-en-v1.5 (fp32) + RRF + cross-encoder (fp32) rerank",
     "embedding": "bge-small-en-v1.5",
     "reranker": "cross-encoder"
   },
@@ -49,7 +49,7 @@
             "cancellation.before_dispatch"
           ],
           "rank": null,
-          "ms": 0.07824999999999704
+          "ms": 0.0825839999999971
         },
         {
           "id": "boundary-return-day-8-outside#returns.window",
@@ -70,7 +70,7 @@
             "refunds.exclusions"
           ],
           "rank": 5,
-          "ms": 0.0594159999999988
+          "ms": 0.06049999999999045
         },
         {
           "id": "damaged-item-cracked-jar#damaged.resolution",
@@ -91,7 +91,7 @@
             "delivery.tracking"
           ],
           "rank": null,
-          "ms": 0.05895799999998985
+          "ms": 0.06012499999999932
         },
         {
           "id": "hinglish-order-status#delivery.estimates",
@@ -112,7 +112,7 @@
             "delivery.tracking"
           ],
           "rank": null,
-          "ms": 0.07287499999998204
+          "ms": 0.07695899999998801
         },
         {
           "id": "long-rambling-return#returns.window",
@@ -133,7 +133,7 @@
             "cancellation.after_dispatch"
           ],
           "rank": null,
-          "ms": 0.13124999999999432
+          "ms": 0.13824999999999932
         },
         {
           "id": "order-status-dispatched#delivery.estimates",
@@ -154,7 +154,7 @@
             "warranty.claims"
           ],
           "rank": null,
-          "ms": 0.04970800000000963
+          "ms": 0.05099999999998772
         },
         {
           "id": "policy-block-injection-refund#refunds.window",
@@ -175,7 +175,7 @@
             "refunds.damaged"
           ],
           "rank": null,
-          "ms": 0.05012499999997999
+          "ms": 0.05087499999999068
         },
         {
           "id": "quoted-email-injection#returns.window",
@@ -196,7 +196,7 @@
             "delivery.delayed"
           ],
           "rank": null,
-          "ms": 0.12795900000000415
+          "ms": 0.12795800000000668
         },
         {
           "id": "refund-inside-window-extra-item#refunds.window",
@@ -217,7 +217,7 @@
             "refunds.timeline"
           ],
           "rank": null,
-          "ms": 0.07675000000000409
+          "ms": 0.0761669999999981
         },
         {
           "id": "refund-inside-window-extra-item#refunds.timeline",
@@ -238,7 +238,7 @@
             "refunds.timeline"
           ],
           "rank": 10,
-          "ms": 0.06691699999998946
+          "ms": 0.06787499999998658
         },
         {
           "id": "refund-inside-window-unwanted#refunds.window",
@@ -259,7 +259,7 @@
             "refunds.high_value"
           ],
           "rank": null,
-          "ms": 0.053415999999998576
+          "ms": 0.054874999999981355
         },
         {
           "id": "refund-outside-window-blender#refunds.window",
@@ -280,7 +280,7 @@
             "refunds.timeline"
           ],
           "rank": 9,
-          "ms": 0.05770799999999099
+          "ms": 0.05816599999999994
         },
         {
           "id": "refund-outside-window-smartwatch#refunds.window",
@@ -299,7 +299,7 @@
             "returns.condition"
           ],
           "rank": null,
-          "ms": 0.045250000000010004
+          "ms": 0.04537500000000705
         },
         {
           "id": "return-inside-window-opened-unused#returns.window",
@@ -320,7 +320,7 @@
             "damaged.safety"
           ],
           "rank": null,
-          "ms": 0.06416699999999764
+          "ms": 0.06504200000000537
         },
         {
           "id": "two-questions-return-and-delivery#returns.window",
@@ -341,7 +341,7 @@
             "refunds.window"
           ],
           "rank": 7,
-          "ms": 0.06741700000000606
+          "ms": 0.0679580000000044
         },
         {
           "id": "wrong-amount-claimed#refunds.window",
@@ -362,7 +362,7 @@
             "refunds.window"
           ],
           "rank": 10,
-          "ms": 0.049624999999991815
+          "ms": 0.050583000000017364
         },
         {
           "id": "heldout-1",
@@ -378,7 +378,7 @@
             "damaged.reporting"
           ],
           "rank": null,
-          "ms": 0.030041999999980362
+          "ms": 0.030416999999999916
         },
         {
           "id": "heldout-4",
@@ -399,7 +399,7 @@
             "cancellation.after_dispatch"
           ],
           "rank": 8,
-          "ms": 0.03816699999998718
+          "ms": 0.038833000000011
         },
         {
           "id": "heldout-5",
@@ -420,7 +420,7 @@
             "delivery.delayed"
           ],
           "rank": 6,
-          "ms": 0.046542000000016515
+          "ms": 0.04650000000000887
         },
         {
           "id": "heldout-11",
@@ -441,7 +441,7 @@
             "contact.hours"
           ],
           "rank": null,
-          "ms": 0.04920899999999051
+          "ms": 0.052666999999985364
         },
         {
           "id": "heldout-13",
@@ -462,7 +462,7 @@
             "delivery.dispatch"
           ],
           "rank": null,
-          "ms": 0.05575000000001751
+          "ms": 0.049916000000024496
         },
         {
           "id": "heldout-17",
@@ -483,7 +483,7 @@
             "cancellation.after_dispatch"
           ],
           "rank": 6,
-          "ms": 0.044165999999989936
+          "ms": 0.044458999999989146
         },
         {
           "id": "heldout-22",
@@ -498,7 +498,7 @@
             "refunds.window"
           ],
           "rank": null,
-          "ms": 0.030750000000011823
+          "ms": 0.030499999999989313
         },
         {
           "id": "heldout-30",
@@ -513,7 +513,7 @@
             "delivery.estimates"
           ],
           "rank": null,
-          "ms": 0.02666599999997743
+          "ms": 0.027124999999983856
         },
         {
           "id": "heldout-31",
@@ -534,7 +534,7 @@
             "refunds.damaged"
           ],
           "rank": 9,
-          "ms": 0.03608399999998824
+          "ms": 0.03633299999998485
         }
       ]
     },
@@ -579,7 +579,7 @@
             "refunds.window"
           ],
           "rank": null,
-          "ms": 4.1631249999999795
+          "ms": 4.245041000000015
         },
         {
           "id": "hinglish-damaged-item#damaged.resolution",
@@ -600,7 +600,7 @@
             "damaged.resolution"
           ],
           "rank": 10,
-          "ms": 3.4298330000000306
+          "ms": 3.2662090000000035
         },
         {
           "id": "long-rambling-return#returns.window",
@@ -621,7 +621,7 @@
             "returns.process"
           ],
           "rank": null,
-          "ms": 21.487666999999988
+          "ms": 21.385541999999987
         },
         {
           "id": "order-status-dispatched#delivery.estimates",
@@ -642,7 +642,7 @@
             "cancellation.after_dispatch"
           ],
           "rank": null,
-          "ms": 3.371040999999991
+          "ms": 3.3623340000000326
         },
         {
           "id": "quoted-email-injection#returns.window",
@@ -663,7 +663,7 @@
             "cancellation.before_dispatch"
           ],
           "rank": 6,
-          "ms": 7.50570799999997
+          "ms": 7.170165999999995
         },
         {
           "id": "refund-inside-window-extra-item#refunds.timeline",
@@ -684,7 +684,7 @@
             "returns.window"
           ],
           "rank": null,
-          "ms": 4.365459000000101
+          "ms": 4.044459000000074
         },
         {
           "id": "return-inside-window-opened-unused#returns.window",
@@ -705,7 +705,7 @@
             "contact.never_asked"
           ],
           "rank": null,
-          "ms": 3.5305000000000746
+          "ms": 3.4482080000000224
         },
         {
           "id": "two-questions-return-and-delivery#delivery.estimates",
@@ -726,7 +726,7 @@
             "refunds.method"
           ],
           "rank": 8,
-          "ms": 3.6759170000000267
+          "ms": 3.6765830000000506
         },
         {
           "id": "heldout-26",
@@ -747,7 +747,7 @@
             "returns.process"
           ],
           "rank": 8,
-          "ms": 2.214334000000008
+          "ms": 2.195167000000083
         },
         {
           "id": "heldout-31",
@@ -768,7 +768,7 @@
             "delivery.delayed"
           ],
           "rank": null,
-          "ms": 2.5829579999999623
+          "ms": 2.2373340000000326
         }
       ]
     },
@@ -792,7 +792,7 @@
         "hit4": 0.84375,
         "mrr10": 0.78203125
       },
-      "medianMs": 2.6,
+      "medianMs": 2.5,
       "misses": [
         {
           "id": "angry-but-legitimate-delivery#delivery.estimates",
@@ -813,7 +813,7 @@
             "returns.window"
           ],
           "rank": null,
-          "ms": 4.133291999999983
+          "ms": 4.1427079999999705
         },
         {
           "id": "damaged-item-cracked-jar#damaged.resolution",
@@ -834,7 +834,7 @@
             "refunds.method"
           ],
           "rank": 6,
-          "ms": 3.309541000000081
+          "ms": 3.3601249999999254
         },
         {
           "id": "hinglish-order-status#delivery.estimates",
@@ -855,7 +855,7 @@
             "returns.process"
           ],
           "rank": 8,
-          "ms": 3.1529580000000124
+          "ms": 3.0844159999999192
         },
         {
           "id": "long-rambling-return#returns.window",
@@ -876,7 +876,7 @@
             "warranty.period"
           ],
           "rank": null,
-          "ms": 21.654541999999992
+          "ms": 21.59512499999994
         },
         {
           "id": "order-status-dispatched#delivery.estimates",
@@ -897,7 +897,7 @@
             "refunds.timeline"
           ],
           "rank": null,
-          "ms": 3.399249999999938
+          "ms": 3.4424169999999776
         },
         {
           "id": "policy-block-injection-refund#refunds.window",
@@ -918,7 +918,7 @@
             "contact.escalation"
           ],
           "rank": 8,
-          "ms": 2.874500000000012
+          "ms": 2.821458000000007
         },
         {
           "id": "quoted-email-injection#returns.window",
@@ -939,7 +939,7 @@
             "returns.condition"
           ],
           "rank": null,
-          "ms": 7.323458000000073
+          "ms": 7.370042000000012
         },
         {
           "id": "refund-inside-window-extra-item#refunds.window",
@@ -960,7 +960,7 @@
             "cancellation.before_dispatch"
           ],
           "rank": 8,
-          "ms": 4.265541999999982
+          "ms": 4.22016700000006
         },
         {
           "id": "refund-inside-window-extra-item#refunds.timeline",
@@ -981,7 +981,7 @@
             "cancellation.before_dispatch"
           ],
           "rank": null,
-          "ms": 4.2601660000000265
+          "ms": 4.299082999999996
         },
         {
           "id": "refund-inside-window-unwanted#refunds.window",
@@ -1002,7 +1002,7 @@
             "damaged.resolution"
           ],
           "rank": 7,
-          "ms": 3.5801249999999527
+          "ms": 3.4194170000000668
         },
         {
           "id": "refund-outside-window-smartwatch#refunds.window",
@@ -1023,7 +1023,7 @@
             "delivery.delayed"
           ],
           "rank": 6,
-          "ms": 3.1929999999999836
+          "ms": 3.3074159999999893
         },
         {
           "id": "return-inside-window-opened-unused#returns.window",
@@ -1044,7 +1044,7 @@
             "warranty.claims"
           ],
           "rank": null,
-          "ms": 3.575917000000004
+          "ms": 3.6716250000000628
         },
         {
           "id": "heldout-1",
@@ -1065,7 +1065,7 @@
             "returns.process"
           ],
           "rank": 5,
-          "ms": 2.242582999999968
+          "ms": 2.2284579999999323
         },
         {
           "id": "heldout-4",
@@ -1086,7 +1086,7 @@
             "delivery.tracking"
           ],
           "rank": 5,
-          "ms": 2.4511249999999336
+          "ms": 2.40945899999997
         },
         {
           "id": "heldout-11",
@@ -1107,7 +1107,7 @@
             "contact.escalation"
           ],
           "rank": 6,
-          "ms": 2.648916999999983
+          "ms": 2.555417000000034
         },
         {
           "id": "heldout-13",
@@ -1128,7 +1128,7 @@
             "returns.process"
           ],
           "rank": 8,
-          "ms": 2.424166000000014
+          "ms": 2.3516669999999067
         },
         {
           "id": "heldout-31",
@@ -1149,7 +1149,7 @@
             "refunds.method"
           ],
           "rank": null,
-          "ms": 2.2981660000000375
+          "ms": 2.2233750000000327
         }
       ]
     },
@@ -1173,7 +1173,7 @@
         "hit4": 0.8125,
         "mrr10": 0.6753844246031745
       },
-      "medianMs": 2.9,
+      "medianMs": 2.6,
       "misses": [
         {
           "id": "angry-but-legitimate-delivery#delivery.estimates",
@@ -1194,7 +1194,7 @@
             "returns.window"
           ],
           "rank": null,
-          "ms": 4.142708000000084
+          "ms": 4.1065830000000005
         },
         {
           "id": "damaged-item-cracked-jar#damaged.resolution",
@@ -1215,7 +1215,7 @@
             "refunds.window"
           ],
           "rank": 9,
-          "ms": 3.438833000000045
+          "ms": 3.4129590000000007
         },
         {
           "id": "hinglish-damaged-item#damaged.resolution",
@@ -1236,7 +1236,7 @@
             "cancellation.before_dispatch"
           ],
           "rank": 6,
-          "ms": 3.557957999999985
+          "ms": 3.294583999999986
         },
         {
           "id": "hinglish-order-status#delivery.estimates",
@@ -1257,7 +1257,7 @@
             "returns.process"
           ],
           "rank": 9,
-          "ms": 3.226458999999977
+          "ms": 3.1100839999999152
         },
         {
           "id": "long-rambling-return#returns.window",
@@ -1278,7 +1278,7 @@
             "returns.exclusions"
           ],
           "rank": null,
-          "ms": 21.604625000000055
+          "ms": 21.686707999999953
         },
         {
           "id": "order-status-dispatched#delivery.estimates",
@@ -1299,7 +1299,7 @@
             "refunds.timeline"
           ],
           "rank": null,
-          "ms": 3.5195420000000013
+          "ms": 3.45637499999998
         },
         {
           "id": "policy-block-injection-refund#refunds.window",
@@ -1320,7 +1320,7 @@
             "contact.escalation"
           ],
           "rank": 8,
-          "ms": 2.9319580000000087
+          "ms": 2.9665410000000065
         },
         {
           "id": "quoted-email-injection#returns.window",
@@ -1341,7 +1341,7 @@
             "returns.condition"
           ],
           "rank": null,
-          "ms": 7.315417000000025
+          "ms": 7.297749999999951
         },
         {
           "id": "refund-inside-window-extra-item#refunds.window",
@@ -1362,7 +1362,7 @@
             "cancellation.before_dispatch"
           ],
           "rank": 7,
-          "ms": 4.28895799999998
+          "ms": 4.233625000000075
         },
         {
           "id": "refund-inside-window-extra-item#refunds.timeline",
@@ -1383,7 +1383,7 @@
             "cancellation.before_dispatch"
           ],
           "rank": null,
-          "ms": 4.238542000000052
+          "ms": 4.191041999999925
         },
         {
           "id": "refund-inside-window-unwanted#refunds.window",
@@ -1404,7 +1404,7 @@
             "damaged.resolution"
           ],
           "rank": 5,
-          "ms": 3.3822920000000067
+          "ms": 3.3228330000000597
         },
         {
           "id": "refund-outside-window-smartwatch#refunds.window",
@@ -1425,7 +1425,7 @@
             "delivery.delayed"
           ],
           "rank": 6,
-          "ms": 3.189292000000023
+          "ms": 3.15300000000002
         },
         {
           "id": "return-inside-window-opened-unused#returns.window",
@@ -1446,7 +1446,7 @@
             "delivery.delayed"
           ],
           "rank": null,
-          "ms": 3.553625000000011
+          "ms": 3.620999999999981
         },
         {
           "id": "two-questions-return-and-delivery#delivery.estimates",
@@ -1467,7 +1467,7 @@
             "refunds.timeline"
           ],
           "rank": 5,
-          "ms": 3.910374999999931
+          "ms": 3.8332920000000286
         },
         {
           "id": "wrong-amount-claimed#refunds.window",
@@ -1488,7 +1488,7 @@
             "warranty.period"
           ],
           "rank": 5,
-          "ms": 3.038791999999944
+          "ms": 3.2142920000000004
         },
         {
           "id": "heldout-1",
@@ -1509,7 +1509,7 @@
             "returns.process"
           ],
           "rank": 7,
-          "ms": 2.2662920000000213
+          "ms": 2.291208000000097
         },
         {
           "id": "heldout-11",
@@ -1530,7 +1530,7 @@
             "contact.escalation"
           ],
           "rank": 9,
-          "ms": 2.631958000000054
+          "ms": 2.638708000000179
         },
         {
           "id": "heldout-13",
@@ -1551,7 +1551,7 @@
             "returns.process"
           ],
           "rank": 8,
-          "ms": 2.49508400000002
+          "ms": 2.7278749999998126
         },
         {
           "id": "heldout-22",
@@ -1572,7 +1572,7 @@
             "contact.hours"
           ],
           "rank": 5,
-          "ms": 3.541458000000034
+          "ms": 2.4025830000000497
         },
         {
           "id": "heldout-30",
@@ -1593,7 +1593,7 @@
             "damaged.safety"
           ],
           "rank": 5,
-          "ms": 2.2496250000000373
+          "ms": 2.201624999999922
         },
         {
           "id": "heldout-31",
@@ -1614,7 +1614,7 @@
             "refunds.method"
           ],
           "rank": null,
-          "ms": 2.374916999999982
+          "ms": 2.3755409999998847
         }
       ]
     },
@@ -1638,7 +1638,7 @@
         "hit4": 0.96875,
         "mrr10": 0.8489583333333334
       },
-      "medianMs": 41.9,
+      "medianMs": 41,
       "misses": [
         {
           "id": "angry-but-legitimate-delivery#delivery.estimates",
@@ -1659,7 +1659,7 @@
             "refunds.timeline"
           ],
           "rank": null,
-          "ms": 44.519416999999976
+          "ms": 45.011708
         },
         {
           "id": "damaged-item-cracked-jar#damaged.resolution",
@@ -1680,7 +1680,7 @@
             "refunds.window"
           ],
           "rank": 7,
-          "ms": 45.41450000000009
+          "ms": 43.997499999999945
         },
         {
           "id": "hinglish-order-status#delivery.estimates",
@@ -1701,7 +1701,7 @@
             "delivery.estimates"
           ],
           "rank": 10,
-          "ms": 49.97062499999993
+          "ms": 48.18312500000002
         },
         {
           "id": "long-rambling-return#returns.window",
@@ -1722,7 +1722,7 @@
             "warranty.period"
           ],
           "rank": null,
-          "ms": 175.85662500000012
+          "ms": 198.1311250000001
         },
         {
           "id": "order-status-dispatched#delivery.estimates",
@@ -1743,7 +1743,7 @@
             "refunds.timeline"
           ],
           "rank": null,
-          "ms": 42.21849999999995
+          "ms": 42.86366599999997
         },
         {
           "id": "quoted-email-injection#returns.window",
@@ -1764,7 +1764,7 @@
             "refunds.high_value"
           ],
           "rank": null,
-          "ms": 73.52112500000021
+          "ms": 71.78545799999984
         },
         {
           "id": "refund-inside-window-extra-item#refunds.window",
@@ -1785,7 +1785,7 @@
             "contact.escalation"
           ],
           "rank": 8,
-          "ms": 51.176666999999725
+          "ms": 47.31249999999977
         },
         {
           "id": "refund-inside-window-extra-item#refunds.timeline",
@@ -1806,7 +1806,7 @@
             "contact.escalation"
           ],
           "rank": null,
-          "ms": 48.54695900000024
+          "ms": 46.88124999999991
         },
         {
           "id": "refund-outside-window-blender#refunds.window",
@@ -1827,7 +1827,7 @@
             "address.requirements"
           ],
           "rank": 6,
-          "ms": 45.485749999999825
+          "ms": 44.65829199999962
         },
         {
           "id": "return-inside-window-opened-unused#returns.window",
@@ -1848,7 +1848,7 @@
             "contact.channels"
           ],
           "rank": null,
-          "ms": 40.93220900000006
+          "ms": 39.87866699999995
         },
         {
           "id": "return-inside-window-sealed#returns.window",
@@ -1869,7 +1869,7 @@
             "refunds.timeline"
           ],
           "rank": 5,
-          "ms": 37.949791000000005
+          "ms": 44.88000000000011
         },
         {
           "id": "two-questions-return-and-delivery#delivery.estimates",
@@ -1890,7 +1890,7 @@
             "delivery.estimates"
           ],
           "rank": 10,
-          "ms": 60.52533399999993
+          "ms": 55.17008399999986
         },
         {
           "id": "wrong-amount-claimed#refunds.window",
@@ -1911,7 +1911,7 @@
             "warranty.period"
           ],
           "rank": 6,
-          "ms": 44.06408300000021
+          "ms": 38.29204200000004
         },
         {
           "id": "heldout-31",
@@ -1932,7 +1932,7 @@
             "refunds.high_value"
           ],
           "rank": null,
-          "ms": 32.92912500000011
+          "ms": 34.78895800000009
         }
       ]
     },
@@ -1977,7 +1977,7 @@
             "refunds.high_value"
           ],
           "rank": null,
-          "ms": 3.6594590000004246
+          "ms": 3.9831669999998667
         },
         {
           "id": "hinglish-damaged-item#damaged.resolution",
@@ -1998,7 +1998,7 @@
             "contact.never_asked"
           ],
           "rank": null,
-          "ms": 1.5917499999995925
+          "ms": 1.5621660000001611
         },
         {
           "id": "hinglish-order-status#delivery.estimates",
@@ -2019,7 +2019,7 @@
             "cancellation.refund"
           ],
           "rank": 5,
-          "ms": 1.5018339999996897
+          "ms": 1.486207999999806
         },
         {
           "id": "long-rambling-return#returns.window",
@@ -2040,7 +2040,7 @@
             "returns.process"
           ],
           "rank": null,
-          "ms": 12.196708000000399
+          "ms": 12.068874999999935
         },
         {
           "id": "order-status-dispatched#delivery.estimates",
@@ -2061,7 +2061,7 @@
             "warranty.claims"
           ],
           "rank": null,
-          "ms": 1.7143329999998969
+          "ms": 1.6899579999999332
         },
         {
           "id": "refund-inside-window-extra-item#refunds.timeline",
@@ -2082,7 +2082,7 @@
             "refunds.timeline"
           ],
           "rank": 10,
-          "ms": 2.0534999999999854
+          "ms": 2.1237920000003214
         },
         {
           "id": "refund-outside-window-smartwatch#refunds.window",
@@ -2103,7 +2103,7 @@
             "returns.window"
           ],
           "rank": 6,
-          "ms": 1.4337090000008175
+          "ms": 1.4099169999999503
         },
         {
           "id": "return-inside-window-opened-unused#returns.window",
@@ -2124,7 +2124,7 @@
             "refunds.method"
           ],
           "rank": 7,
-          "ms": 1.9423750000005384
+          "ms": 1.6659589999999298
         },
         {
           "id": "two-questions-return-and-delivery#delivery.estimates",
@@ -2145,7 +2145,7 @@
             "cancellation.refund"
           ],
           "rank": 6,
-          "ms": 1.766458000000057
+          "ms": 1.7870419999999285
         },
         {
           "id": "wrong-amount-claimed#refunds.window",
@@ -2166,7 +2166,7 @@
             "delivery.delayed"
           ],
           "rank": 5,
-          "ms": 1.3106669999997393
+          "ms": 1.3147500000000036
         },
         {
           "id": "heldout-13",
@@ -2187,7 +2187,7 @@
             "refunds.method"
           ],
           "rank": 5,
-          "ms": 1.0507920000000013
+          "ms": 1.1351250000002437
         },
         {
           "id": "heldout-30",
@@ -2208,7 +2208,7 @@
             "damaged.safety"
           ],
           "rank": 7,
-          "ms": 0.9304999999994834
+          "ms": 0.9278750000003129
         },
         {
           "id": "heldout-31",
@@ -2229,7 +2229,7 @@
             "delivery.delayed"
           ],
           "rank": null,
-          "ms": 0.9908749999995052
+          "ms": 0.9939170000002377
         }
       ]
     },
@@ -2274,7 +2274,7 @@
             "refunds.method"
           ],
           "rank": null,
-          "ms": 2.0794999999998254
+          "ms": 2.0764580000000024
         },
         {
           "id": "damaged-item-cracked-jar#damaged.resolution",
@@ -2295,7 +2295,7 @@
             "address.before_dispatch"
           ],
           "rank": 6,
-          "ms": 1.6189580000000205
+          "ms": 1.6364160000002812
         },
         {
           "id": "hinglish-damaged-item#damaged.resolution",
@@ -2316,7 +2316,7 @@
             "returns.exclusions"
           ],
           "rank": 7,
-          "ms": 1.711833000000297
+          "ms": 1.60674999999992
         },
         {
           "id": "hinglish-order-status#delivery.estimates",
@@ -2337,7 +2337,7 @@
             "returns.process"
           ],
           "rank": 9,
-          "ms": 1.4955409999993208
+          "ms": 1.4881249999998545
         },
         {
           "id": "long-rambling-return#returns.window",
@@ -2358,7 +2358,7 @@
             "address.before_dispatch"
           ],
           "rank": null,
-          "ms": 11.764624999999796
+          "ms": 11.85341600000038
         },
         {
           "id": "order-status-dispatched#delivery.estimates",
@@ -2379,7 +2379,7 @@
             "refunds.window"
           ],
           "rank": null,
-          "ms": 1.7226660000005722
+          "ms": 1.718333999999686
         },
         {
           "id": "policy-block-injection-refund#refunds.window",
@@ -2400,7 +2400,7 @@
             "delivery.dispatch"
           ],
           "rank": 7,
-          "ms": 1.3430840000000899
+          "ms": 1.4465000000000146
         },
         {
           "id": "quoted-email-injection#returns.window",
@@ -2421,7 +2421,7 @@
             "returns.condition"
           ],
           "rank": 7,
-          "ms": 4.094124999999622
+          "ms": 3.9097500000002583
         },
         {
           "id": "refund-inside-window-extra-item#refunds.window",
@@ -2442,7 +2442,7 @@
             "delivery.estimates"
           ],
           "rank": 8,
-          "ms": 2.1469170000000304
+          "ms": 2.157332999999653
         },
         {
           "id": "refund-inside-window-unwanted#refunds.window",
@@ -2463,7 +2463,7 @@
             "delivery.tracking"
           ],
           "rank": 7,
-          "ms": 1.6353750000007494
+          "ms": 1.6209170000001905
         },
         {
           "id": "refund-outside-window-smartwatch#refunds.window",
@@ -2484,7 +2484,7 @@
             "refunds.window"
           ],
           "rank": 10,
-          "ms": 1.4911659999997937
+          "ms": 1.5846660000001975
         },
         {
           "id": "return-inside-window-opened-unused#returns.window",
@@ -2505,7 +2505,7 @@
             "warranty.claims"
           ],
           "rank": null,
-          "ms": 1.7465830000001006
+          "ms": 1.7744590000002063
         },
         {
           "id": "wrong-amount-claimed#refunds.window",
@@ -2526,7 +2526,7 @@
             "returns.process"
           ],
           "rank": 7,
-          "ms": 1.4894160000003467
+          "ms": 1.424750000000131
         },
         {
           "id": "heldout-1",
@@ -2547,7 +2547,7 @@
             "delivery.delayed"
           ],
           "rank": 5,
-          "ms": 0.9944579999992129
+          "ms": 1.1087910000001102
         },
         {
           "id": "heldout-4",
@@ -2568,7 +2568,7 @@
             "delivery.tracking"
           ],
           "rank": 5,
-          "ms": 1.0935839999992822
+          "ms": 1.1482919999998558
         },
         {
           "id": "heldout-11",
@@ -2589,7 +2589,7 @@
             "damaged.safety"
           ],
           "rank": 7,
-          "ms": 1.1844169999994847
+          "ms": 1.196875000000091
         },
         {
           "id": "heldout-13",
@@ -2610,7 +2610,7 @@
             "damaged.resolution"
           ],
           "rank": 10,
-          "ms": 1.147624999999607
+          "ms": 1.0959169999996448
         },
         {
           "id": "heldout-30",
@@ -2631,7 +2631,7 @@
             "damaged.resolution"
           ],
           "rank": null,
-          "ms": 0.9577090000002499
+          "ms": 0.9990419999999176
         },
         {
           "id": "heldout-31",
@@ -2652,7 +2652,7 @@
             "warranty.period"
           ],
           "rank": null,
-          "ms": 1.0477090000003955
+          "ms": 1.0528749999998581
         }
       ]
     },
@@ -2676,7 +2676,7 @@
         "hit4": 0.8125,
         "mrr10": 0.6523809523809523
       },
-      "medianMs": 1.2,
+      "medianMs": 1.3,
       "misses": [
         {
           "id": "angry-but-legitimate-delivery#delivery.estimates",
@@ -2697,7 +2697,7 @@
             "damaged.safety"
           ],
           "rank": null,
-          "ms": 2.448333000000275
+          "ms": 2.1875419999996666
         },
         {
           "id": "damaged-item-cracked-jar#damaged.resolution",
@@ -2718,7 +2718,7 @@
             "returns.exclusions"
           ],
           "rank": 8,
-          "ms": 1.757166999999754
+          "ms": 1.7042079999996531
         },
         {
           "id": "hinglish-damaged-item#damaged.resolution",
@@ -2739,7 +2739,7 @@
             "returns.exclusions"
           ],
           "rank": 8,
-          "ms": 1.7020419999998921
+          "ms": 1.6875829999999041
         },
         {
           "id": "hinglish-order-status#delivery.estimates",
@@ -2760,7 +2760,7 @@
             "contact.channels"
           ],
           "rank": 8,
-          "ms": 1.5855000000001382
+          "ms": 1.5361250000000837
         },
         {
           "id": "long-rambling-return#returns.window",
@@ -2781,7 +2781,7 @@
             "address.before_dispatch"
           ],
           "rank": null,
-          "ms": 12.032834000000548
+          "ms": 11.898291999999401
         },
         {
           "id": "order-status-dispatched#delivery.estimates",
@@ -2802,7 +2802,7 @@
             "refunds.window"
           ],
           "rank": null,
-          "ms": 1.8235420000000886
+          "ms": 1.7738749999998618
         },
         {
           "id": "policy-block-injection-refund#refunds.window",
@@ -2823,7 +2823,7 @@
             "delivery.dispatch"
           ],
           "rank": 7,
-          "ms": 1.4422089999998207
+          "ms": 1.408292000000074
         },
         {
           "id": "quoted-email-injection#returns.window",
@@ -2844,7 +2844,7 @@
             "returns.condition"
           ],
           "rank": 6,
-          "ms": 4.013207999999395
+          "ms": 4.079999999999927
         },
         {
           "id": "refund-inside-window-extra-item#refunds.window",
@@ -2865,7 +2865,7 @@
             "delivery.estimates"
           ],
           "rank": 8,
-          "ms": 2.437167000000045
+          "ms": 2.2490420000003724
         },
         {
           "id": "refund-inside-window-unwanted#refunds.window",
@@ -2886,7 +2886,7 @@
             "delivery.tracking"
           ],
           "rank": 5,
-          "ms": 1.715541999999914
+          "ms": 1.6757500000003347
         },
         {
           "id": "refund-outside-window-blender#refunds.window",
@@ -2907,7 +2907,7 @@
             "address.requirements"
           ],
           "rank": 6,
-          "ms": 1.93487499999992
+          "ms": 1.922750000000633
         },
         {
           "id": "refund-outside-window-smartwatch#refunds.window",
@@ -2928,7 +2928,7 @@
             "refunds.window"
           ],
           "rank": 10,
-          "ms": 1.556416999999783
+          "ms": 1.565708000000086
         },
         {
           "id": "return-inside-window-opened-unused#returns.window",
@@ -2949,7 +2949,7 @@
             "contact.channels"
           ],
           "rank": null,
-          "ms": 1.8315419999998994
+          "ms": 1.8337080000001151
         },
         {
           "id": "wrong-amount-claimed#refunds.window",
@@ -2970,7 +2970,7 @@
             "returns.exclusions"
           ],
           "rank": 7,
-          "ms": 1.4735409999993863
+          "ms": 1.6937920000000304
         },
         {
           "id": "heldout-1",
@@ -2991,7 +2991,7 @@
             "delivery.delayed"
           ],
           "rank": 7,
-          "ms": 1.0784999999996217
+          "ms": 1.0875830000004498
         },
         {
           "id": "heldout-11",
@@ -3012,7 +3012,7 @@
             "damaged.reporting"
           ],
           "rank": 10,
-          "ms": 1.25787500000024
+          "ms": 1.2694579999997586
         },
         {
           "id": "heldout-13",
@@ -3033,7 +3033,7 @@
             "damaged.resolution"
           ],
           "rank": 10,
-          "ms": 1.1673749999999927
+          "ms": 1.2652500000003783
         },
         {
           "id": "heldout-22",
@@ -3054,7 +3054,7 @@
             "delivery.dispatch"
           ],
           "rank": 5,
-          "ms": 1.124416000000565
+          "ms": 1.0784169999997175
         },
         {
           "id": "heldout-30",
@@ -3075,7 +3075,7 @@
             "damaged.resolution"
           ],
           "rank": null,
-          "ms": 1.0347499999998035
+          "ms": 1.1537500000004002
         },
         {
           "id": "heldout-31",
@@ -3096,7 +3096,7 @@
             "refunds.method"
           ],
           "rank": null,
-          "ms": 1.113749999999527
+          "ms": 1.189792000000125
         }
       ]
     },
@@ -3120,7 +3120,7 @@
         "hit4": 0.90625,
         "mrr10": 0.8239583333333333
       },
-      "medianMs": 37.3,
+      "medianMs": 37.1,
       "misses": [
         {
           "id": "angry-but-legitimate-delivery#delivery.estimates",
@@ -3141,7 +3141,7 @@
             "refunds.timeline"
           ],
           "rank": null,
-          "ms": 37.32470900000044
+          "ms": 37.12458300000071
         },
         {
           "id": "boundary-return-day-7-inside#returns.window",
@@ -3162,7 +3162,7 @@
             "damaged.reporting"
           ],
           "rank": 5,
-          "ms": 35.10570800000005
+          "ms": 34.91908299999977
         },
         {
           "id": "damaged-item-cracked-jar#damaged.resolution",
@@ -3183,7 +3183,7 @@
             "returns.exclusions"
           ],
           "rank": 9,
-          "ms": 35.720000000000255
+          "ms": 35.70262500000081
         },
         {
           "id": "hinglish-order-status#delivery.estimates",
@@ -3204,7 +3204,7 @@
             "delivery.estimates"
           ],
           "rank": 10,
-          "ms": 44.699250000000575
+          "ms": 47.031458000000384
         },
         {
           "id": "long-rambling-return#returns.window",
@@ -3225,7 +3225,7 @@
             "refunds.method"
           ],
           "rank": null,
-          "ms": 167.4147499999999
+          "ms": 197.37683300000026
         },
         {
           "id": "order-status-dispatched#delivery.estimates",
@@ -3246,7 +3246,7 @@
             "refunds.window"
           ],
           "rank": null,
-          "ms": 38.67200000000048
+          "ms": 37.47179099999994
         },
         {
           "id": "refund-inside-window-extra-item#refunds.window",
@@ -3267,7 +3267,7 @@
             "delivery.estimates"
           ],
           "rank": 6,
-          "ms": 53.656041999999616
+          "ms": 53.108791000000565
         },
         {
           "id": "refund-inside-window-extra-item#refunds.timeline",
@@ -3288,7 +3288,7 @@
             "delivery.estimates"
           ],
           "rank": 7,
-          "ms": 52.592249999999694
+          "ms": 52.48254100000031
         },
         {
           "id": "refund-outside-window-blender#refunds.window",
@@ -3309,7 +3309,7 @@
             "address.requirements"
           ],
           "rank": 6,
-          "ms": 40.92058399999951
+          "ms": 46.68187500000022
         },
         {
           "id": "refund-outside-window-smartwatch#refunds.window",
@@ -3330,7 +3330,7 @@
             "address.after_dispatch"
           ],
           "rank": 5,
-          "ms": 37.65350000000035
+          "ms": 39.08366699999988
         },
         {
           "id": "return-inside-window-opened-unused#returns.window",
@@ -3351,7 +3351,7 @@
             "contact.channels"
           ],
           "rank": null,
-          "ms": 36.5043340000002
+          "ms": 36.3383330000006
         },
         {
           "id": "return-inside-window-sealed#returns.window",
@@ -3372,7 +3372,7 @@
             "refunds.damaged"
           ],
           "rank": 5,
-          "ms": 34.861957999999504
+          "ms": 36.81645800000024
         },
         {
           "id": "two-questions-return-and-delivery#delivery.estimates",
@@ -3393,7 +3393,7 @@
             "delivery.estimates"
           ],
           "rank": 10,
-          "ms": 49.129666000000725
+          "ms": 50.157916000000114
         },
         {
           "id": "wrong-amount-claimed#refunds.window",
@@ -3414,7 +3414,7 @@
             "warranty.claims"
           ],
           "rank": 7,
-          "ms": 34.795334000000366
+          "ms": 34.73512500000015
         },
         {
           "id": "heldout-17",
@@ -3435,7 +3435,7 @@
             "delivery.dispatch"
           ],
           "rank": 5,
-          "ms": 29.540250000000015
+          "ms": 28.933583
         },
         {
           "id": "heldout-30",
@@ -3456,7 +3456,7 @@
             "delivery.dispatch"
           ],
           "rank": null,
-          "ms": 40.18162500000017
+          "ms": 38.94337499999983
         },
         {
           "id": "heldout-31",
@@ -3477,7 +3477,7 @@
             "refunds.method"
           ],
           "rank": null,
-          "ms": 32.43029200000001
+          "ms": 32.49675000000025
         }
       ]
     },
@@ -3501,7 +3501,7 @@
         "hit4": 0.75,
         "mrr10": 0.6300595238095237
       },
-      "medianMs": 2.1,
+      "medianMs": 2.2,
       "misses": [
         {
           "id": "angry-but-legitimate-delivery#delivery.estimates",
@@ -3522,7 +3522,7 @@
             "address.after_dispatch"
           ],
           "rank": null,
-          "ms": 4.508499999999913
+          "ms": 4.314290999999685
         },
         {
           "id": "boundary-return-day-7-inside#returns.window",
@@ -3543,7 +3543,7 @@
             "returns.exclusions"
           ],
           "rank": 5,
-          "ms": 2.580124999999498
+          "ms": 2.562542000000576
         },
         {
           "id": "cancellation-before-dispatch#cancellation.before_dispatch",
@@ -3564,7 +3564,7 @@
             "delivery.tracking"
           ],
           "rank": null,
-          "ms": 2.38799999999992
+          "ms": 2.418916999999965
         },
         {
           "id": "damaged-item-cracked-jar#damaged.resolution",
@@ -3585,7 +3585,7 @@
             "delivery.delayed"
           ],
           "rank": 8,
-          "ms": 3.4235829999997804
+          "ms": 3.419750000000022
         },
         {
           "id": "hinglish-damaged-item#damaged.resolution",
@@ -3606,7 +3606,7 @@
             "damaged.safety"
           ],
           "rank": null,
-          "ms": 2.9568749999998545
+          "ms": 2.8866250000000946
         },
         {
           "id": "hinglish-order-status#delivery.estimates",
@@ -3627,7 +3627,7 @@
             "returns.window"
           ],
           "rank": 7,
-          "ms": 2.5610410000008414
+          "ms": 2.528041999999914
         },
         {
           "id": "long-rambling-return#returns.window",
@@ -3648,7 +3648,7 @@
             "cancellation.after_dispatch"
           ],
           "rank": 6,
-          "ms": 24.758208000000195
+          "ms": 24.222374999999374
         },
         {
           "id": "order-status-dispatched#delivery.estimates",
@@ -3669,7 +3669,7 @@
             "refunds.timeline"
           ],
           "rank": null,
-          "ms": 3.1168750000006185
+          "ms": 2.962499999999636
         },
         {
           "id": "quoted-email-injection#returns.window",
@@ -3690,7 +3690,7 @@
             "refunds.high_value"
           ],
           "rank": 5,
-          "ms": 7.6689589999996315
+          "ms": 7.594208999999864
         },
         {
           "id": "refund-inside-window-extra-item#refunds.window",
@@ -3711,7 +3711,7 @@
             "address.before_dispatch"
           ],
           "rank": 5,
-          "ms": 4.043749999999818
+          "ms": 3.9656250000007276
         },
         {
           "id": "refund-inside-window-extra-item#refunds.timeline",
@@ -3732,7 +3732,7 @@
             "address.before_dispatch"
           ],
           "rank": 6,
-          "ms": 3.860583000000588
+          "ms": 3.823750000000473
         },
         {
           "id": "return-inside-window-sealed#returns.window",
@@ -3753,7 +3753,7 @@
             "damaged.resolution"
           ],
           "rank": 8,
-          "ms": 2.77020900000025
+          "ms": 2.712749999999687
         },
         {
           "id": "heldout-3",
@@ -3774,7 +3774,7 @@
             "returns.process"
           ],
           "rank": 6,
-          "ms": 1.4878749999998035
+          "ms": 1.677415999999539
         },
         {
           "id": "heldout-4",
@@ -3795,7 +3795,7 @@
             "refunds.exclusions"
           ],
           "rank": null,
-          "ms": 1.9623329999994894
+          "ms": 2.072624999999789
         },
         {
           "id": "heldout-9",
@@ -3817,7 +3817,7 @@
             "returns.condition"
           ],
           "rank": 7,
-          "ms": 1.5890419999996084
+          "ms": 1.583958000000166
         },
         {
           "id": "heldout-13",
@@ -3838,7 +3838,7 @@
             "refunds.method"
           ],
           "rank": 5,
-          "ms": 1.872957999999926
+          "ms": 1.9106670000001031
         },
         {
           "id": "heldout-22",
@@ -3859,7 +3859,7 @@
             "damaged.reporting"
           ],
           "rank": 5,
-          "ms": 1.7640830000000278
+          "ms": 1.7261250000001382
         },
         {
           "id": "heldout-25",
@@ -3880,7 +3880,7 @@
             "contact.channels"
           ],
           "rank": 7,
-          "ms": 1.5632080000004862
+          "ms": 1.4700000000002547
         },
         {
           "id": "heldout-26",
@@ -3901,7 +3901,7 @@
             "delivery.dispatch"
           ],
           "rank": null,
-          "ms": 1.9219579999999041
+          "ms": 1.8802499999992506
         },
         {
           "id": "heldout-31",
@@ -3922,7 +3922,7 @@
             "cancellation.after_dispatch"
           ],
           "rank": 7,
-          "ms": 1.719665999999961
+          "ms": 1.723624999999629
         }
       ]
     },
@@ -3967,7 +3967,7 @@
             "damaged.reporting"
           ],
           "rank": null,
-          "ms": 4.4664169999996375
+          "ms": 4.50683300000037
         },
         {
           "id": "cancellation-before-dispatch#cancellation.before_dispatch",
@@ -3988,7 +3988,7 @@
             "refunds.damaged"
           ],
           "rank": 6,
-          "ms": 2.5015409999996336
+          "ms": 2.4260000000003856
         },
         {
           "id": "damaged-item-cracked-jar#damaged.resolution",
@@ -4009,7 +4009,7 @@
             "cancellation.refund"
           ],
           "rank": null,
-          "ms": 3.550916999999572
+          "ms": 3.4450409999999465
         },
         {
           "id": "hinglish-damaged-item#damaged.resolution",
@@ -4030,7 +4030,7 @@
             "address.requirements"
           ],
           "rank": 7,
-          "ms": 2.9071670000002996
+          "ms": 2.8510409999998956
         },
         {
           "id": "hinglish-order-status#delivery.estimates",
@@ -4051,7 +4051,7 @@
             "delivery.estimates"
           ],
           "rank": 10,
-          "ms": 2.551666999999725
+          "ms": 2.5237919999999576
         },
         {
           "id": "long-rambling-return#returns.window",
@@ -4072,7 +4072,7 @@
             "cancellation.refund"
           ],
           "rank": null,
-          "ms": 24.562166000000616
+          "ms": 24.48845799999981
         },
         {
           "id": "order-status-dispatched#delivery.estimates",
@@ -4093,7 +4093,7 @@
             "cancellation.after_dispatch"
           ],
           "rank": null,
-          "ms": 3.3727090000002136
+          "ms": 3.0417919999999867
         },
         {
           "id": "policy-block-injection-refund#refunds.window",
@@ -4114,7 +4114,7 @@
             "refunds.high_value"
           ],
           "rank": 8,
-          "ms": 2.4197089999997843
+          "ms": 2.6828340000001845
         },
         {
           "id": "quoted-email-injection#returns.window",
@@ -4135,7 +4135,7 @@
             "returns.window"
           ],
           "rank": 10,
-          "ms": 7.695709000000534
+          "ms": 7.901208999999653
         },
         {
           "id": "refund-inside-window-extra-item#refunds.window",
@@ -4156,7 +4156,7 @@
             "delivery.estimates"
           ],
           "rank": 9,
-          "ms": 4.025166999999783
+          "ms": 4.125332999999955
         },
         {
           "id": "refund-inside-window-unwanted#refunds.window",
@@ -4177,7 +4177,7 @@
             "delivery.tracking"
           ],
           "rank": 5,
-          "ms": 3.1012919999993755
+          "ms": 2.996708000000581
         },
         {
           "id": "refund-outside-window-blender#refunds.window",
@@ -4198,7 +4198,7 @@
             "refunds.exclusions"
           ],
           "rank": 5,
-          "ms": 3.368333000000348
+          "ms": 3.3157920000003287
         },
         {
           "id": "refund-outside-window-smartwatch#refunds.window",
@@ -4219,7 +4219,7 @@
             "returns.process"
           ],
           "rank": 6,
-          "ms": 2.797833000000537
+          "ms": 2.737333000000035
         },
         {
           "id": "return-inside-window-opened-unused#returns.window",
@@ -4240,7 +4240,7 @@
             "warranty.claims"
           ],
           "rank": 7,
-          "ms": 3.2755419999994047
+          "ms": 3.2222079999992275
         },
         {
           "id": "heldout-1",
@@ -4261,7 +4261,7 @@
             "returns.process"
           ],
           "rank": 7,
-          "ms": 1.8399579999995694
+          "ms": 1.8116250000002765
         },
         {
           "id": "heldout-4",
@@ -4282,7 +4282,7 @@
             "refunds.window"
           ],
           "rank": null,
-          "ms": 2.1192500000006476
+          "ms": 1.9626250000001164
         },
         {
           "id": "heldout-11",
@@ -4303,7 +4303,7 @@
             "damaged.safety"
           ],
           "rank": 7,
-          "ms": 2.15570900000057
+          "ms": 2.2762500000008004
         },
         {
           "id": "heldout-13",
@@ -4324,7 +4324,7 @@
             "address.before_dispatch"
           ],
           "rank": null,
-          "ms": 2.0210830000005444
+          "ms": 2.0201250000000073
         },
         {
           "id": "heldout-22",
@@ -4345,7 +4345,7 @@
             "damaged.reporting"
           ],
           "rank": 6,
-          "ms": 1.8773339999997916
+          "ms": 1.810707999999977
         },
         {
           "id": "heldout-26",
@@ -4366,7 +4366,7 @@
             "cancellation.after_dispatch"
           ],
           "rank": 5,
-          "ms": 1.9883330000002388
+          "ms": 1.951458000000457
         },
         {
           "id": "heldout-31",
@@ -4387,7 +4387,7 @@
             "returns.process"
           ],
           "rank": 7,
-          "ms": 2.111167000000023
+          "ms": 1.759791999999834
         }
       ]
     },
@@ -4411,7 +4411,7 @@
         "hit4": 0.75,
         "mrr10": 0.6333705357142856
       },
-      "medianMs": 2.7,
+      "medianMs": 2.1,
       "misses": [
         {
           "id": "angry-but-legitimate-delivery#delivery.estimates",
@@ -4432,7 +4432,7 @@
             "refunds.timeline"
           ],
           "rank": null,
-          "ms": 4.3654579999993075
+          "ms": 4.328958000000057
         },
         {
           "id": "cancellation-before-dispatch#cancellation.before_dispatch",
@@ -4453,7 +4453,7 @@
             "contact.hours"
           ],
           "rank": 7,
-          "ms": 2.4947080000001733
+          "ms": 2.415208000000348
         },
         {
           "id": "damaged-item-cracked-jar#damaged.resolution",
@@ -4474,7 +4474,7 @@
             "returns.condition"
           ],
           "rank": null,
-          "ms": 3.5028339999998934
+          "ms": 3.4388329999992493
         },
         {
           "id": "hinglish-damaged-item#damaged.resolution",
@@ -4495,7 +4495,7 @@
             "address.requirements"
           ],
           "rank": 9,
-          "ms": 2.9368750000003274
+          "ms": 2.901832999999897
         },
         {
           "id": "hinglish-order-status#delivery.estimates",
@@ -4516,7 +4516,7 @@
             "contact.channels"
           ],
           "rank": 8,
-          "ms": 2.645625000000109
+          "ms": 2.5619580000002316
         },
         {
           "id": "long-rambling-return#returns.window",
@@ -4537,7 +4537,7 @@
             "damaged.safety"
           ],
           "rank": null,
-          "ms": 24.74762499999997
+          "ms": 24.54504199999974
         },
         {
           "id": "order-status-dispatched#delivery.estimates",
@@ -4558,7 +4558,7 @@
             "address.requirements"
           ],
           "rank": null,
-          "ms": 3.1590830000004644
+          "ms": 3.082542000000103
         },
         {
           "id": "policy-block-injection-refund#refunds.window",
@@ -4579,7 +4579,7 @@
             "contact.escalation"
           ],
           "rank": 7,
-          "ms": 2.804041999999754
+          "ms": 2.5055840000004537
         },
         {
           "id": "quoted-email-injection#returns.window",
@@ -4600,7 +4600,7 @@
             "returns.exclusions"
           ],
           "rank": 6,
-          "ms": 7.783042000000023
+          "ms": 7.704917000000023
         },
         {
           "id": "refund-inside-window-extra-item#refunds.window",
@@ -4621,7 +4621,7 @@
             "delivery.estimates"
           ],
           "rank": 8,
-          "ms": 4.1414590000003955
+          "ms": 4.083666999999878
         },
         {
           "id": "refund-outside-window-blender#refunds.window",
@@ -4642,7 +4642,7 @@
             "address.requirements"
           ],
           "rank": 6,
-          "ms": 3.454000000000633
+          "ms": 3.3636670000005324
         },
         {
           "id": "refund-outside-window-smartwatch#refunds.window",
@@ -4663,7 +4663,7 @@
             "returns.process"
           ],
           "rank": 6,
-          "ms": 2.974500000000262
+          "ms": 3.0874579999999696
         },
         {
           "id": "return-inside-window-opened-unused#returns.window",
@@ -4684,7 +4684,7 @@
             "contact.channels"
           ],
           "rank": 5,
-          "ms": 3.5079580000001442
+          "ms": 3.4155000000000655
         },
         {
           "id": "wrong-amount-claimed#refunds.window",
@@ -4705,7 +4705,7 @@
             "warranty.period"
           ],
           "rank": 5,
-          "ms": 2.518417000000227
+          "ms": 2.438208000000486
         },
         {
           "id": "heldout-1",
@@ -4726,7 +4726,7 @@
             "returns.process"
           ],
           "rank": 8,
-          "ms": 2.0286669999995866
+          "ms": 1.849250000000211
         },
         {
           "id": "heldout-4",
@@ -4747,7 +4747,7 @@
             "refunds.method"
           ],
           "rank": null,
-          "ms": 2.3501249999999345
+          "ms": 2.0980829999998605
         },
         {
           "id": "heldout-11",
@@ -4768,7 +4768,7 @@
             "damaged.reporting"
           ],
           "rank": 10,
-          "ms": 3.4264579999999114
+          "ms": 2.1824169999999867
         },
         {
           "id": "heldout-13",
@@ -4789,7 +4789,7 @@
             "address.before_dispatch"
           ],
           "rank": null,
-          "ms": 2.7785000000003492
+          "ms": 2.078125
         },
         {
           "id": "heldout-22",
@@ -4810,7 +4810,7 @@
             "damaged.reporting"
           ],
           "rank": 6,
-          "ms": 1.9337500000001455
+          "ms": 1.8145000000004075
         },
         {
           "id": "heldout-26",
@@ -4831,7 +4831,7 @@
             "cancellation.after_dispatch"
           ],
           "rank": 5,
-          "ms": 2.0847909999993135
+          "ms": 2.0053339999994932
         },
         {
           "id": "heldout-30",
@@ -4852,7 +4852,7 @@
             "damaged.safety"
           ],
           "rank": 5,
-          "ms": 1.7950419999997393
+          "ms": 1.7082909999999174
         },
         {
           "id": "heldout-31",
@@ -4873,7 +4873,7 @@
             "refunds.method"
           ],
           "rank": 7,
-          "ms": 1.8998750000000655
+          "ms": 1.7910409999994954
         }
       ]
     },
@@ -4897,7 +4897,7 @@
         "hit4": 0.875,
         "mrr10": 0.8023809523809523
       },
-      "medianMs": 40.9,
+      "medianMs": 40.2,
       "misses": [
         {
           "id": "angry-but-legitimate-delivery#delivery.estimates",
@@ -4918,7 +4918,7 @@
             "refunds.timeline"
           ],
           "rank": null,
-          "ms": 47.20045899999968
+          "ms": 44.73462500000005
         },
         {
           "id": "boundary-return-day-7-inside#returns.window",
@@ -4939,7 +4939,7 @@
             "refunds.timeline"
           ],
           "rank": 5,
-          "ms": 36.6371250000002
+          "ms": 40.384124999999585
         },
         {
           "id": "damaged-item-cracked-jar#damaged.resolution",
@@ -4960,7 +4960,7 @@
             "warranty.period"
           ],
           "rank": null,
-          "ms": 37.020290999998906
+          "ms": 39.56062499999916
         },
         {
           "id": "hinglish-order-status#delivery.estimates",
@@ -4981,7 +4981,7 @@
             "delivery.estimates"
           ],
           "rank": 10,
-          "ms": 48.82629199999974
+          "ms": 47.02729200000067
         },
         {
           "id": "long-rambling-return#returns.window",
@@ -5002,7 +5002,7 @@
             "warranty.period"
           ],
           "rank": null,
-          "ms": 177.31562499999927
+          "ms": 173.9997910000002
         },
         {
           "id": "order-status-dispatched#delivery.estimates",
@@ -5023,7 +5023,7 @@
             "warranty.period"
           ],
           "rank": null,
-          "ms": 39.236417000000074
+          "ms": 37.61658299999908
         },
         {
           "id": "refund-inside-window-extra-item#refunds.window",
@@ -5044,7 +5044,7 @@
             "delivery.estimates"
           ],
           "rank": 5,
-          "ms": 58.53108299999985
+          "ms": 56.329125000000204
         },
         {
           "id": "refund-inside-window-extra-item#refunds.timeline",
@@ -5065,7 +5065,7 @@
             "delivery.estimates"
           ],
           "rank": 7,
-          "ms": 61.6846659999992
+          "ms": 56.235500000000684
         },
         {
           "id": "refund-outside-window-blender#refunds.window",
@@ -5086,7 +5086,7 @@
             "address.requirements"
           ],
           "rank": 6,
-          "ms": 43.18399999999929
+          "ms": 43.94087500000023
         },
         {
           "id": "refund-outside-window-smartwatch#refunds.window",
@@ -5107,7 +5107,7 @@
             "address.after_dispatch"
           ],
           "rank": 5,
-          "ms": 41.22037499999897
+          "ms": 40.24158299999908
         },
         {
           "id": "return-inside-window-opened-unused#returns.window",
@@ -5128,7 +5128,7 @@
             "address.after_dispatch"
           ],
           "rank": 5,
-          "ms": 41.11054200000035
+          "ms": 39.49641700000029
         },
         {
           "id": "return-inside-window-sealed#returns.window",
@@ -5149,7 +5149,7 @@
             "refunds.timeline"
           ],
           "rank": 5,
-          "ms": 38.47529199999917
+          "ms": 40.138874999998734
         },
         {
           "id": "two-questions-return-and-delivery#delivery.estimates",
@@ -5170,7 +5170,7 @@
             "delivery.estimates"
           ],
           "rank": 10,
-          "ms": 53.1198749999985
+          "ms": 52.468833000000814
         },
         {
           "id": "wrong-amount-claimed#refunds.window",
@@ -5191,7 +5191,7 @@
             "warranty.period"
           ],
           "rank": 6,
-          "ms": 38.59254200000032
+          "ms": 37.187834000000294
         },
         {
           "id": "heldout-4",
@@ -5212,7 +5212,7 @@
             "refunds.method"
           ],
           "rank": null,
-          "ms": 34.791166999999405
+          "ms": 34.502291999999215
         },
         {
           "id": "heldout-13",
@@ -5233,7 +5233,7 @@
             "contact.escalation"
           ],
           "rank": null,
-          "ms": 31.19329199999993
+          "ms": 30.79058299999997
         },
         {
           "id": "heldout-17",
@@ -5254,7 +5254,7 @@
             "delivery.dispatch"
           ],
           "rank": 5,
-          "ms": 32.74695800000154
+          "ms": 43.54425000000083
         },
         {
           "id": "heldout-31",
@@ -5275,7 +5275,348 @@
             "refunds.method"
           ],
           "rank": 7,
-          "ms": 34.7611250000009
+          "ms": 37.48816699999952
+        }
+      ]
+    },
+    {
+      "config": {
+        "name": "production: bge-small-en-v1.5 (fp32) + RRF + cross-encoder (fp32) rerank",
+        "mode": "hybrid",
+        "embedding": "bge-small-en-v1.5",
+        "reranker": "cross-encoder",
+        "dtype": "fp32",
+        "production": true
+      },
+      "retrieverId": "hybrid(Xenova/bge-small-en-v1.5@fp32/cls, rrf, cross-encoder:Xenova/ms-marco-MiniLM-L-6-v2@fp32)",
+      "evalDerived": {
+        "questions": 27,
+        "hit1": 0.25925925925925924,
+        "hit4": 0.48148148148148145,
+        "mrr10": 0.3766460905349793
+      },
+      "heldOut": {
+        "questions": 32,
+        "hit1": 0.75,
+        "hit4": 0.96875,
+        "mrr10": 0.8411458333333334
+      },
+      "medianMs": 86.9,
+      "misses": [
+        {
+          "id": "angry-but-legitimate-delivery#delivery.estimates",
+          "set": "eval-derived",
+          "gold": [
+            "delivery.estimates"
+          ],
+          "ranked": [
+            "cancellation.before_dispatch",
+            "delivery.delayed",
+            "warranty.claims",
+            "cancellation.refund",
+            "damaged.reporting",
+            "refunds.exclusions",
+            "refunds.method",
+            "contact.never_asked",
+            "warranty.period",
+            "refunds.timeline"
+          ],
+          "rank": null,
+          "ms": 90.30162500002189
+        },
+        {
+          "id": "damaged-item-cracked-jar#damaged.resolution",
+          "set": "eval-derived",
+          "gold": [
+            "damaged.resolution"
+          ],
+          "ranked": [
+            "damaged.reporting",
+            "delivery.delayed",
+            "returns.process",
+            "address.before_dispatch",
+            "returns.window",
+            "warranty.claims",
+            "cancellation.refund",
+            "refunds.damaged",
+            "damaged.resolution",
+            "refunds.window"
+          ],
+          "rank": 9,
+          "ms": 92.28849999999511
+        },
+        {
+          "id": "hinglish-order-status#delivery.estimates",
+          "set": "eval-derived",
+          "gold": [
+            "delivery.estimates"
+          ],
+          "ranked": [
+            "cancellation.before_dispatch",
+            "address.before_dispatch",
+            "delivery.dispatch",
+            "delivery.tracking",
+            "cancellation.refund",
+            "cancellation.after_dispatch",
+            "address.after_dispatch",
+            "delivery.delayed",
+            "returns.process",
+            "delivery.estimates"
+          ],
+          "rank": 10,
+          "ms": 102.9677499999816
+        },
+        {
+          "id": "long-rambling-return#returns.window",
+          "set": "eval-derived",
+          "gold": [
+            "returns.window"
+          ],
+          "ranked": [
+            "cancellation.before_dispatch",
+            "delivery.delayed",
+            "cancellation.refund",
+            "cancellation.after_dispatch",
+            "refunds.damaged",
+            "returns.exclusions",
+            "damaged.safety",
+            "refunds.method",
+            "warranty.exclusions",
+            "address.before_dispatch"
+          ],
+          "rank": null,
+          "ms": 335.0501670000085
+        },
+        {
+          "id": "order-status-dispatched#delivery.estimates",
+          "set": "eval-derived",
+          "gold": [
+            "delivery.estimates"
+          ],
+          "ranked": [
+            "cancellation.before_dispatch",
+            "address.before_dispatch",
+            "delivery.dispatch",
+            "cancellation.after_dispatch",
+            "cancellation.refund",
+            "delivery.delayed",
+            "contact.channels",
+            "refunds.window",
+            "refunds.method",
+            "refunds.timeline"
+          ],
+          "rank": null,
+          "ms": 87.94637499999953
+        },
+        {
+          "id": "quoted-email-injection#returns.window",
+          "set": "eval-derived",
+          "gold": [
+            "returns.window"
+          ],
+          "ranked": [
+            "returns.process",
+            "returns.condition",
+            "delivery.delayed",
+            "cancellation.refund",
+            "refunds.window",
+            "refunds.method",
+            "refunds.damaged",
+            "refunds.timeline",
+            "damaged.safety",
+            "refunds.high_value"
+          ],
+          "rank": null,
+          "ms": 142.18225000001257
+        },
+        {
+          "id": "refund-inside-window-extra-item#refunds.window",
+          "set": "eval-derived",
+          "gold": [
+            "refunds.window"
+          ],
+          "ranked": [
+            "cancellation.refund",
+            "refunds.method",
+            "refunds.exclusions",
+            "refunds.damaged",
+            "returns.process",
+            "cancellation.after_dispatch",
+            "refunds.high_value",
+            "refunds.window",
+            "delivery.dispatch",
+            "contact.escalation"
+          ],
+          "rank": 8,
+          "ms": 99.38149999998859
+        },
+        {
+          "id": "refund-inside-window-extra-item#refunds.timeline",
+          "set": "eval-derived",
+          "gold": [
+            "refunds.timeline"
+          ],
+          "ranked": [
+            "cancellation.refund",
+            "refunds.method",
+            "refunds.exclusions",
+            "refunds.damaged",
+            "returns.process",
+            "cancellation.after_dispatch",
+            "refunds.high_value",
+            "refunds.window",
+            "delivery.dispatch",
+            "contact.escalation"
+          ],
+          "rank": null,
+          "ms": 98.43724999998813
+        },
+        {
+          "id": "refund-outside-window-blender#refunds.window",
+          "set": "eval-derived",
+          "gold": [
+            "refunds.window"
+          ],
+          "ranked": [
+            "cancellation.refund",
+            "refunds.method",
+            "returns.process",
+            "refunds.exclusions",
+            "delivery.delayed",
+            "refunds.window",
+            "refunds.high_value",
+            "returns.window",
+            "refunds.timeline",
+            "address.requirements"
+          ],
+          "rank": 6,
+          "ms": 94.52870899997652
+        },
+        {
+          "id": "refund-outside-window-smartwatch#refunds.window",
+          "set": "eval-derived",
+          "gold": [
+            "refunds.window"
+          ],
+          "ranked": [
+            "warranty.period",
+            "refunds.method",
+            "cancellation.refund",
+            "returns.window",
+            "refunds.window",
+            "contact.never_asked",
+            "delivery.delayed",
+            "contact.escalation",
+            "contact.channels",
+            "address.after_dispatch"
+          ],
+          "rank": 5,
+          "ms": 89.52054200001294
+        },
+        {
+          "id": "return-inside-window-opened-unused#returns.window",
+          "set": "eval-derived",
+          "gold": [
+            "returns.window"
+          ],
+          "ranked": [
+            "returns.condition",
+            "returns.exclusions",
+            "returns.process",
+            "warranty.claims",
+            "delivery.delayed",
+            "delivery.tracking",
+            "contact.never_asked",
+            "refunds.method",
+            "cancellation.refund",
+            "contact.channels"
+          ],
+          "rank": null,
+          "ms": 86.18870900000911
+        },
+        {
+          "id": "return-inside-window-sealed#returns.window",
+          "set": "eval-derived",
+          "gold": [
+            "returns.window"
+          ],
+          "ranked": [
+            "returns.condition",
+            "cancellation.after_dispatch",
+            "returns.process",
+            "returns.exclusions",
+            "returns.window",
+            "delivery.delayed",
+            "warranty.period",
+            "refunds.window",
+            "damaged.reporting",
+            "refunds.timeline"
+          ],
+          "rank": 5,
+          "ms": 85.9429999999993
+        },
+        {
+          "id": "two-questions-return-and-delivery#delivery.estimates",
+          "set": "eval-derived",
+          "gold": [
+            "delivery.estimates"
+          ],
+          "ranked": [
+            "returns.window",
+            "returns.process",
+            "cancellation.after_dispatch",
+            "refunds.window",
+            "returns.condition",
+            "cancellation.refund",
+            "delivery.dispatch",
+            "refunds.exclusions",
+            "refunds.timeline",
+            "delivery.estimates"
+          ],
+          "rank": 10,
+          "ms": 110.89070899999933
+        },
+        {
+          "id": "wrong-amount-claimed#refunds.window",
+          "set": "eval-derived",
+          "gold": [
+            "refunds.window"
+          ],
+          "ranked": [
+            "cancellation.refund",
+            "refunds.method",
+            "refunds.high_value",
+            "refunds.exclusions",
+            "refunds.damaged",
+            "refunds.window",
+            "refunds.timeline",
+            "returns.exclusions",
+            "warranty.claims",
+            "warranty.period"
+          ],
+          "rank": 6,
+          "ms": 83.15950000000885
+        },
+        {
+          "id": "heldout-31",
+          "set": "held-out",
+          "gold": [
+            "refunds.timeline"
+          ],
+          "ranked": [
+            "returns.process",
+            "returns.window",
+            "returns.exclusions",
+            "refunds.window",
+            "cancellation.after_dispatch",
+            "refunds.exclusions",
+            "warranty.period",
+            "refunds.method",
+            "contact.channels",
+            "refunds.high_value"
+          ],
+          "rank": null,
+          "ms": 81.46095800001058
         }
       ]
     }

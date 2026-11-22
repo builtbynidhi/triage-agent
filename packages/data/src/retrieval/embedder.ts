@@ -34,27 +34,35 @@ export const EMBEDDING_MODELS = {
 
 export type EmbeddingModelName = keyof typeof EMBEDDING_MODELS;
 
+/**
+ * Weight precision. q8 is a quarter of the size, but int8 maths is implemented differently on
+ * ARM and x86, so near-ties rank differently across machines (measured: a recording made on
+ * macOS missed on the Linux CI runner). fp32 differences across CPUs are around 1e-6, so
+ * production uses fp32; q8 remains for the size/quality comparison in docs/retrieval.md.
+ */
+export type ModelDtype = "fp32" | "q8";
+
 const pipelines = new Map<string, Promise<FeatureExtractionPipeline>>();
 
-function load(model: string): Promise<FeatureExtractionPipeline> {
+function load(model: string, dtype: ModelDtype): Promise<FeatureExtractionPipeline> {
   configureLocalModels();
-  let p = pipelines.get(model);
+  const cacheKey = `${model}@${dtype}`;
+  let p = pipelines.get(cacheKey);
   if (!p) {
-    // q8 weights: a quarter of the size of fp32, with negligible loss for retrieval.
     p = pipeline("feature-extraction", model, {
-      dtype: "q8",
+      dtype,
     }) as Promise<FeatureExtractionPipeline>;
-    pipelines.set(model, p);
+    pipelines.set(cacheKey, p);
   }
   return p;
 }
 
 /** A local, CPU-only sentence embedder. The model loads lazily, once per process. */
-export function createLocalEmbedder(name: EmbeddingModelName): Embedder {
+export function createLocalEmbedder(name: EmbeddingModelName, dtype: ModelDtype = "q8"): Embedder {
   const spec: EmbeddingModelSpec = EMBEDDING_MODELS[name];
   const embed = async (texts: string[]): Promise<Float32Array[]> => {
     if (texts.length === 0) return [];
-    const extractor = await load(spec.model);
+    const extractor = await load(spec.model, dtype);
     const out = await extractor(texts, { pooling: spec.pooling, normalize: true });
     const [rows, dim] = out.dims as [number, number];
     if (dim !== EMBEDDING_DIM)
@@ -63,7 +71,7 @@ export function createLocalEmbedder(name: EmbeddingModelName): Embedder {
     return Array.from({ length: rows }, (_, i) => data.slice(i * dim, (i + 1) * dim));
   };
   return {
-    id: `${spec.model}@q8/${spec.pooling}`,
+    id: `${spec.model}@${dtype}/${spec.pooling}`,
     dim: EMBEDDING_DIM,
     embedDocuments: embed,
     async embedQuery(text) {

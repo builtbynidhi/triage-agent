@@ -4,6 +4,7 @@ import {
   type PreTrainedModel,
   type PreTrainedTokenizer,
 } from "@huggingface/transformers";
+import type { ModelDtype } from "./embedder.ts";
 import { configureLocalModels } from "./models.ts";
 import { contentWords } from "./text.ts";
 
@@ -78,21 +79,25 @@ const crossEncoders = new Map<string, Promise<[PreTrainedTokenizer, PreTrainedMo
  * which catches meaning that word overlap and independent embeddings miss. Runs locally
  * (MS MARCO MiniLM, q8, about 23 MB).
  */
-export function createCrossEncoderReranker(model = "Xenova/ms-marco-MiniLM-L-6-v2"): Reranker {
+export function createCrossEncoderReranker(
+  model = "Xenova/ms-marco-MiniLM-L-6-v2",
+  dtype: ModelDtype = "q8",
+): Reranker {
   const load = () => {
     configureLocalModels();
-    let p = crossEncoders.get(model);
+    const cacheKey = `${model}@${dtype}`;
+    let p = crossEncoders.get(cacheKey);
     if (!p) {
       p = Promise.all([
         AutoTokenizer.from_pretrained(model),
-        AutoModelForSequenceClassification.from_pretrained(model, { dtype: "q8" }),
+        AutoModelForSequenceClassification.from_pretrained(model, { dtype }),
       ]);
-      crossEncoders.set(model, p);
+      crossEncoders.set(cacheKey, p);
     }
     return p;
   };
   return {
-    id: `cross-encoder:${model}@q8`,
+    id: `cross-encoder:${model}@${dtype}`,
     async rerank(query, candidates) {
       if (candidates.length === 0) return [];
       const [tokenizer, ce] = await load();

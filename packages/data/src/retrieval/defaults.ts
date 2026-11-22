@@ -11,11 +11,13 @@ import { createPolicyRetriever, type PolicyRetriever } from "./retriever.ts";
  */
 export const DEFAULT_EMBEDDING_MODEL: EmbeddingModelName = "bge-small-en-v1.5";
 export const DEFAULT_RERANKER = "cross-encoder" as const;
+/** fp32, not q8: identical rankings on every CPU, so recordings replay anywhere (ADR 0005). */
+export const DEFAULT_DTYPE = "fp32" as const;
 
 export function createDefaultRetriever(store: TriageStore): PolicyRetriever {
   return createPolicyRetriever({
     store,
-    embedder: createLocalEmbedder(DEFAULT_EMBEDDING_MODEL),
-    reranker: createCrossEncoderReranker(),
+    embedder: createLocalEmbedder(DEFAULT_EMBEDDING_MODEL, DEFAULT_DTYPE),
+    reranker: createCrossEncoderReranker(undefined, DEFAULT_DTYPE),
   });
 }
