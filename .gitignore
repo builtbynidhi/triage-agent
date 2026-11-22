@@ -17,3 +17,6 @@ __pycache__/
 *.db-wal
 *.db-shm
 /.cache/
+
+# Claude Code: personal settings stay local; .claude/settings.json is shared and committed
+.claude/settings.local.json
