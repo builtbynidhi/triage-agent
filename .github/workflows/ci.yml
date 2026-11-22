@@ -35,7 +35,7 @@ jobs:
       # Local embedding and reranker models (about 60 MB), downloaded once from the public
       # Hugging Face hub, then restored from the cache. No API keys, no cost.
       - name: Cache local models
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: .cache/models
           key: models-${{ hashFiles('packages/data/src/retrieval/defaults.ts', 'packages/data/src/retrieval/embedder.ts', 'packages/data/src/retrieval/rerank.ts') }}
