@@ -57,7 +57,15 @@ Then ask, for example: _"Using the triage tools, can order A-10413 still be retu
 
 ## Use it from Claude Desktop
 
-Add this to `~/Library/Application Support/Claude/claude_desktop_config.json` on macOS (`%APPDATA%\Claude\claude_desktop_config.json` on Windows), then restart Claude Desktop:
+A live client checks the tools against its own calendar, so the demo uses its own database, seeded relative to the **real** today with no pinned date. (Tests and evals keep the fixed date in `data/triage.db`.)
+
+```bash
+pnpm db:demo    # rebuilds data/demo.db as of today in India, builds the index, prints what to ask
+```
+
+Re-run it before a demo: order ages move on by a day every day.
+
+Then add this to `~/Library/Application Support/Claude/claude_desktop_config.json` on macOS (`%APPDATA%\Claude\claude_desktop_config.json` on Windows), keeping anything already there, and restart Claude Desktop with ⌘Q:
 
 ```json
 {
@@ -65,13 +73,26 @@ Add this to `~/Library/Application Support/Claude/claude_desktop_config.json` on
     "triage-kaveri": {
       "command": "/absolute/path/to/node",
       "args": ["/absolute/path/to/triage-agent/packages/mcp-server/src/stdio.ts"],
-      "env": { "TRIAGE_TENANT": "tenant_a", "TRIAGE_TODAY": "2026-11-20" }
+      "env": {
+        "TRIAGE_TENANT": "tenant_a",
+        "DATABASE_PATH": "/absolute/path/to/triage-agent/data/demo.db"
+      }
+    },
+    "triage-nilgiri": {
+      "command": "/absolute/path/to/node",
+      "args": ["/absolute/path/to/triage-agent/packages/mcp-server/src/stdio.ts"],
+      "env": {
+        "TRIAGE_TENANT": "tenant_b",
+        "DATABASE_PATH": "/absolute/path/to/triage-agent/data/demo.db"
+      }
     }
   }
 }
 ```
 
-Use absolute paths. Claude Desktop does not use your shell's `PATH`, so give the output of `which node` (Node 22.18 or later, so it can run TypeScript directly).
+Use absolute paths. Claude Desktop does not use your shell's `PATH`, so give the output of `which node` (Node 22.18 or later). Do not set `TRIAGE_TODAY` here: a pinned date makes the tools contradict the client's calendar, and Claude rightly flags the eligibility answers as wrong.
+
+**Demo script:** A-10413 is always on day 7 of its return window (eligible, `returns.window`), and A-10414 on day 8 (not eligible). B-20410 is `not_found` through triage-kaveri but found through triage-nilgiri: one merchant cannot see another's orders.
 
 ## Streamable HTTP
 

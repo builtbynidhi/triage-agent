@@ -115,3 +115,9 @@ Prompt structure: role, rules and schema in the system prompt (a versioned file)
 - Keyword queries go through `toFtsQuery`, which keeps content words only (the NLTK and Hinglish list in `retrieval/text.ts`). Never pass user text to `MATCH`.
 - `evals/retrieval/heldout.yaml` must never be edited to raise a score. `evals/src/retrieval.test.ts` gates hit@4 on the committed `evals/report/retrieval.json`.
 - pnpm build scripts are denied for `onnxruntime-node` (it would download CUDA libraries on Linux) and `protobufjs` in `pnpm-workspace.yaml`. Keep it that way.
+
+## Two databases: fixed date vs live demo
+
+- `data/triage.db` (`pnpm db:seed`) is anchored to `SEED_TODAY` (2026-11-20). Tests and evals use it, and pin `today` to that date so answers never drift.
+- `data/demo.db` (`pnpm db:demo`) is seeded relative to the **real** today in India, for live clients such as Claude Desktop. Its servers set **no** `TRIAGE_TODAY`. Pinning the date in a live client makes the tools contradict the client's calendar. Claude Desktop caught exactly that on 2026-11-22 and flagged the eligibility tool as "using the wrong date".
+- `seed(db, { today })` shifts every seeded date by the same amount, so ages and window boundaries are identical whatever the anchor (A-10413 is always day 7, A-10414 day 8).
