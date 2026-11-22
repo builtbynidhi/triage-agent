@@ -141,3 +141,12 @@ Prompt structure: role, rules and schema in the system prompt (a versioned file)
 - Every non-decided outcome is ESCALATE with the gathered facts, except a CassetteMissError, which must propagate.
 - `pnpm agent:run --ticket "..."` replays by default. Record a new ticket once with `--mode record-missing`, which costs about 3 to 4 free calls; say so before running it. `--demo` uses `data/demo.db` and today's date.
 - Tests use `scriptedRouter` and real MCP tools (`src/test-helpers.ts`), with no network.
+
+## Eval harness (Phase 7)
+
+- `pnpm eval` replays all 40 cases (no API calls, no keys). `pnpm eval --mode record-missing` records only cases with no recording. `--case <substring>` and `--repeats N` narrow a run; `--write-baseline` writes `evals/baseline.json`.
+- Code: `evals/run.ts` (CLI), `evals/src/runner.ts` (drives the real agent, MCP, retrieval and router per case), `grade.ts` (the three checks), `metrics.ts` (scorecard), `report.ts` (markdown and baseline comparison). Outputs: `evals/report/report.json`, `report.md`. Charts: `pnpm eval:charts` runs `scripts/report.py`, which re-aggregates the runs as a cross-check and renders `docs/images/*.png`; it needs `.venv` (`python3 -m venv .venv && .venv/bin/pip install -r scripts/requirements.txt`).
+- A run with no recording, or a provider outage, is **incomplete**: reported, never scored, and the exit code is non-zero.
+- The judge is Phase 9: until then the reply check is phrases only, and the report says so.
+- Recording costs free-tier calls (about 3 per case). Always state the count and get the owner's go-ahead before a recording run. **Both accounts must stay on free plans; never add credits anywhere.** grok-api.com ("GrokAPI") is unrelated to Groq and is not used.
+- Phase 7 is the honest first score: no prompt or agent tuning until Phase 8.
