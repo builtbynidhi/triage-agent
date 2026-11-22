@@ -7,7 +7,8 @@ export const searchPolicy = defineTool({
   name: "search_policy",
   title: "Search policy",
   description:
-    "Search the merchant's support policies. Returns the best-matching clauses, each with a stable " +
+    "Search the support policies that apply to this merchant (policies shared by all merchants, plus " +
+    "any specific to this one). Returns the best-matching clauses, each with a stable " +
     "clause_id. Ask one short, specific question per call (e.g. 'return window for an unused item'), " +
     "not the whole ticket: retrieval is far more accurate on focused questions. For a ticket with two " +
     "questions, search twice. A reply may only cite clause_ids returned by this tool (or by " +

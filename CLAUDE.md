@@ -102,6 +102,7 @@ Prompt structure: role, rules and schema in the system prompt (a versioned file)
 - **Every tool goes through `invokeTool`**. It validates with Zod and returns the shared error shape for every failure, including bad input. Do not let the SDK validate input: its errors are free text. That is why `advertiseOnly` exists; keep it. Successes are `{ ok: true, ... }`.
 - `check_eligibility` request types: `return`, `refund`, `cancellation`, `address_change`. Damaged items are not a request type; they always escalate. Rules and constants live in `src/eligibility.ts`, with today defaulting to the current date in India (`Asia/Kolkata`). Tests and evals pin `today` to `SEED_TODAY`.
 - Not-found messages are shared constants (`ORDER_NOT_FOUND`, `CUSTOMER_NOT_FOUND`), so "missing" and "another tenant's" are identical. Keep it that way.
+- Each server names its merchant in its MCP instructions ("Kaveri Home & Kitchen (tenant_a)"), and `search_policy` and the resources say their policies are the ones that apply to that merchant. Added after Claude Desktop hedged about whose policy applied.
 - Run: `pnpm mcp:stdio` (needs `TRIAGE_TENANT`), `pnpm mcp:http` (port 3100). Client setup: `packages/mcp-server/README.md`.
 - Tests: `eligibility.test.ts` (every boundary), `pii.test.ts`, `tools.test.ts` (over a real MCP client), `transports.test.ts` (a real stdio subprocess and a real HTTP server). Five deliberate bugs were each caught by these tests before Phase 3 shipped.
 

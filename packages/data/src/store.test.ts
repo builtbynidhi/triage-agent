@@ -25,6 +25,20 @@ describe("toFtsQuery", () => {
   });
 });
 
+describe("tenants", () => {
+  it("returns a merchant's display name, or null for an unknown tenant", async () => {
+    expect(await store.getTenant("tenant_a")).toEqual({
+      id: "tenant_a",
+      name: "Kaveri Home & Kitchen",
+    });
+    expect(await store.getTenant("tenant_b")).toEqual({
+      id: "tenant_b",
+      name: "Nilgiri Electronics",
+    });
+    expect(await store.getTenant("tenant_zz")).toBeNull();
+  });
+});
+
 describe("SQLite store tenant scoping", () => {
   it("returns an order to its own tenant only", async () => {
     expect((await store.getOrder("tenant_a", "A-10413"))?.id).toBe("A-10413");

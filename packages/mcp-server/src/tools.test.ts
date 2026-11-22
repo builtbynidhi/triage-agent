@@ -38,6 +38,22 @@ const customers = db.prepare("SELECT * FROM customers ORDER BY id").all() as {
   phone: string;
 }[];
 
+describe("each server says which merchant it serves", () => {
+  it("names its own merchant in the server instructions, and only that one", () => {
+    const ia = a.client.getInstructions() ?? "";
+    const ib = b.client.getInstructions() ?? "";
+    expect(ia).toContain("Kaveri Home & Kitchen (tenant_a)");
+    expect(ia).not.toContain("Nilgiri");
+    expect(ib).toContain("Nilgiri Electronics (tenant_b)");
+    expect(ib).not.toContain("Kaveri");
+  });
+
+  it("search_policy says its policies are the ones that apply to this merchant", async () => {
+    const t = (await a.client.listTools()).tools.find((x) => x.name === "search_policy")!;
+    expect(t.description).toMatch(/policies that apply to this merchant/);
+  });
+});
+
 describe("tool listing: names, schemas, annotations", () => {
   it("exposes exactly the four read tools", async () => {
     const { tools } = await a.client.listTools();

@@ -11,6 +11,8 @@ import { ToolFailure, toolError, type ToolError } from "./errors.ts";
 export interface ToolContext {
   store: TriageStore;
   tenantId: string;
+  /** The merchant's display name, e.g. "Kaveri Home & Kitchen". */
+  tenantName: string;
   /** Today's date, YYYY-MM-DD. Injected so evals pin it to the seed date. */
   today: () => string;
   /** Policy retrieval. Keyword search now; Phase 4 swaps in hybrid search behind the same signature. */

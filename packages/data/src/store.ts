@@ -19,6 +19,8 @@ import { contentWords } from "./retrieval/text.ts";
  */
 export interface TriageStore {
   tenantExists(tenantId: string): Promise<boolean>;
+  /** The merchant's display name, or null if the tenant does not exist. */
+  getTenant(tenantId: string): Promise<{ id: string; name: string } | null>;
   getOrder(tenantId: string, orderId: string): Promise<OrderRecord | null>;
   getCustomerById(tenantId: string, customerId: string): Promise<CustomerRecord | null>;
   getCustomerByEmail(tenantId: string, email: string): Promise<CustomerRecord | null>;
@@ -151,6 +153,7 @@ export function createSqliteStore(db: Db, options: { policiesDir?: string } = {}
   const policiesDir = options.policiesDir ?? defaultPoliciesDir();
   const q = {
     tenant: db.prepare("SELECT 1 FROM tenants WHERE id = ?"),
+    tenantRow: db.prepare("SELECT id, name FROM tenants WHERE id = ?"),
     order: db.prepare("SELECT * FROM orders WHERE tenant_id = ? AND id = ?"),
     items: db.prepare(
       "SELECT sku, name, qty, unit_price FROM order_items WHERE order_id = ? ORDER BY id",
@@ -195,6 +198,9 @@ export function createSqliteStore(db: Db, options: { policiesDir?: string } = {}
   let documents: PolicyDocument[] | undefined;
 
   return {
+    async getTenant(tenantId) {
+      return (q.tenantRow.get(tenantId) as { id: string; name: string } | undefined) ?? null;
+    },
     async tenantExists(tenantId) {
       return q.tenant.get(tenantId) !== undefined;
     },
