@@ -89,8 +89,15 @@ export function createRouter(opts: RouterOptions): Router {
 
   // The key is computed from the REDACTED request, so a recording run and a later replay run
   // (which feeds back redacted answers) always produce the same keys turn after turn.
+  // The route part of the key is the SET of providers (sorted), not their order: swapping
+  // primary and fallback keeps every recording valid, while a model or setting change still
+  // invalidates it. (Sorted "gemini…" before "groq…", so earlier keys are unchanged.)
+  const routeKey = opts.providers
+    .map((p) => `${p.id}:${p.model}:${canonicalJson(p.settings)}`)
+    .sort()
+    .join(" > ");
   const keyOf = (req: ChatRequest) =>
-    sha256(canonicalJson({ v: 1, route: id, request: redactDeep(req) }));
+    sha256(canonicalJson({ v: 1, route: routeKey, request: redactDeep(req) }));
 
   const finish = (
     key: string,

@@ -430,6 +430,39 @@ describe("free-tier guard", () => {
     expect(second.latencyMs).toBe(0); // the fake provider itself takes no time
   });
 
+  it("enforces a daily token cap (Groq's free tier limits tokens per day)", async () => {
+    const ledger = createLedger({ clock: fakeClock(), limits: { groq: { tokensPerDay: 1000 } } });
+    await ledger.acquire("groq", 400);
+    ledger.record("groq", 900);
+    await expect(ledger.acquire("groq", 200)).rejects.toThrow(/daily token cap of 1000/);
+  });
+
+  it("recording keys ignore provider order, so swapping primary and fallback keeps recordings valid", async () => {
+    const make = (order: "gemini-first" | "groq-first") => {
+      const g = createGeminiProvider({
+        apiKey: "g",
+        model: "gemini-3.6-flash",
+        fetch: fakeFetch([{ body: geminiOk("x") }]),
+      });
+      const q = createGroqProvider({
+        apiKey: "q",
+        model: "openai/gpt-oss-120b",
+        fetch: fakeFetch([{ body: groqOk("x") }]),
+      });
+      const clock = fakeClock();
+      return createRouter({
+        providers: order === "gemini-first" ? [g, q] : [q, g],
+        mode: "live",
+        ledger: createLedger({ clock }),
+        clock,
+      });
+    };
+    const a = await make("gemini-first").complete(req());
+    const b = await make("groq-first").complete(req());
+    expect(a.key).toBe(b.key);
+    expect([a.provider, b.provider]).toEqual(["gemini", "groq"]); // order still decides who answers
+  });
+
   it("only approved, priced models can be routed to", () => {
     expect(() =>
       createRouter({

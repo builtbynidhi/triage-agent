@@ -15,17 +15,25 @@ export interface ProviderLimits {
   callsPerDay: number;
   minIntervalMs: number;
   tokensPerMinute: number;
+  /** Daily token cap (Groq's free tier limits tokens per day as well as requests). */
+  tokensPerDay: number;
 }
 
 /**
- * Conservative defaults, measured or read on 2026-11-22.
- * Groq gpt-oss-120b free: 30 RPM, 1000 RPD, 8000 TPM (rate-limit headers on a live call).
- * Gemini free-tier limits are shown only in AI Studio and "not guaranteed", so the cap is
- * kept low and the pacing slow.
+ * Set below the MEASURED free limits (2026-11-22):
+ *   Gemini gemini-3.6-flash: 20 requests per day per project (Google's own 429:
+ *     "GenerateRequestsPerDayPerProjectPerModel-FreeTier", limit 20). An earlier guess of 200
+ *     was ten times too high; Google publishes free limits only inside AI Studio.
+ *   Groq gpt-oss-120b: 30 RPM, 1,000 RPD, 8,000 TPM (response headers), 200,000 TPD (docs).
  */
 export const DEFAULT_LIMITS: Record<ProviderId, ProviderLimits> = {
-  gemini: { callsPerDay: 200, minIntervalMs: 6_000, tokensPerMinute: 100_000 },
-  groq: { callsPerDay: 700, minIntervalMs: 3_000, tokensPerMinute: 6_000 },
+  gemini: {
+    callsPerDay: 18,
+    minIntervalMs: 6_000,
+    tokensPerMinute: 100_000,
+    tokensPerDay: 1_000_000,
+  },
+  groq: { callsPerDay: 700, minIntervalMs: 3_000, tokensPerMinute: 6_000, tokensPerDay: 180_000 },
 };
 
 export class BudgetExceededError extends Error {
@@ -118,6 +126,12 @@ export function createLedger(opts: LedgerOptions = {}): UsageLedger {
         throw new BudgetExceededError(
           provider,
           `${provider}: daily cap of ${l.callsPerDay} calls reached for ${day.date} (kept below the free limit on purpose)`,
+        );
+      }
+      if ((day.tokens[provider] ?? 0) + estimatedTokens > l.tokensPerDay) {
+        throw new BudgetExceededError(
+          provider,
+          `${provider}: daily token cap of ${l.tokensPerDay} reached for ${day.date} (kept below the free limit on purpose)`,
         );
       }
       // Pacing: minimum gap since the previous call.
