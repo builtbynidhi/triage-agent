@@ -4,9 +4,48 @@ Outline only. Bodies are filled in during the phase that makes each decision.
 
 ## 1. High-level design (HLD)
 
-- Three layers and the cross-cutting band (tracing, cost ledger, guardrails)
-- Request path: API → queue → worker → agent → MCP tools → data
-- Why each boundary exists (queue, MCP server, provider router, validator, approval queue, eval harness)
+Status markers: **built** = in the repo and tested; **planned** = phase not reached yet.
+
+### 1.1 Shape
+
+Three thin layers and one cross-cutting band.
+
+```
+              ┌──────────────────────────── cross-cutting band ─────────────────────────────┐
+              │  tracing (OTel GenAI spans) · cost and token ledger · budgets · guardrails  │
+              └─────────────────────────────────────────────────────────────────────────────┘
+ ticket ─► [ API ] ─► [ jobs queue ] ─► [ worker: agent state machine ] ─► [ MCP server ] ─► [ data ]
+           planned     schema built      planned (Phase 6)                  built (4 read     built
+           (Ph. 10)    (Ph. 1), logic                │                     tools)             (SQLite,
+                       planned (Ph. 10)              ▼                                         FTS5,
+                                              [ provider router ] ─► Gemini / Groq / replay   sqlite-vec)
+                                                planned (Phase 5)
+ reviewer ─► [ approval queue ] (planned, Phase 10) ─► the only path to a write tool
+ eval harness ─► drives the same entry point a real ticket uses (planned, Phase 7)
+```
+
+### 1.2 One ticket, end to end
+
+1. `POST /triage` authenticates, rate-limits per tenant, checks an idempotency key, writes a `runs` row and a `jobs` row in one transaction, and returns 202 with a run ID. _(Planned, Phase 10. The tables and the idempotency index are built.)_
+2. A worker leases the job and runs the agent state machine with a budget of 8 steps, 6 tool calls and a token ceiling. _(Planned, Phase 6.)_
+3. The agent reaches the world **only** through the MCP server: `search_policy` (hybrid retrieval), `get_order`, `get_customer` (PII masked) and `check_eligibility` (rules in code). _(Built, Phases 3 and 4.)_
+4. The model's decision is validated against the schema, with one repair attempt, then the run fails closed to ESCALATE. _(Planned, Phase 6.)_
+5. Any write pauses in the approval queue until a reviewer approves. _(Planned, Phase 10.)_
+6. Every step emits a span with token counts and cost. _(Planned, Phase 11. Retrieval already returns a per-stage trace.)_
+
+### 1.3 Why each boundary exists
+
+| Boundary                                 | Why                                                                                                                                                                                                                                  | Status                                           |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------ |
+| Queue between API and agent              | A triage run takes seconds, and an HTTP request should not wait on a model. The queue also gives retries and dead letters, and the job is written atomically with its run (§3.1).                                                    | Schema built; worker planned                     |
+| MCP server between agent and data        | The tools become a contract with declared schemas, usable from Claude Desktop as well as our own loop, and the agent cannot reach the database directly (ADR 0002). Tenant and date are bound by the transport, never by tool input. | Built                                            |
+| Code, not the model, for eligibility     | Money decisions are date arithmetic: deterministic, tested at every boundary, auditable (ADR 0004).                                                                                                                                  | Built                                            |
+| PII masked at the tool boundary          | A value the model never sees cannot leak through any prompt or injection (ADR 0003).                                                                                                                                                 | Built                                            |
+| Hybrid retrieval with reranking          | Measured, not assumed: best on focused questions, so the agent is told to ask them (ADR 0005, docs/retrieval.md).                                                                                                                    | Built                                            |
+| Provider router between agent and models | One interface, three implementations: primary, fallback, and replay of recorded responses, so CI is free and deterministic.                                                                                                          | Planned, Phase 5                                 |
+| Validator between model and system       | A model returns text, and the system needs a typed decision. Validate, allow one repair, then fail closed.                                                                                                                           | Planned, Phase 6                                 |
+| Approval queue before any write          | The agent proposes, a human commits: the mitigation for excessive agency.                                                                                                                                                            | Planned, Phase 10                                |
+| Eval harness outside the agent           | It drives the same entry point a real ticket uses, so the system is graded, not a special test path.                                                                                                                                 | Cases built (Phase 2); harness planned (Phase 7) |
 
 ## 2. Component low-level design (LLD)
 
