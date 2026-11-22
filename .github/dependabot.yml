@@ -1,0 +1,29 @@
+# Supply chain (OWASP LLM04): weekly dependency updates, plus security alerts and fixes
+# (enabled in the repository settings). Minor and patch bumps are grouped into one PR.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]
+    ignore:
+      # Pinned on purpose: typescript-eslint does not support TypeScript 7 yet (see CLAUDE.md).
+      - dependency-name: typescript
+        update-types: [version-update:semver-major]
+      # Types must match the Node version we target (.nvmrc = 22).
+      - dependency-name: "@types/node"
+        update-types: [version-update:semver-major]
+    commit-message:
+      prefix: chore
+      include: scope
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: ci
