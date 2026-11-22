@@ -40,6 +40,9 @@ importers:
       '@triage/data':
         specifier: workspace:*
         version: link:../packages/data
+      '@triage/providers':
+        specifier: workspace:*
+        version: link:../packages/providers
       yaml:
         specifier: ^2.9.1
         version: 2.9.1

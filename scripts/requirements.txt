@@ -1,0 +1,3 @@
+# Python is used only for scripts/report.py (scorecard charts). Install into a local venv:
+#   python3 -m venv .venv && .venv/bin/pip install -r scripts/requirements.txt
+matplotlib==3.9.4

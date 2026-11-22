@@ -22,7 +22,9 @@
     "eval:retrieval": "pnpm --filter @triage/evals retrieval",
     "db:index": "pnpm --filter @triage/data db:index",
     "db:demo": "pnpm --filter @triage/data db:demo",
-    "agent:run": "pnpm --filter @triage/agent agent:run"
+    "agent:run": "pnpm --filter @triage/agent agent:run",
+    "eval": "pnpm --filter @triage/evals eval",
+    "eval:charts": ".venv/bin/python scripts/report.py"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
