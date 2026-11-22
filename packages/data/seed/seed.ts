@@ -83,7 +83,19 @@ const WIPE_ORDER = [
 ];
 
 /** Reset reference data and policy index to the deterministic seed. */
-export function seed(db: Db, policiesDir?: string): void {
+export interface SeedOptions {
+  /**
+   * The date every seeded date is relative to. Defaults to SEED_TODAY, which tests and evals
+   * rely on. The live demo database (pnpm db:demo) passes the real date instead, so a client
+   * like Claude Desktop sees order ages that agree with its own calendar.
+   */
+  today?: string;
+  policiesDir?: string;
+}
+
+export function seed(db: Db, options: SeedOptions = {}): void {
+  const today = options.today ?? SEED_TODAY;
+  const ago = (days: number) => dateMinus(days, today);
   db.transaction(() => {
     for (const t of WIPE_ORDER) db.exec(`DELETE FROM ${t}`);
 
@@ -122,26 +134,26 @@ export function seed(db: Db, policiesDir?: string): void {
           returned: string | null = null;
         switch (p.status) {
           case "placed":
-            placed = dateMinus(p.ago);
+            placed = ago(p.ago);
             break;
           case "dispatched":
-            dispatched = dateMinus(p.ago);
-            placed = dateMinus(p.ago + 1);
+            dispatched = ago(p.ago);
+            placed = ago(p.ago + 1);
             break;
           case "delivered":
-            delivered = dateMinus(p.ago);
-            dispatched = dateMinus(p.ago + 3);
-            placed = dateMinus(p.ago + 4);
+            delivered = ago(p.ago);
+            dispatched = ago(p.ago + 3);
+            placed = ago(p.ago + 4);
             break;
           case "cancelled":
-            placed = dateMinus(p.ago);
-            cancelled = dateMinus(p.ago - 1);
+            placed = ago(p.ago);
+            cancelled = ago(p.ago - 1);
             break;
           case "returned":
-            delivered = dateMinus(p.ago);
-            dispatched = dateMinus(p.ago + 3);
-            placed = dateMinus(p.ago + 4);
-            returned = dateMinus(p.ago - 5);
+            delivered = ago(p.ago);
+            dispatched = ago(p.ago + 3);
+            placed = ago(p.ago + 4);
+            returned = ago(p.ago - 5);
             break;
         }
 
@@ -168,6 +180,6 @@ export function seed(db: Db, policiesDir?: string): void {
       });
     });
 
-    indexPolicies(db, loadPolicies(policiesDir));
+    indexPolicies(db, loadPolicies(options.policiesDir));
   })();
 }

@@ -20,7 +20,8 @@
     "mcp:stdio": "pnpm --filter @triage/mcp-server mcp:stdio",
     "mcp:http": "pnpm --filter @triage/mcp-server mcp:http",
     "eval:retrieval": "pnpm --filter @triage/evals retrieval",
-    "db:index": "pnpm --filter @triage/data db:index"
+    "db:index": "pnpm --filter @triage/data db:index",
+    "db:demo": "pnpm --filter @triage/data db:demo"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

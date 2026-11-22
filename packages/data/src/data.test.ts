@@ -154,3 +154,40 @@ describe("seed", () => {
     expect(cross.c).toBe(0);
   });
 });
+
+describe("seed anchored to another date (the live demo database)", () => {
+  it("shifts every date by the same amount, so ages and windows are unchanged", () => {
+    const fixed = openDb(":memory:");
+    const live = openDb(":memory:");
+    seed(fixed);
+    seed(live, { today: "2026-12-01" }); // 11 days after SEED_TODAY
+    const rows = (db: ReturnType<typeof openDb>) =>
+      db
+        .prepare("SELECT id, status, placed_at, delivered_at, total FROM orders ORDER BY id")
+        .all() as {
+        id: string;
+        status: string;
+        placed_at: string;
+        delivered_at: string | null;
+        total: number;
+      }[];
+    const shift = (d: string | null) => (d ? dateMinus(-11, d) : null);
+    const a = rows(fixed);
+    const b = rows(live);
+    expect(b.map((r) => r.status)).toEqual(a.map((r) => r.status));
+    expect(b.map((r) => r.total)).toEqual(a.map((r) => r.total));
+    expect(b.map((r) => r.placed_at)).toEqual(a.map((r) => shift(r.placed_at)));
+    expect(b.map((r) => r.delivered_at)).toEqual(a.map((r) => shift(r.delivered_at)));
+  });
+
+  it("still puts A-10413 on day 7 of its return window, whatever the anchor", () => {
+    const db = openDb(":memory:");
+    seed(db, { today: "2027-03-15" });
+    const { delivered_at } = db
+      .prepare("SELECT delivered_at FROM orders WHERE id = 'A-10413'")
+      .get() as {
+      delivered_at: string;
+    };
+    expect(delivered_at).toBe(dateMinus(7, "2027-03-15"));
+  });
+});

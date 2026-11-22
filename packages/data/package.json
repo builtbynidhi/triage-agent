@@ -16,7 +16,8 @@
   "scripts": {
     "db:reset": "node src/cli.ts reset",
     "db:seed": "node src/cli.ts seed",
-    "db:index": "node src/cli.ts index"
+    "db:index": "node src/cli.ts index",
+    "db:demo": "node src/cli.ts demo"
   },
   "exports": {
     ".": "./src/index.ts"
