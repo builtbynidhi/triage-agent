@@ -23,6 +23,12 @@ export interface RouterOptions {
   /** Attempts per provider, including the first. Spec: bounded retry. */
   maxAttempts?: number;
   timeoutMs?: number;
+  /**
+   * After a provider answers "rate limited", skip it for this long (no ledger slot, no request).
+   * Free-tier 429s usually mean the quota is spent; asking again only burns more quota.
+   * Default 15 minutes.
+   */
+  rateLimitCooldownMs?: number;
   clock?: Clock;
   /** Date used to pick the list price (YYYY-MM-DD); defaults to today. */
   priceDate?: () => string;
@@ -66,6 +72,9 @@ export function createRouter(opts: RouterOptions): Router {
   assertApproved(opts.providers);
   const clock = opts.clock ?? realClock;
   const maxAttempts = opts.maxAttempts ?? 2;
+  const cooldownMs = opts.rateLimitCooldownMs ?? 15 * 60_000;
+  /** Circuit breaker: provider → time until which it is skipped after a rate limit. */
+  const coolingUntil = new Map<string, number>();
   const timeoutMs = opts.timeoutMs ?? 45_000;
   const priceDate = opts.priceDate ?? (() => new Date(clock.now()).toISOString().slice(0, 10));
   const id = opts.providers
@@ -109,6 +118,17 @@ export function createRouter(opts: RouterOptions): Router {
     const attempts: Attempt[] = [];
     let lastError: unknown;
     for (const provider of opts.providers) {
+      if ((coolingUntil.get(provider.id) ?? 0) > clock.now()) {
+        // Circuit open: this provider rate-limited recently. Skip it without spending anything.
+        attempts.push({
+          provider: provider.id,
+          model: provider.model,
+          ok: false,
+          code: "circuit_open",
+          ms: 0,
+        });
+        continue;
+      }
       for (let attempt = 1; attempt <= maxAttempts; attempt++) {
         try {
           const w0 = clock.now();
@@ -153,6 +173,11 @@ export function createRouter(opts: RouterOptions): Router {
             code: pe?.code ?? "unknown",
             ms: clock.now() - started,
           });
+          if (pe?.code === "rate_limited") {
+            // Never retry a rate limit: open the circuit and fall back straight away.
+            coolingUntil.set(provider.id, clock.now() + cooldownMs);
+            break;
+          }
           if (!pe?.retryable || attempt === maxAttempts) break; // give up on this provider, fall back
           // Back off: honour retry-after when the provider sends it, else 2s, 4s, ... capped at 20s.
           await clock.sleep(Math.min(pe.retryAfterMs ?? 2000 * 2 ** (attempt - 1), 20_000));

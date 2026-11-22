@@ -7,14 +7,14 @@ import { runAgent } from "./machine.ts";
 import { connectTools } from "./tools.ts";
 
 /**
- * Replays the committed recording of the Phase 6 done-when run, through the REAL production
+ * Replays a committed recording (eval case boundary-return-day-7-inside) through the REAL production
  * pieces: hybrid retrieval with local models, the MCP server, and the router in replay mode.
  * No API keys, no network. It proves a run recorded on one machine replays on another (CI runs
  * Linux x86; the recording was made on macOS arm64): every byte sent to the model, tool results
  * included, must come out identical, or the request key changes and replay misses.
  */
 describe("a committed recording replays end to end with zero API calls", () => {
-  it("the sealed-return ticket reaches the same AUTO_REPLY", async () => {
+  it("the day-7 return ticket (eval case boundary-return-day-7-inside) reaches the same AUTO_REPLY", async () => {
     const db = openDb(":memory:");
     seed(db);
     const store = createSqliteStore(db);
@@ -28,8 +28,8 @@ describe("a committed recording replays end to end with zero API calls", () => {
       const r = await diagnose(() =>
         runAgent({
           ticket: {
-            text: "I got the blender on 18 Nov and it's still sealed. Can I return it? Order A-10410",
-            channel: "email",
+            text: "got my blender on 13th nov, still sealed, want to return it. order A-10413",
+            channel: "web",
           },
           tools,
           router: createDefaultRouter({ mode: "replay", env: {} }),

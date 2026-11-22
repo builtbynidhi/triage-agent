@@ -112,7 +112,7 @@ describe("fallback and bounded retry", () => {
 
   it("retries a transient failure and succeeds without falling back", async () => {
     const { router, gemini, groq } = setup({
-      primary: [{ status: 429, body: {} }, { body: geminiOk("second try") }],
+      primary: [{ status: 503, body: {} }, { body: geminiOk("second try") }],
     });
     const r = await router.complete(req());
     expect(r.text).toBe("second try");
@@ -123,7 +123,7 @@ describe("fallback and bounded retry", () => {
   it("honours retry-after before retrying", async () => {
     const { router, clock } = setup({
       primary: [
-        { status: 429, headers: { "retry-after": "7" }, body: {} },
+        { status: 503, headers: { "retry-after": "7" }, body: {} },
         { body: geminiOk("ok") },
       ],
     });
@@ -158,6 +158,33 @@ describe("fallback and bounded retry", () => {
     expect(gemini.calls).toHaveLength(1);
     expect(groq.calls).toHaveLength(1);
     expect(r.provider).toBe("groq");
+  });
+
+  it("never retries a rate limit: one 429, then straight to the fallback", async () => {
+    const { router, gemini, groq } = setup({ primary: [{ status: 429, body: {} }] });
+    const r = await router.complete(req());
+    expect(gemini.calls).toHaveLength(1); // no retry: a free-tier 429 means the quota is spent
+    expect(groq.calls).toHaveLength(1);
+    expect(r.provider).toBe("groq");
+  });
+
+  it("circuit breaker: after a 429, the provider is skipped (no request) until the cooldown ends", async () => {
+    const clock = fakeClock();
+    const { router, gemini, groq } = setup({
+      clock,
+      primary: [{ status: 429, body: {} }, { body: geminiOk("back") }],
+      fallback: [{ body: groqOk("one") }, { body: groqOk("two") }],
+    });
+    await router.complete(req("first")); // gemini 429 → circuit opens → groq
+    const second = await router.complete(req("second")); // gemini skipped entirely
+    expect(gemini.calls).toHaveLength(1);
+    expect(second.provider).toBe("groq");
+    expect(groq.calls).toHaveLength(2); // the fallback served both while the circuit was open
+    expect(second.attempts[0]).toMatchObject({ provider: "gemini", code: "circuit_open" });
+    await clock.sleep(15 * 60_000 + 1); // cooldown over
+    const third = await router.complete(req("third"));
+    expect(third.provider).toBe("gemini");
+    expect(gemini.calls).toHaveLength(2);
   });
 
   it("when every provider fails, throws with every attempt listed", async () => {

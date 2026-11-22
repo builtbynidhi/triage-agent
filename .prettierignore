@@ -7,3 +7,5 @@ evals/report
 traces
 evals/case.schema.json
 docs/retrieval.md
+.venv
+.cache
