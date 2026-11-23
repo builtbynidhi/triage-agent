@@ -36,3 +36,7 @@ The spec says: "every state transition spends a step and every tool call spends 
 - There are only two gather turns. A ticket needing a chain of three dependent lookups ends at ESCALATE, which is the intended bounded behaviour.
 - The second gather turn often only says "DONE" (on the first live run it took a third of the tokens). Whether to drop it is a Phase 8 decision, made with eval data.
 - The stretch task stays open: port the same machine to LangGraph on a branch, and compare honestly.
+
+## Addendum (2026-11-23, Phase 8): RETRIEVE is a state run by code
+
+The spec's flow is "classify the intent, then retrieve policy clauses". The first implementation left retrieval to the model, and 27 of 39 eval runs never searched. A forced `tool_choice` fixed that on paper and failed in practice (see docs/failures.md, G1). Now CLASSIFY is a schema-shaped model call with no tools, and the machine calls `search_policy` itself, plus `get_order` for an order ID written in the ticket. A typical run is 7 steps (classify 1, search 1, order 1, one gather turn with one tool 2, a closing gather turn 1, decide 1) and a repair makes 8, so the budget is unchanged. The cost is one more small model call per ticket, and the third lookup of a three-step chain is still left to ESCALATE.

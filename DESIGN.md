@@ -159,7 +159,9 @@ Below the confidence threshold (0.5 for now; Phase 8 sets it from data), an AUTO
 
 **Measured (first live run, 2026-11-22).** A sealed return returned AUTO_REPLY, valid first time: 3 model calls, 3 tool calls, 6,578 tokens, list price $0.0067. Recorded and committed; it replays with zero API calls.
 
-**Retrieval is enforced (Phase 8).** The first gather turn is sent with `toolChoice: { name: "search_policy" }`, so every run reads policy text before it decides; the model still writes the query. Before this, 27 of 39 eval runs never searched: they cited clause IDs from `check_eligibility` without reading the clauses and invented process steps (docs/failures.md, G1). The cost is one tool call and about 500 input tokens per run.
+**Retrieval is a state, run by code (Phase 8).** CLASSIFY is a schema-shaped model call with no tools: it returns the intent and one neutral policy question. The machine then calls `search_policy` with that question itself, and `get_order` for the first order ID written in the ticket, before the model gets a gather turn. Before this, 27 of 39 eval runs never searched: they cited clause IDs from `check_eligibility` without reading the clauses and invented process steps (docs/failures.md, G1); a bracketed order ID was overlooked in two recordings. A forced `tool_choice` was tried first and removed: gpt-oss ignored it, Groq returned a 400 (a request that was never recorded), and the forced search used one of the two gather turns. Cost: one extra small model call per run. Budget: 7 steps typical, 8 with a repair.
+
+**Refused model output.** When a provider rejects the model's own output (a tool call it was not offered, or any tool when none are allowed), the router raises `model_output_rejected`, which is never retried and never falls back (the other provider would see the same history). The rejection is recorded as a cassette so replay and CI reproduce it. The machine retries that stage once with a note, then fails closed to ESCALATE with exit `model_error`.
 
 ### 2.6 Eval harness (Phase 7)
 
