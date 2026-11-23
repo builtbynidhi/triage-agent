@@ -4,7 +4,7 @@ A bounded AI agent that triages customer-support tickets, drafts policy-grounded
 
 [![CI](https://github.com/builtbynidhi/triage-agent/actions/workflows/ci.yml/badge.svg)](https://github.com/builtbynidhi/triage-agent/actions/workflows/ci.yml)
 
-> **Work in progress.** Phases 1 to 6 of 12 are done: data, the 40-case eval suite, the MCP tool server, hybrid retrieval, the model provider router, and the agent itself. Its scorecard comes next. Every number on this page was measured; none is a target or an estimate.
+> **Work in progress.** Phases 1 to 7 of 12 are done (data, the 40-case eval suite, the MCP tool server, hybrid retrieval, the model router, the agent, and the eval harness). Phases 8 and 9 are partial: the failure analysis and the judge are built, but the agent fixes are unmeasured and the judge is not fully recorded. Phases 10 to 12 (API and approvals, UI, CI gate) are not built. Every number on this page was measured. **One-page summary: [docs/OVERVIEW.md](docs/OVERVIEW.md).**
 
 ## What it will do
 
