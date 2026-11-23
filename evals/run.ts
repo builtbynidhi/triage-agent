@@ -4,7 +4,9 @@
  *   pnpm eval                              replay every case from committed recordings (no API calls)
  *   pnpm eval --mode record-missing        record only cases that have no recording yet (free tier)
  *   pnpm eval --case refund --repeats 1    a subset, one repeat
- *   pnpm eval --write-baseline             also write evals/baseline.json from this run
+ *   pnpm eval --write-baseline             also write evals/baseline.json and evals/badge.json from this run
+ *   pnpm eval --canary --mode live         the five cases in evals/canary.json against live models (nightly)
+ *   pnpm eval --allow-incomplete           exit 0 even if some runs could not be scored (CI: the gate decides)
  *
  * Writes evals/report/report.json and report.md, prints the scorecard, and compares against
  * evals/baseline.json when it exists. Exits non-zero if any run is incomplete.
@@ -29,6 +31,8 @@ const { values } = parseArgs({
     repeats: { type: "string", default: "3" },
     case: { type: "string" },
     "write-baseline": { type: "boolean", default: false },
+    canary: { type: "boolean", default: false },
+    "allow-incomplete": { type: "boolean", default: false },
     out: { type: "string", default: join(root, "evals", "report") },
   },
 });
@@ -39,7 +43,15 @@ if (!(MODES as readonly string[]).includes(values.mode!)) {
 }
 const mode = values.mode as ProviderMode;
 const repeats = Math.max(1, Number(values.repeats));
-const cases = loadCases().filter((c) => !values.case || c.data.id.includes(values.case));
+const canary = values.canary
+  ? new Set(
+      (JSON.parse(readFileSync(join(root, "evals", "canary.json"), "utf8")) as { cases: string[] })
+        .cases,
+    )
+  : null;
+const cases = loadCases().filter(
+  (c) => (!values.case || c.data.id.includes(values.case)) && (!canary || canary.has(c.data.id)),
+);
 if (!cases.length) {
   console.error(`no case matches "${values.case}"`);
   process.exit(1);
@@ -112,6 +124,32 @@ if (existsSync(baselinePath)) {
 }
 if (values["write-baseline"]) {
   writeFileSync(baselinePath, JSON.stringify(now, null, 2) + "\n");
-  console.error(`wrote ${baselinePath}`);
+  // The README's evals badge reads this file (shields.io endpoint format): cases that passed every repeat.
+  const scored = Object.values(now.cases);
+  const clean = scored.filter((r) => r === 1).length;
+  const share = scored.length ? clean / scored.length : 0;
+  writeFileSync(
+    join(root, "evals", "badge.json"),
+    JSON.stringify(
+      {
+        schemaVersion: 1,
+        label: "evals",
+        message: `${clean}/${scored.length} cases pass every repeat`,
+        color:
+          share >= 0.9
+            ? "brightgreen"
+            : share >= 0.75
+              ? "yellowgreen"
+              : share >= 0.6
+                ? "yellow"
+                : "orange",
+      },
+      null,
+      2,
+    ) + "\n",
+  );
+  console.error(`wrote ${baselinePath} and evals/badge.json`);
 }
-if (card.runs.incomplete) process.exitCode = 1;
+// A run that could not be scored is reported, never counted as a pass, and by default fails the command.
+// CI passes --allow-incomplete because scripts/gate.mjs decides what an unscored case means there.
+if (card.runs.incomplete && !values["allow-incomplete"]) process.exitCode = 1;

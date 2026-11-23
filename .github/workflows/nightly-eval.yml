@@ -1,15 +1,79 @@
-# Placeholder until Phase 12, which adds the daily schedule, the live-provider eval run
-# and the issue opened when live results diverge from replay. Manual trigger only for now.
+# A daily LIVE run of a small canary of the eval suite against the real models, which opens an issue
+# when the result diverges from what the committed recordings say (a model or provider changed under
+# us, or a recording went stale).
+#
+# It is a CANARY, not the whole suite, on purpose: 40 cases x 3 repeats is about 320k Groq tokens,
+# more than the free tier's 200k a day. Five cheap cases (evals/canary.json, one repeat) cost roughly
+# 40k tokens. It is also OFF until you turn it on:
+#   1. add the repository secrets GROQ_API_KEY and GEMINI_API_KEY (free-tier keys, never a paid plan);
+#   2. set the repository variable NIGHTLY_ENABLED to "true".
+# Do not turn it on while the Phase 8b recorder is still using the same Groq quota each morning.
 name: nightly-eval
 
 on:
+  schedule:
+    - cron: "17 2 * * *" # 02:17 UTC, just after Groq's daily quota resets at 00:00 UTC
   workflow_dispatch:
 
 permissions:
   contents: read
+  issues: write
 
 jobs:
-  placeholder:
+  canary:
+    if: ${{ vars.NIGHTLY_ENABLED == 'true' }}
     runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      PROVIDER_MODE: live
+      GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
     steps:
-      - run: echo "Nightly live eval is added in Phase 12."
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 12
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Cache local models
+        uses: actions/cache@v4
+        with:
+          path: .cache/models
+          key: models-${{ hashFiles('packages/data/src/retrieval/defaults.ts', 'packages/data/src/retrieval/embedder.ts', 'packages/data/src/retrieval/rerank.ts') }}
+          restore-keys: models-
+      - run: pnpm db:reset && pnpm db:seed && pnpm db:index
+      - name: Check the keys are there
+        run: |
+          [ -n "$GROQ_API_KEY" ] && [ -n "$GEMINI_API_KEY" ] || { echo "Add the GROQ_API_KEY and GEMINI_API_KEY repository secrets."; exit 1; }
+      - name: Run the canary against the live models
+        run: pnpm eval --canary --mode live --repeats 1 --allow-incomplete --out evals/report-live
+      - name: Compare with the recordings
+        id: diverge
+        continue-on-error: true
+        run: node scripts/gate.mjs --diverge evals/report-live/report.json --summary diverge.md
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: nightly-live-report
+          path: |
+            evals/report-live/report.md
+            evals/report-live/report.json
+            diverge.md
+      - name: Open or update an issue when it diverged
+        if: steps.diverge.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh label create nightly-divergence --color d93f0b --description "Live models disagree with the recordings" --force
+          existing=$(gh issue list --label nightly-divergence --state open --json number --jq '.[0].number // empty')
+          body="$(cat diverge.md)
+
+          Run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --body "$body"
+          else
+            gh issue create --title "Nightly live eval diverged from the recordings ($(date -u +%F))" --label nightly-divergence --body "$body"
+          fi

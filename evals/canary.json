@@ -1,0 +1,10 @@
+{
+  "why": "The nightly live run is a small canary, not the whole suite: 40 cases x 3 repeats is about 320k Groq tokens, more than a day of the free tier (200k). Five cheap, deterministic cases cover a refusal, an escalation, a missing detail, a thank-you and a status answer. Every one passes 3 of 3 in the committed recordings.",
+  "cases": [
+    "address-change-before-dispatch",
+    "boundary-return-day-8-outside",
+    "no-order-id-status",
+    "thank-you-no-action",
+    "order-status-dispatched"
+  ]
+}

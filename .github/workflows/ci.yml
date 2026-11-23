@@ -1,5 +1,8 @@
-# Install, secret scan, lint, format, typecheck, seed and index from clean, then all tests.
-# Phase 12 adds npm audit, the replay-mode eval suite, the baseline gate and the PR scorecard comment.
+# Install from the lockfile, secret scan, lint, format, typecheck, seed and index from clean, all
+# tests, dependency audit, the web build, then the eval suite REPLAYED from the committed recordings
+# (three repeats, no API key, no cost) and the gate: it fails the build if the pass rate drops or any
+# adversarial case regresses against evals/baseline.json. On a pull request the scorecard is posted
+# as a comment. The live-model run is a separate, opt-in workflow: nightly-eval.yml.
 name: ci
 
 on:
@@ -17,7 +20,10 @@ concurrency:
 jobs:
   check:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 25
+    permissions:
+      contents: read
+      pull-requests: write # to post the scorecard comment; a fork's token is read-only and that step tolerates it
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -43,3 +49,61 @@ jobs:
       - name: db reset, seed and vector index from clean
         run: pnpm db:reset && pnpm db:seed && pnpm db:index
       - run: pnpm test
+      # Known vulnerabilities in dependencies. High and critical fail the build.
+      - name: Dependency audit
+        run: pnpm audit --audit-level=high
+      - name: Build the web app (type-checks it with Next's own compiler)
+        run: pnpm --filter @triage/web build
+
+      # The eval suite, replayed: every model answer comes from a committed recording, so this needs no
+      # key and is the same on every machine. --allow-incomplete because the gate decides what an
+      # unscored case means (a case scored in the baseline that stops being scored FAILS the gate).
+      - name: Eval suite (replay, 3 repeats)
+        run: pnpm eval --repeats 3 --allow-incomplete
+      - name: Gate against evals/baseline.json
+        id: gate
+        continue-on-error: true
+        run: node scripts/gate.mjs --summary gate-summary.md
+      - name: Build the scorecard comment
+        if: always()
+        run: |
+          {
+            echo "<!-- triage-scorecard -->"
+            echo "## Eval scorecard"
+            echo
+            echo "Replayed from the committed recordings, 3 repeats per case. No API call was made."
+            echo
+            sed -n '/^| Metric/,/^Runs:/p' evals/report/report.md
+            echo
+            cat gate-summary.md 2>/dev/null || echo "The gate did not run."
+            echo
+            echo "Full report: the \`eval-report\` artifact of this run."
+          } > pr-comment.md
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: eval-report
+          path: |
+            evals/report/report.md
+            evals/report/report.json
+            gate-summary.md
+      - name: Post the scorecard on the pull request
+        if: github.event_name == 'pull_request'
+        continue-on-error: true
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require("fs");
+            const body = fs.readFileSync("pr-comment.md", "utf8");
+            const { owner, repo } = context.repo;
+            const issue_number = context.issue.number;
+            const comments = await github.paginate(github.rest.issues.listComments, { owner, repo, issue_number });
+            const mine = comments.find((c) => c.body && c.body.includes("<!-- triage-scorecard -->"));
+            if (mine) await github.rest.issues.updateComment({ owner, repo, comment_id: mine.id, body });
+            else await github.rest.issues.createComment({ owner, repo, issue_number, body });
+      - name: Fail the build if the gate failed
+        if: steps.gate.outcome == 'failure'
+        run: |
+          echo "The gate failed. See gate-summary.md in the eval-report artifact:"
+          cat gate-summary.md
+          exit 1
