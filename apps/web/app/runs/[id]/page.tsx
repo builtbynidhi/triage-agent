@@ -254,7 +254,7 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <section>
+    <section id={title.toLowerCase().replace(/[^a-z0-9]+/g, "-")} className="scroll-mt-4">
       <h2 className="text-lg font-semibold">{title}</h2>
       {note && <p className="mb-3 mt-0.5 max-w-3xl text-sm text-muted">{note}</p>}
       <div className={note ? "" : "mt-2"}>{children}</div>

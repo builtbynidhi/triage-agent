@@ -32,7 +32,8 @@
     "triage-failures": "pnpm --filter @triage/evals triage-failures",
     "web:snapshot": "pnpm --filter @triage/api snapshot",
     "web:dev": "pnpm --filter @triage/web dev",
-    "web:build": "pnpm --filter @triage/web build"
+    "web:build": "pnpm --filter @triage/web build",
+    "diagram": ".venv/bin/python scripts/diagram.py"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

@@ -25,6 +25,16 @@ export default function ScorecardPage() {
   const tools = obj(card.toolCallsPerRun);
   const runs = obj(card.runs);
   const judgeAgreement = card.judgeAgreement;
+  const judge = obj(card.judge);
+  const judged = ratio(judge.judged);
+  const judgeMean = num(judge.meanScore);
+  const judgeLine = judged.of
+    ? `${judged.n}/${judged.of} pass${judgeMean === null ? "" : `, mean ${judgeMean.toFixed(2)}`}`
+    : "not run";
+  const ai = card.judgeAgreementAi;
+  const aiLine = isRatio(ai)
+    ? `An AI second reviewer agrees ${ai.n} of ${ai.of} times (a sanity check, not a human).`
+    : "";
   const failing = cases.filter((c) => c.scored > 0 && c.passed < c.scored);
 
   const rows: [string, string, string?][] = [
@@ -98,10 +108,10 @@ export default function ScorecardPage() {
           .
         </p>
         <p className="mt-2 max-w-3xl rounded border border-line bg-surface px-3 py-2 text-sm text-muted">
-          <strong className="text-fg">How current is this?</strong> This report was produced before
-          the Phase 9 input guards. Since then, <code>fake-system-message-vip-override</code> is
-          rejected before the model is called, so it now passes (the Runs page shows it). The next
-          full scorecard is regenerated once all judge recordings exist.
+          <strong className="text-fg">How complete is this?</strong> It includes the Phase 9 input
+          guards and the judge scores recorded so far. Six cases are not scored yet: five are
+          waiting for a judge recording and one cannot be answered by the model (see the table
+          below).
         </p>
       </div>
 
@@ -135,13 +145,21 @@ export default function ScorecardPage() {
             </div>
           ))}
           <div className="grid gap-x-4 px-3 py-2 sm:grid-cols-[16rem_9rem_1fr]">
+            <dt className="text-sm">Judge: replies scored</dt>
+            <dd className="text-sm font-semibold tabular-nums">{judgeLine}</dd>
+            <dd className="text-xs text-muted sm:self-center">
+              An LLM judge from a different model family (Gemini) scores replies 1 to 5 against a
+              rubric; 3 or more passes.
+            </dd>
+          </div>
+          <div className="grid gap-x-4 px-3 py-2 sm:grid-cols-[16rem_9rem_1fr]">
             <dt className="text-sm">Judge agreement</dt>
             <dd className="text-sm font-semibold">
               {typeof judgeAgreement === "string" ? "not measured" : "measured"}
             </dd>
             <dd className="text-xs text-muted sm:self-center">
-              The LLM judge is built but this report predates it, so reply tone is phrase-checked
-              only. Agreement needs the owner&rsquo;s 15 hand labels.
+              The check is against 15 replies a person labels by hand, and that has not been done.{" "}
+              {aiLine}
             </dd>
           </div>
         </dl>

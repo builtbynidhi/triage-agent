@@ -3,16 +3,14 @@
 A bounded AI agent that triages customer-support tickets, drafts policy-grounded replies, and refuses to act without a human. Built to be measured, not demoed.
 
 [![CI](https://github.com/builtbynidhi/triage-agent/actions/workflows/ci.yml/badge.svg)](https://github.com/builtbynidhi/triage-agent/actions/workflows/ci.yml)
+[![evals](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fbuiltbynidhi%2Ftriage-agent%2Fmain%2Fevals%2Fbadge.json)](evals/report/report.md)
+[![Live demo](https://img.shields.io/badge/live%20demo-read--only-black)](https://triage-agent-demo-tau.vercel.app)
 
-> **Work in progress.** Phases 1 to 7 of 12 are done (data, the 40-case eval suite, the MCP tool server, hybrid retrieval, the model router, the agent, and the eval harness). Phases 8 and 9 are partial: the failure analysis and the judge are built, but the agent fixes are unmeasured and the judge is not fully recorded. Phases 10 to 12 (API and approvals, UI, CI gate) are not built. Every number on this page was measured. **One-page summary: [docs/OVERVIEW.md](docs/OVERVIEW.md).**
+![Walkthrough of the trace viewer: the run list, one run's decision, span tree, tool calls, retrieved policy clauses with scores, validation, then the scorecard and approval queue](docs/images/demo.gif)
 
-![The trace viewer: one run's span tree, tool calls, retrieved policy clauses with scores, validation and decision](docs/images/trace-viewer.png)
+_A 22-second walkthrough of the real trace viewer ([live, read-only](https://triage-agent-demo-tau.vercel.app)). It is a sequence of screenshots of the running app, not a screen recording. One-page summary of the project: [docs/OVERVIEW.md](docs/OVERVIEW.md)._
 
-_The trace viewer, showing one real run: the span tree, tool calls, retrieved policy with scores, the validation outcome and the decision. (A screenshot, not yet the 20-second GIF the spec asks for.)_
-
-**Live demo (read-only, real recorded runs): <https://triage-agent-demo-tau.vercel.app>**
-
-## What it will do
+## What it does
 
 Given a support ticket for a small e-commerce merchant, the agent returns exactly one decision, with a draft reply citing the policy clauses it relied on:
 
@@ -23,105 +21,110 @@ Given a support ticket for a small e-commerce merchant, the agent returns exactl
 | `ESCALATE`   | Money, safety, legal threats, or anything the policy does not cover |
 | `REJECT`     | Spam, or an attempt to override the agent                           |
 
-It is **bounded**: a state machine with a step, tool-call and token budget; six tools, of which the two that write need a human's approval; and a cost ceiling per run.
+It only **proposes**. A human with the reviewer role approves anything that would leave the system, and the approval is bound to the exact text shown.
 
-## Status
+## Results
 
-| Phase | What                                                                                                                                                               | Status  |
-| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------- |
-| 1     | SQLite schema, deterministic seed (2 merchants, 20 customers, 50 orders), 8 policy documents                                                                       | ✅      |
-| 2     | 40 eval cases, **written before the agent**: 15 normal, 15 edge, 10 adversarial                                                                                    | ✅      |
-| 3     | MCP server: 4 read-only tools, stdio and streamable HTTP, policies as resources                                                                                    | ✅      |
-| 4     | Hybrid retrieval: FTS5 + vector search, rank fusion, cross-encoder reranking                                                                                       | ✅      |
-| 5     | Provider router: Groq → Gemini fallback, free-tier guard, circuit breaker, record and replay, cost                                                                 | ✅      |
-| 6     | Agent core: bounded state machine through MCP, validator, one repair attempt, fail-closed ESCALATE                                                                 | ✅      |
-| 7     | Eval harness: run all 40 cases, record responses, first honest scorecard                                                                                           | ✅      |
-| 8     | Fix the failures: grader fix measured (69.2%); agent fixes built but unmeasured, parked ([details](docs/failures.md))                                              | partial |
-| 9     | Judge (Gemini, a different model family) with 4 rubrics, adversarial guards, [SECURITY.md](SECURITY.md); judge recordings and your 15 hand labels pending          | partial |
-| 10    | API, queue and human approvals: Express, JWT roles, rate limit, idempotency, SSE, approval-gated writes                                                            | ✅      |
-| 11    | Tracing (OpenTelemetry GenAI spans), the trace viewer, approval queue and scorecard page (Next.js), [deployed on Vercel](https://triage-agent-demo-tau.vercel.app) | ✅      |
-| 12    | CI gate                                                                                                                                                            | planned |
+40 hand-written cases (15 normal, 15 edge, 10 adversarial), each run 3 times, replayed from recorded model answers. Every number is measured; none is a target. Full report: [evals/report/report.md](evals/report/report.md).
 
-## Measured so far
+| Metric                                     | Result                                                                                |
+| ------------------------------------------ | ------------------------------------------------------------------------------------- |
+| **Pass rate**                              | **70.6%** (72/102 runs)                                                               |
+| normal / edge / adversarial                | 54.5% / 61.5% / **100%**                                                              |
+| Decision accuracy                          | 88.2%                                                                                 |
+| Citation accuracy                          | 93.3% (of AUTO_REPLY runs)                                                            |
+| Escalation precision, recall               | 87.5%, 87.5%                                                                          |
+| Injection resistance                       | 10/10 adversarial cases held on every repeat                                          |
+| p50 / p95 latency                          | 8.0 s / 76.8 s                                                                        |
+| Cost per 100 tickets                       | $0.16 at list price (actual: $0, free tiers)                                          |
+| LLM judge: replies scored, mean            | 42/48 pass (87.5%), mean 4.38 out of 5                                                |
+| Judge agreement with **human** labels      | **not measured yet** (it needs 15 labels from a person)                               |
+| Judge agreement with an AI second reviewer | 13/14 (a sanity check only: not human, and that reviewer's labels were all "pass")    |
+| Not scored                                 | 6 of 40 cases (5 waiting for a judge recording, 1 the model cannot answer; see below) |
 
-**First eval scorecard** (Phase 7, untuned; full report: [evals/report/report.md](evals/report/report.md)). 39 of 40 cases × 3 repeats, replayed from recordings:
-
-| Metric                       | Result                                                |
-| ---------------------------- | ----------------------------------------------------- |
-| Pass rate                    | **64.1%** (75/117)                                    |
-| normal / edge / adversarial  | 42.9% / 66.7% / 90%                                   |
-| Decision accuracy            | 87.2%                                                 |
-| Citation accuracy            | 90% (of AUTO_REPLY runs)                              |
-| Escalation precision, recall | 87.5%, 87.5%                                          |
-| Injection resistance         | 9/10 adversarial cases held on every repeat           |
-| p50 / p95 latency            | 8.6 s / 76.8 s                                        |
-| Cost per 100 tickets         | $0.16 at list price (actual: $0, free tiers)          |
-| Judge agreement              | not measured yet (the judge model arrives in Phase 9) |
+Run on 2026-11-23, prompt `system.v1`, 3 repeats per case. The model answers were recorded mostly on Groq `gpt-oss-120b` (24 cases; 5 were recorded on Gemini 3.6 Flash, and 5 never reach a model because the input guard rejects them first). The judge is Gemini 3.6 Flash: a different model family from the agent.
 
 ![Pass rate by group](docs/images/pass-rate.png)
 
-What the score means, honestly:
+The agent is **untuned**: the weakest group is ordinary tickets, where replies often leave out a required fact or cite a clause the agent never read. [docs/failures.md](docs/failures.md) groups every failure by cause. The adversarial group holds at 100% because of code-level guards around the model (see [SECURITY.md](SECURITY.md)), not because the model is perfect.
 
-- **The judge is not run yet**, so the reply check is phrases only. The pass rate will move when it arrives.
-- **Normal tickets score lowest.** Mostly the replies leave out a required fact (the return window, the pickup step) or skip a required clause. Phase 8 analysed them in [docs/failures.md](docs/failures.md).
-- **One case is not scored** (`damaged-item-safety-hazard`): on that ticket gpt-oss-120b tries to call a tool named `ESCALATE` that does not exist, Groq rejects the request, and Gemini's free quota was spent for the day. It is reported as incomplete, not counted as a pass or a fail.
-- **Mostly one model.** gpt-oss-120b (Groq) answered 34 of the 39 scored cases, Gemini 3.6 Flash the other 5, from the first recording run before Groq became primary. Those five also drive the p95 latency and the higher cost bars below.
-- In replay, all three repeats of a case serve the same recording, so repeats test the pipeline, not model variance.
+## How it works
 
-![Cost per run](docs/images/cost-per-run.png)
+![Architecture: ticket to API, queue in SQLite, worker running the agent, MCP tools with approval-gated writes, model router](docs/images/architecture.png)
 
-**Policy retrieval** (from [docs/retrieval.md](docs/retrieval.md)): is the correct policy clause in the top 4 results?
+- **A bounded state machine**, not a loop: classify, retrieve, gather (2 turns), decide, validate, one repair, propose. 8 steps, 6 tool calls and 24k tokens per run; hit any ceiling and it escalates with the facts so far. ([ADR 0001](docs/adr/0001-state-machine-not-a-framework.md))
+- **Six tools behind an MCP server**, four read-only and two that write. The write tools refuse unless a reviewer approved exactly what they are asked to do. The merchant comes from the token, never from a request. ([ADR 0002](docs/adr/0002-tools-behind-an-mcp-server.md), [ADR 0006](docs/adr/0006-queue-and-approvals-in-sqlite.md))
+- **Hybrid retrieval** over the policy base: FTS5 keyword search plus local vector search, rank fusion, and a cross-encoder reranker. All on CPU, all free. ([ADR 0005](docs/adr/0005-retrieval-configuration.md))
+- **Every reply must cite clauses a tool returned in that run**, and the validator checks it. Eligibility (return and refund windows) is plain date arithmetic, never a model. ([ADR 0004](docs/adr/0004-eligibility-is-code.md))
+- **Untrusted text is data.** Tickets sit in their own delimited message, obvious override attempts are rejected before any model call, and PII is masked at the tool boundary ([ADR 0003](docs/adr/0003-pii-at-the-boundary.md)).
+- **OpenTelemetry GenAI traces**, with tokens and list-price cost recorded per run, drawn by the trace viewer. Message content is off unless you opt in.
+- **Free tiers only, and never wasted.** A router tries Groq, then Gemini, with caps set below the free limits. Every model answer is recorded once and replayed, so tests and CI need no key.
 
-| Method                                     | Raw customer tickets (27) | Short questions (32, held out) |
-| ------------------------------------------ | ------------------------- | ------------------------------ |
-| Keyword only (FTS5/BM25)                   | 40.7%                     | 71.9%                          |
-| Vector only (bge-small)                    | 70.4%                     | 93.8%                          |
-| **Hybrid + cross-encoder rerank (in use)** | 48.1%                     | **96.9%**                      |
-
-Hybrid wins on focused questions and loses to vector-only on raw tickets, so the agent is told to search with one short question at a time. The held-out questions were committed before anything was measured. Why this configuration, and what it costs: [ADR 0005](docs/adr/0005-retrieval-configuration.md).
-
-**Tests:** over 300, run on every push, none of them calling a paid or live API. They cover tenant isolation for all 50 orders, PII masking for all 20 customers, eligibility at every date boundary, a retrieval regression gate, and the model router's fallback, retries, free-tier caps and record/replay. Each safety test was checked by deliberately breaking the code it protects.
-
-## How it works (built so far)
-
-- **Tools behind an MCP server.** The agent can only reach data through four tools with declared schemas. The merchant (tenant) is fixed by the server, never by tool input, so a ticket cannot reach another merchant's orders. ([ADR 0002](docs/adr/0002-tools-behind-an-mcp-server.md))
-- **Eligibility is code, not a model.** Return and refund windows are date arithmetic, tested at day 7 and day 8. ([ADR 0004](docs/adr/0004-eligibility-is-code.md))
-- **PII is masked at the tool boundary**, so a full email or phone number never enters a prompt. ([ADR 0003](docs/adr/0003-pii-at-the-boundary.md))
-- **One structured error shape** (`{ ok, code, message, retryable }`), so the agent branches on codes, never on prose.
-- **Local models, zero cost.** Embeddings and reranking run on the CPU via ONNX.
-- **Model calls on free tiers only, and never wasted.** A router sends calls to Groq (gpt-oss-120b) and falls back to Gemini. Daily caps are set below the free limits and enforced before any request is sent. Responses are recorded once and replayed, so tests and CI never call an API and need no keys.
-
-Design, with the trade-offs: [DESIGN.md](DESIGN.md).
+Full design and trade-offs: [DESIGN.md](DESIGN.md). Threat model mapped to the OWASP LLM Top 10 (2026): [SECURITY.md](SECURITY.md).
 
 ## Run it
 
-Needs Node 22 or later and pnpm. No API keys.
+No API keys needed. The tests and the eval replay recorded model answers. Needs Node 22 or later and pnpm.
 
 ```bash
 pnpm install
 pnpm db:reset && pnpm db:seed   # SQLite database with the seeded merchants and orders
 pnpm db:index                   # one-time ~60 MB local model download, builds the vector index
 pnpm test
-pnpm eval:retrieval             # re-measures retrieval and rewrites docs/retrieval.md
-pnpm eval                       # the scorecard: all 40 cases × 3, replayed (no keys, no calls)
-pnpm agent:run --ticket "got my blender on 13th nov, still sealed, want to return it. order A-10413"
-                                # runs the agent on a recorded ticket: no API keys, no calls
-
-pnpm web:dev                    # the web app at http://localhost:3300: runs, trace viewer, approvals, scorecard
-pnpm web:snapshot               # rebuild the demo snapshot from the recorded tickets (0 API calls)
-pnpm triage-failures            # the failing eval cases, grouped by reason
+npm run eval                    # replays the recordings, writes the scorecard (0 API calls)
+pnpm web:dev                    # the trace viewer at http://localhost:3300 (reads the demo snapshot)
 ```
 
-## Use the tools from Claude Desktop or Claude Code
+Also: `pnpm agent:run --ticket "..."` runs the agent on a recorded ticket; `pnpm triage-failures` lists failing eval cases by cause; `pnpm api:start` and `pnpm api:worker` run the API and the queue worker (they need a `JWT_SECRET` in `.env`; mint a token with `pnpm api:token --tenant tenant_a --role reviewer`).
 
-The MCP server works in any MCP client. Setup (one server per merchant): [packages/mcp-server/README.md](packages/mcp-server/README.md).
+To run against live models, copy `.env.example` to `.env`, add free-tier Groq and Gemini keys, and set `PROVIDER_MODE=record-missing` (it calls a model only where no recording exists). **Never add a payment method to either account**: the project is built to fit the free limits.
+
+## Use the tools from Claude Desktop
+
+The MCP server works in any MCP client, one server per merchant. Add this to your client's config (absolute paths), after `pnpm db:demo`:
+
+```json
+{
+  "mcpServers": {
+    "triage-kaveri": {
+      "command": "/absolute/path/to/node",
+      "args": ["/absolute/path/to/triage-agent/packages/mcp-server/src/stdio.ts"],
+      "env": {
+        "TRIAGE_TENANT": "tenant_a",
+        "DATABASE_PATH": "/absolute/path/to/triage-agent/data/demo.db"
+      }
+    }
+  }
+}
+```
+
+More in [packages/mcp-server/README.md](packages/mcp-server/README.md).
 
 ## What does not work yet
 
-- **The judge has not scored a single reply yet.** It is built and tested, but recording its 24 judgements takes two days of Gemini's free quota (18 calls a day), and the judge-agreement number needs you to label 15 replies (`evals/labels/to-label.md`). Until then the scorecard says so.
-- **The agent fixes are not measured.** The score is now 69.2%, but only because a grader bug was fixed (typographic hyphens and spaces). Three agent designs were built on branch `phase-8-v2`; on the 6 cases recorded the latest passes 3 where the current agent passes 5, so it is not merged. Measuring it fully needs about three days of Groq's free tier ([docs/failures.md](docs/failures.md)).
-- **The retrieval choice is unconfirmed.** It assumes the agent searches with short, focused questions. In the current agent, 27 of 39 runs never call `search_policy` at all.
-- **No API, UI or live demo yet** (Phases 10 and 11).
+- **The judge has not been checked against a person.** It scores 42 of 48 replies and agrees with an AI reviewer 13 times out of 14, but the spec's check is against 15 replies **you** label by hand (`evals/labels/to-label.md`), and that has not been done.
+- **Six of the 40 cases are unscored.** Five wait for their judge recording (Gemini's free tier allows 18 calls a day). `damaged-item-safety-hazard` has not been recorded: the model tries to call a tool named `ESCALATE` that does not exist, Groq rejects the request, and the Gemini fallback's daily quota was spent before it could answer. The gate treats a case that stops being scored as a failure, so none can quietly drop out.
+- **The agent is untuned.** 70.6% overall; ordinary tickets 54.5%. Fixes were built (a retrieval step run by code, handling for refused model output, a stricter prompt) but on the 6 cases recorded they did worse than the current agent, so they are parked on branch `phase-8-v2` and **not merged**. Measuring them fully needs about three days of free-tier quota ([#18](https://github.com/builtbynidhi/triage-agent/issues/18)).
+- **Approved writes are recorded, not delivered.** An approved reply goes into an outbox table; nothing is actually emailed. There is no login endpoint (tokens come from whoever holds `JWT_SECRET`), and the web app has no login, so approving from it is off by default.
+- **The nightly live check is built but switched off.** It runs five cases against the real models and opens an issue if they disagree with the recordings. It needs your free-tier keys as repository secrets, and a full-suite nightly would not fit the free quota.
+- **The three repeats of a case are identical in replay**, because there is one recording per request. They test the pipeline, not the model's run-to-run variation.
+- **Not built:** the optional Supabase hosted mode and the LangGraph port of the state machine.
+- The live demo is deployed by command (`scripts/deploy-demo.sh`), so a push to `main` does not update it.
+
+## Why it is built this way
+
+| Decision                                                                              | One line                                                                              |
+| ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| [0001 State machine, not a framework](docs/adr/0001-state-machine-not-a-framework.md) | A fixed number of model calls keeps cost and behaviour bounded.                       |
+| [0002 Tools behind an MCP server](docs/adr/0002-tools-behind-an-mcp-server.md)        | The agent reaches data only through typed tools; the merchant is fixed by the server. |
+| [0003 PII at the boundary](docs/adr/0003-pii-at-the-boundary.md)                      | A full email or phone number never enters a prompt.                                   |
+| [0004 Eligibility is code](docs/adr/0004-eligibility-is-code.md)                      | Policy windows are date arithmetic: deterministic, testable, auditable.               |
+| [0005 Retrieval configuration](docs/adr/0005-retrieval-configuration.md)              | Hybrid search plus a reranker, chosen from a held-out measurement.                    |
+| [0006 Queue and approvals in SQLite](docs/adr/0006-queue-and-approvals-in-sqlite.md)  | One file, one transaction; the write tools, not the routes, enforce the approval.     |
+
+## Status
+
+Phases 1 to 7, 10 and 11 are done; 8, 9 and 12 are partial (see above). Each phase's issue records what was built and what was not.
 
 ## Built with Claude Code
 

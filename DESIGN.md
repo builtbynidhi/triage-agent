@@ -1,10 +1,10 @@
 # DESIGN
 
-Outline only. Bodies are filled in during the phase that makes each decision.
+The design of triage-agent: how it fits together, why each boundary exists, the trade-offs, and what is still open. Written phase by phase; brought up to date at the end of Phase 12.
 
 ## 1. High-level design (HLD)
 
-Status markers: **built** = in the repo and tested; **planned** = phase not reached yet.
+Everything in this section is **built** and tested unless it says otherwise.
 
 ### 1.1 Shape
 
@@ -15,23 +15,25 @@ Three thin layers and one cross-cutting band.
               │  tracing (OTel GenAI spans) · cost and token ledger · budgets · guardrails  │
               └─────────────────────────────────────────────────────────────────────────────┘
  ticket ─► [ API ] ─► [ jobs queue ] ─► [ worker: agent state machine ] ─► [ MCP server ] ─► [ data ]
-           planned     schema built      planned (Phase 6)                  built (4 read     built
-           (Ph. 10)    (Ph. 1), logic                │                     tools)             (SQLite,
-                       planned (Ph. 10)              ▼                                         FTS5,
-                                              [ provider router ] ─► Gemini / Groq / replay   sqlite-vec)
-                                                planned (Phase 5)
- reviewer ─► [ approval queue ] (planned, Phase 10) ─► the only path to a write tool
- eval harness ─► drives the same entry point a real ticket uses (Phase 7)
+           Express     table in the     classify, retrieve, gather,         six tools: 4      SQLite,
+           JWT, rate   same SQLite      decide, validate, one repair,       read, 2 write     FTS5,
+           limit, key  file: lease,     propose                             (approval-gated)  sqlite-vec
+                       retry, dead                  │
+                       letter                       ▼
+                                             [ provider router ] ─► Groq / Gemini / replay
+ reviewer ─► [ approval queue ] ─► the only path to a write tool (the tool re-checks the approval)
+ eval harness ─► drives the same entry point a real ticket uses; CI replays it and gates on a baseline
+ trace viewer (Next.js) ─► reads the API, or a read-only snapshot (the public demo)
 ```
 
 ### 1.2 One ticket, end to end
 
-1. `POST /triage` authenticates, rate-limits per tenant, checks an idempotency key, writes a `runs` row and a `jobs` row in one transaction, and returns 202 with a run ID. _(Planned, Phase 10. The tables and the idempotency index are built.)_
-2. A worker leases the job and runs the agent state machine with a budget of 8 steps, 6 tool calls and a token ceiling. _(Planned, Phase 6.)_
-3. The agent reaches the world **only** through the MCP server: `search_policy` (hybrid retrieval), `get_order`, `get_customer` (PII masked) and `check_eligibility` (rules in code). _(Built, Phases 3 and 4.)_
-4. The model's decision is validated against the schema, with one repair attempt, then the run fails closed to ESCALATE. _(Planned, Phase 6.)_
-5. Any write pauses in the approval queue until a reviewer approves. _(Planned, Phase 10.)_
-6. Every step emits a span with token counts and cost. _(Planned, Phase 11. Retrieval already returns a per-stage trace.)_
+1. `POST /v1/triage` authenticates (JWT, merchant from the token only), rate-limits per merchant, checks an idempotency key, writes a `tickets`, a `runs` and a `jobs` row in one transaction, and returns 202 with a run ID (§2.7).
+2. A worker leases the job and runs the agent state machine with a budget of 8 steps, 6 tool calls and 24k tokens (§2.5).
+3. The agent reaches the world **only** through the MCP server: `search_policy` (hybrid retrieval), `get_order`, `get_customer` (PII masked) and `check_eligibility` (rules in code) (§2.2, §2.3).
+4. The model's decision is validated against the schema and the rules, with one repair attempt, then the run fails closed to ESCALATE. Input is quarantined first and obvious override attempts never reach the model (§2.5, SECURITY.md).
+5. The proposal waits in the approval queue. A reviewer approves exactly what is shown; the write tool then re-checks the approval and records the write once (§2.7).
+6. Every step emits an OpenTelemetry span with token counts; the spans are saved with the run and drawn by the trace viewer (§2.8, §2.9).
 
 ### 1.3 Why each boundary exists
 
@@ -83,7 +85,7 @@ Three thin layers and one cross-cutting band.
 
 **search_policy, for now.** FTS5 with BM25 (title weighted 2x over text), behind `ctx.searchPolicies` so Phase 4 can swap in hybrid retrieval, and Phase 7 can wrap it to plant the poisoned-policy fixture. User text never reaches `MATCH` raw: `toFtsQuery` keeps only words (letters, combining marks and digits, so Devanagari survives), quotes each one, and ORs them. FTS operators in a ticket become plain words.
 
-**HTTP transport security until Phase 10.** The tenant comes from an `x-triage-tenant` header, which is only acceptable on loopback. `startHttpServer` therefore refuses to bind to a non-loopback address, rejects requests whose Host or browser Origin is not localhost (DNS-rebinding protection from `@modelcontextprotocol/node`), and returns 401 for a missing or unknown tenant. Phase 10 replaces the header with a verified JWT claim.
+**HTTP transport security.** The tenant comes from an `x-triage-tenant` header, which is only acceptable on loopback. `startHttpServer` therefore refuses to bind to a non-loopback address, rejects requests whose Host or browser Origin is not localhost (DNS-rebinding protection from `@modelcontextprotocol/node`), and returns 401 for a missing or unknown tenant. The Express API from Phase 10 does not use this header: it takes the merchant from a verified JWT claim (§2.7). This MCP HTTP transport still uses the header, so it stays loopback-only, for local MCP clients.
 
 **Resources.** Each policy file is an MCP resource, `policy://{doc}`, served as committed (frontmatter included), so a person in a client can read exactly what the agent cites.
 
@@ -257,5 +259,9 @@ Every run is an OpenTelemetry span tree: `invoke_agent triage-agent` (internal) 
 - **Resolved: eligibility clause IDs are citable.** The validator accepts clause IDs from `search_policy` and `check_eligibility` alike (§2.5).
 - **Resolved: tenant-scoped retrieval.** `policy_chunks.tenant_id` (NULL = shared), filtered in keyword and vector search (§2.3).
 - **"Remote" delivery locations are undefined** in `delivery.estimates`, so the Guwahati case accepts either band. A policy edit could pin it down.
-- **Check retrieval with the agent's real queries (moved to Phase 8).** ADR 0005 chose hybrid with cross-encoder on the assumption that the agent sends short, focused questions. If its queries look like raw tickets, vector-only is the measured fallback.
-- **Phase 8 inputs from the first live run:** the reply invented a return step ("log into your account"; policy says support arranges pickup); the second gather turn often only says DONE (a third of the tokens); the confidence threshold is provisional.
+- **Still open: does the agent really send short, focused questions?** ADR 0005 chose hybrid with a cross-encoder on that assumption. In the current agent 27 of 39 runs never call `search_policy` at all, so the assumption is untested; the parked Phase 8 design runs the search in code (docs/failures.md).
+- **Analysed, not all fixed (Phase 8):** replies that invent a return step instead of the policy's pickup, and a second gather turn that often only says DONE. Both are in docs/failures.md. The fixes are parked on branch `phase-8-v2` because on the cases recorded they did worse than the current agent. **The confidence threshold (0.5) is still provisional**: it was not tuned from data.
+- **Open: the judge is validated only against an AI reviewer.** It agrees with it 13 times out of 14, but the spec's check is 15 replies labelled by a person, and that is pending. Until then the agreement with human labels is reported as not measured.
+- **Open: six of 40 cases are unscored** (five need a judge recording; one, `damaged-item-safety-hazard`, makes the model call a tool that does not exist). The CI gate fails if a case that was scored stops being scored, so none can drop out silently.
+- **Open: a nightly live check needs keys and quota.** The workflow is built and off; a full-suite nightly would need about 320k Groq tokens against a 200k daily free limit, so it runs a five-case canary.
+- **Not built:** the Supabase hosted mode, the LangGraph port, a login endpoint, token revocation, delivery of an approved reply (the outbox is the record), and editing a proposal before approval.
