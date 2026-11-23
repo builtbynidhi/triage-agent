@@ -69,14 +69,27 @@ Each failing case was replayed and its steps printed (tool calls, inputs, output
 
 - 17 of 39 runs use a second gather turn only to say they are done. Expected effect of removing it: about a third fewer tokens per run, which also makes re-recording cheaper.
 
-## Open questions for the owner
+## What was tried for G1 to G6, and what it showed
 
-1. **How to force retrieval (G1).** Recommended: force a `search_policy` call on the first gather turn through the providers' tool-choice option. Alternatives:
-   - The code calls `search_policy` with the raw ticket. That needs no model change, but hybrid retrieval finds the right clause in the top 4 for only 48% of raw tickets.
-   - A prompt rule alone: cheapest, least reliable.
-2. **Re-running after each fix costs free quota.** Any prompt, model or tool-output change changes every recorded request, so the suite must be re-recorded: about 40 × 4,000 to 5,000 tokens, close to Groq's free 200,000 tokens a day. Re-running after _every_ group, as the spec asks, would take one day per group. Fixes that do not change model requests (G0, validator and harness rules) are measured exactly in replay.
-3. **The validator accepts clause IDs from any tool**, including `check_eligibility`. The spec says "any clause_id not returned by `search_policy` this run is a hard failure". Tightening it only makes sense together with G1.
+All of it lives on branch `phase-8-v2` (not merged). Three designs were built, one after another, each because the previous one failed in a real run:
+
+1. **Forced first tool call** (`tool_choice: search_policy`). Failed: gpt-oss ignores the forced tool and calls another, Groq returns a 400 that is never recorded, and the forced search uses one of the two gather turns (Groq allows one tool call per turn), so `get_order` and `check_eligibility` no longer both fit. Of the first 8 cases, 1 passed.
+2. **Retrieval as a machine state** (the spec's "classify, then retrieve"): CLASSIFY is a model call with no tools that writes one policy question; the machine itself runs `search_policy`, and `get_order` for an order ID written in the ticket; refused model output is recorded, retried once, then fails closed (`model_error`); address changes, cancellations and damaged items can never be AUTO_REPLY. Provider errors went to zero, and address-change and cancellation now pass.
+3. **Prompt v2** (neutral search question, apply a clause only when its conditions are confirmed, order changes escalate).
+
+**Partial measurement, 6 of 40 cases (not a score):** the v2 agent passes 3 of them (`address-change`, `cancellation`, `damaged-item-cracked-jar`). The current agent on `main` passes 5 of the same 6 (3 of 3 repeats each), and fails `damaged-item-cracked-jar`. So v2 fixed one case and regressed three: `angry-but-legitimate-delivery` (the model's search question echoes "not arrived", retrieves the late-parcel clause and applies it without checking dates), and both `boundary-return` cases (the reply still invents a "return portal" instead of the free pickup, even with the policy retrieved). The sample is small, but it points the wrong way, so **v2 is not merged**.
+
+**Why it stops here.** Measuring v2 properly needs all 40 cases recorded: about 8,000 tokens a case, about 320,000 tokens, against a free limit of 200,000 tokens a day on Groq (about three days). There is no free alternative: Gemini 3.6 Flash allows 20 requests a day, and Cerebras (same model, larger limit) now asks for a payment method. That would break the owner's no-payment rule.
+
+## Decisions taken in Phase 8
+
+1. **Retrieval is not forced through the model** (a forced tool choice failed, see above).
+2. **Measuring under the free tier: one recorded version at a time.** Any prompt, model or tool-output change alters every recorded request, so the whole suite must be re-recorded before a score exists.
+3. **The validator still accepts clause IDs from any tool**, including `check_eligibility`. The spec's validator line says only `search_policy`, but its tool section says `check_eligibility` returns "clause IDs the reply must cite", so both must be citable.
 
 ## What remains after Phase 8
 
-Filled in at the end of the phase.
+- **Measured:** the grader fix (G0): 64.1% to 69.2% (75/117 to 81/117), with no change to the agent.
+- **Not measured, parked on `phase-8-v2`:** G1 to G6. To resume: record the other 34 cases (`pnpm eval --mode record-missing`, about three Groq days), replay three times, and compare per case with `main`. If v2 does not beat 69.2% there, it stays unmerged.
+- **Not fixed:** the 14 failing cases above, except `damaged-item-cracked-jar` on the branch. `damaged-item-safety-hazard` is still unrecorded: gpt-oss calls a tool named `ESCALATE` that does not exist, and Groq rejects it. The branch records and handles that refusal.
+- **Open questions:** the confidence threshold is still the provisional 0.5, and retrieval has not been checked against the agent's real queries.

@@ -151,3 +151,8 @@ Prompt structure: role, rules and schema in the system prompt (a versioned file)
 - The judge is Phase 9: until then the reply check is phrases only, and the report says so.
 - Recording costs free-tier calls (about 3 per case). Always state the count and get the owner's go-ahead before a recording run. **Both accounts must stay on free plans; never add credits anywhere.** grok-api.com ("GrokAPI") is unrelated to Groq and is not used.
 - Phase 7 is the honest first score: no prompt or agent tuning until Phase 8.
+
+## Phase 8 status
+
+- Phase 8 is **partial**. Measured and merged: the grader fix (64.1% to 69.2%). Parked, not merged: three agent designs on branch `phase-8-v2` (retrieval as a machine state, refused-output handling, prompt v2); the 6 cases recorded show it passing fewer than the current agent. Full record in `docs/failures.md`.
+- Free-tier facts: Groq gpt-oss-120b 200k tokens a day (resets 05:30 IST), Gemini 3.6 Flash 20 requests a day (resets 13:30 IST). A full v2 recording is about 320k tokens, so about three Groq days. Cerebras needs a payment method: do not use it.
