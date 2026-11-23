@@ -17,7 +17,10 @@ WEB="$ROOT/apps/web"
 PROJECT="${VERCEL_PROJECT:-triage-agent-demo}"
 [ -d "$WEB/node_modules/next" ] || { echo "run 'pnpm install' first" >&2; exit 1; }
 
-DIR="$(mktemp -d)/$PROJECT"
+TMP="$(mktemp -d)"
+# Vercel's link step writes a short-lived token into .env.local here: remove the whole folder on exit.
+trap 'rm -rf "$TMP"' EXIT
+DIR="$TMP/$PROJECT"
 mkdir -p "$DIR"
 rsync -a --exclude node_modules --exclude .next --exclude '*.test.ts' --exclude tsconfig.tsbuildinfo \
   --exclude next-env.d.ts --exclude vercel.json --exclude package.json --exclude .vercel "$WEB/" "$DIR/"
@@ -39,6 +42,8 @@ writeFileSync(process.env.DIR + '/package.json', JSON.stringify(pkg, null, 2) + 
 "
 printf '{\n  "framework": "nextjs"\n}\n' > "$DIR/vercel.json"
 printf '.next\nnode_modules\n.vercel\n' > "$DIR/.gitignore"
+# Never upload an env file (Vercel already skips .env.local; this makes it explicit).
+printf '.env*\n' > "$DIR/.vercelignore"
 
 cd "$DIR"
 npm install --package-lock-only --ignore-scripts >/dev/null
