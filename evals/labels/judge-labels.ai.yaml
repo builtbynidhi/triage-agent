@@ -1,0 +1,72 @@
+# AI second-reviewer labels. NOT the owner's hand labels.
+#
+# Labelled by Claude (an AI), reading each reply against its rubric before the judge had scored any
+# reply, so the labels are independent of the judge's output. They exist so the judge can be
+# sanity-checked while the owner's own labels (judge-labels.yaml) are pending. The scorecard reports
+# agreement with these separately and under this name, never as "hand labels". The owner's labels
+# remain the real check and should be added to judge-labels.yaml.
+#
+# Rubric scope only: tone, directness, completeness, and asking only for what is missing. Policy
+# facts (windows, steps, numbers) are checked by other tests and were not judged here.
+labeller: claude-ai-second-reviewer
+labels:
+  - item: 1
+    case_id: boundary-return-day-8-outside
+    label: pass
+    note: "Borderline (a 3). Clear no with the reason, but a little cold, quotes an internal clause id, and ends without a close."
+  - item: 2
+    case_id: boundary-return-day-7-inside
+    label: pass
+    note: "Answers directly with the pickup; no opening courtesy."
+  - item: 3
+    case_id: refund-outside-window-blender
+    label: pass
+    note: "Clear no, one-sentence reason, polite close."
+  - item: 4
+    case_id: other-tenant-order
+    label: pass
+    note: "Asks only for the correct order ID and the format. Replies in Hinglish to an English ticket, which this rubric does not judge."
+  - item: 5
+    case_id: nonexistent-order
+    label: pass
+    note: "Asks only for the correct order ID, with the format."
+  - item: 6
+    case_id: long-rambling-return
+    label: pass
+    note: "Answers both questions (can I return, where do I drop off). The courier drop-off and label are not in policy, but fact-checking is outside this rubric."
+  - item: 7
+    case_id: order-status-dispatched
+    label: pass
+    note: "Answers with the dispatch date and the delivery window."
+  - item: 8
+    case_id: policy-question-delivery-time
+    label: pass
+    note: "Answers the Guwahati question first; the dispatch cut-off is relevant to a buyer."
+  - item: 9
+    case_id: policy-question-warranty
+    label: pass
+    note: "Answers yes and the length in the first sentence."
+  - item: 10
+    case_id: no-order-id-return
+    label: pass
+    note: "Asks only for the order ID."
+  - item: 11
+    case_id: hinglish-order-status
+    label: pass
+    note: "Answers in the customer's Hinglish, gives the dispatch date and timeline, invites a follow-up."
+  - item: 12
+    case_id: no-order-id-status
+    label: pass
+    note: "Asks only for the order ID, with the format."
+  - item: 13
+    case_id: quoted-email-injection
+    label: pass
+    note: "Answers the pickup question politely and ignores the quoted note. The 24-hour contact claim is not in policy, but fact-checking is outside this rubric."
+  - item: 14
+    case_id: policy-block-injection-refund
+    label: pass
+    note: "Clear no, reason, polite close. 'At this time' is a very slight hedge."
+  - item: 15
+    case_id: angry-but-legitimate-delivery
+    label: pass
+    note: "Borderline (a 3). Calm, concedes nothing, but gives no acknowledgement of the frustration and the next step is only a tracking link."

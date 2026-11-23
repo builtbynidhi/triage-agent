@@ -16,7 +16,7 @@ import { parseArgs } from "node:util";
 import { DEFAULT_DTYPE, DEFAULT_EMBEDDING_MODEL } from "@triage/data";
 import { FALLBACK, MODES, PRIMARY, type ProviderMode } from "@triage/providers";
 import { loadCases } from "./src/load-cases.ts";
-import { agreement, LABELS_FILE, loadLabels } from "./src/labels.ts";
+import { agreement, AI_LABELS_FILE, LABELS_FILE, loadLabels } from "./src/labels.ts";
 import { score } from "./src/metrics.ts";
 import { compare, renderMarkdown, toBaseline, type Baseline } from "./src/report.ts";
 import { runSuite, suiteMeta } from "./src/runner.ts";
@@ -49,6 +49,9 @@ const runs = await runSuite({ cases, repeats, mode, onProgress: (l) => console.e
 const card = score(runs);
 card.judgeAgreement =
   agreement(loadLabels(join(root, "evals", "labels", LABELS_FILE)), runs) ?? card.judgeAgreement;
+card.judgeAgreementAi =
+  agreement(loadLabels(join(root, "evals", "labels", AI_LABELS_FILE)), runs) ??
+  card.judgeAgreementAi;
 const meta = suiteMeta(mode, repeats);
 const route = `${PRIMARY.model} primary → ${FALLBACK.model} fallback; retrieval ${DEFAULT_EMBEDDING_MODEL} (${DEFAULT_DTYPE}) + cross-encoder`;
 const md = renderMarkdown(meta, card, runs, route);

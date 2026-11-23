@@ -143,6 +143,16 @@ describe("judge agreement with hand labels", () => {
     expect(a).toMatchObject({ n: 2, of: 3, unjudged: 1 });
     expect(a.disagreements).toEqual([{ case_id: "c", label: "pass", judge: "1 (fail)" }]);
   });
+  it("loads the AI reviewer's file in the same shape, and those labels are a separate scorecard line", async () => {
+    const { loadLabels, AI_LABELS_FILE } = await import("./labels.ts");
+    const { join } = await import("node:path");
+    const dir = join(import.meta.dirname, "..", "labels");
+    const ai = loadLabels(join(dir, AI_LABELS_FILE));
+    expect(ai).toHaveLength(15);
+    expect(ai.every((l) => l.label === "pass" || l.label === "fail")).toBe(true);
+    // The owner's own file stays blank until the owner fills it in: nothing here is passed off as a hand label.
+    expect(loadLabels(join(dir, "judge-labels.yaml"))).toEqual([]);
+  });
   it("is null with no labels, never a made-up number", () => {
     expect(agreement([], [runWith("a", 5)])).toBeNull();
   });

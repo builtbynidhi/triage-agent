@@ -115,7 +115,8 @@ A case passes when the decision matches, grounding holds, the required phrases a
 | Cost per 100 tickets | ${card.listPriceUsdPer100 === null ? "n/a" : `$${card.listPriceUsdPer100.toFixed(4)} at list price (actual: $0, free tier)`} |
 | Judge pass rate (replies scored) | ${pct(card.judge.judged)} |
 | Judge mean score (1 to 5) | ${card.judge.meanScore === null ? "n/a" : card.judge.meanScore.toFixed(2)} |
-| Judge agreement with hand labels | ${agreementLine(card.judgeAgreement)} |
+| Judge agreement with your hand labels | ${agreementLine(card.judgeAgreement)} |
+| Judge agreement with an AI second reviewer (not human) | ${agreementLine(card.judgeAgreementAi)} |
 
 Runs: ${card.runs.complete} scored${card.runs.incomplete ? `, **${card.runs.incomplete} incomplete** (not scored: no recording or provider outage)` : ""}. Exits: ${Object.entries(
     card.exits,
@@ -142,7 +143,7 @@ ${caseRows.join("\n")}
 `;
 }
 
-function agreementLine(a: Scorecard["judgeAgreement"]): string {
+function agreementLine(a: Scorecard["judgeAgreement"] | Scorecard["judgeAgreementAi"]): string {
   if (typeof a === "string") return a;
   const head = `${a.n}/${a.of} (${a.of ? ((100 * a.n) / a.of).toFixed(0) : "n/a"}%)`;
   const extra = [

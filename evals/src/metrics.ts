@@ -59,6 +59,12 @@ export interface Scorecard {
   };
   /** The judge against the owner's hand labels, or why it is not measured. */
   judgeAgreement: Agreement | "not measured (no hand labels yet)";
+  /**
+   * The judge against an AI second reviewer's labels (evals/labels/judge-labels.ai.yaml). Reported
+   * on its own line and never as "hand labels": it is a sanity check while the owner's labels are
+   * pending, not the human ground truth the spec asks for.
+   */
+  judgeAgreementAi: Agreement | "not measured (no AI labels)";
 }
 
 export function score(runs: ScoredRun[]): Scorecard {
@@ -130,6 +136,7 @@ export function score(runs: ScoredRun[]): Scorecard {
     exits,
     judge: judgeStats(done),
     judgeAgreement: "not measured (no hand labels yet)",
+    judgeAgreementAi: "not measured (no AI labels)",
   };
 }
 

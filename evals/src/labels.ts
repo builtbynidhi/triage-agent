@@ -20,6 +20,8 @@ export interface Label {
 }
 
 export const LABELS_FILE = "judge-labels.yaml";
+/** An AI second reviewer's labels: same shape, reported separately, never called hand labels. */
+export const AI_LABELS_FILE = "judge-labels.ai.yaml";
 
 export function loadLabels(file: string): Label[] {
   if (!existsSync(file)) return [];
