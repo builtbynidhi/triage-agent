@@ -27,7 +27,7 @@ The agent only **proposes**. A human approves anything that would leave the syst
 | 8     | Fix the failures                             | partial: grader fix merged; agent changes parked, unmeasured        |
 | 9     | LLM judge and security hardening             | partial: built; 16 of 21 judge scores recorded, your labels pending |
 | 10    | API, queue, human approvals                  | done                                                                |
-| 11    | UI and tracing                               | built; public deploy pending                                        |
+| 11    | UI and tracing                               | done ([live demo](https://triage-agent-demo-tau.vercel.app))        |
 | 12    | CI gate and polish                           | not built                                                           |
 
 ## What it is built with
@@ -47,7 +47,7 @@ TypeScript on Node 22 (pnpm workspace) · SQLite with FTS5 and sqlite-vec · MCP
 
 - **Measured:** 69.2% of eval runs pass (81 of 117, 40 cases × 3 repeats) on an untuned agent. Cost: $0 (about $0.16 per 100 tickets at list price).
 - **Judge:** 14 of the 16 replies scored so far pass (mean 4.38 out of 5). Agreement with human labels is **not measured yet**: it needs your 15 labels.
-- **Not done:** the agent fixes from Phase 8 are parked on a branch and unmeasured, the public deployment of the UI needs the owner's Vercel account, and the CI gate is not built. Details: [docs/failures.md](failures.md).
+- **Not done:** the agent fixes from Phase 8 are parked on a branch and unmeasured, the CI gate is not built. Details: [docs/failures.md](failures.md).
 
 ## Run it
 

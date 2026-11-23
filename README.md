@@ -10,6 +10,8 @@ A bounded AI agent that triages customer-support tickets, drafts policy-grounded
 
 _The trace viewer, showing one real run: the span tree, tool calls, retrieved policy with scores, the validation outcome and the decision. (A screenshot, not yet the 20-second GIF the spec asks for.)_
 
+**Live demo (read-only, real recorded runs): <https://triage-agent-demo-tau.vercel.app>**
+
 ## What it will do
 
 Given a support ticket for a small e-commerce merchant, the agent returns exactly one decision, with a draft reply citing the policy clauses it relied on:
@@ -25,20 +27,20 @@ It is **bounded**: a state machine with a step, tool-call and token budget; six 
 
 ## Status
 
-| Phase | What                                                                                                                                                        | Status  |
-| ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
-| 1     | SQLite schema, deterministic seed (2 merchants, 20 customers, 50 orders), 8 policy documents                                                                | ✅      |
-| 2     | 40 eval cases, **written before the agent**: 15 normal, 15 edge, 10 adversarial                                                                             | ✅      |
-| 3     | MCP server: 4 read-only tools, stdio and streamable HTTP, policies as resources                                                                             | ✅      |
-| 4     | Hybrid retrieval: FTS5 + vector search, rank fusion, cross-encoder reranking                                                                                | ✅      |
-| 5     | Provider router: Groq → Gemini fallback, free-tier guard, circuit breaker, record and replay, cost                                                          | ✅      |
-| 6     | Agent core: bounded state machine through MCP, validator, one repair attempt, fail-closed ESCALATE                                                          | ✅      |
-| 7     | Eval harness: run all 40 cases, record responses, first honest scorecard                                                                                    | ✅      |
-| 8     | Fix the failures: grader fix measured (69.2%); agent fixes built but unmeasured, parked ([details](docs/failures.md))                                       | partial |
-| 9     | Judge (Gemini, a different model family) with 4 rubrics, adversarial guards, [SECURITY.md](SECURITY.md); judge recordings and your 15 hand labels pending   | partial |
-| 10    | API, queue and human approvals: Express, JWT roles, rate limit, idempotency, SSE, approval-gated writes                                                     | ✅      |
-| 11    | Tracing (OpenTelemetry GenAI spans), the trace viewer, approval queue and scorecard page (Next.js); public deploy is pending ([steps](docs/deploy-demo.md)) | partial |
-| 12    | CI gate                                                                                                                                                     | planned |
+| Phase | What                                                                                                                                                               | Status  |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------- |
+| 1     | SQLite schema, deterministic seed (2 merchants, 20 customers, 50 orders), 8 policy documents                                                                       | ✅      |
+| 2     | 40 eval cases, **written before the agent**: 15 normal, 15 edge, 10 adversarial                                                                                    | ✅      |
+| 3     | MCP server: 4 read-only tools, stdio and streamable HTTP, policies as resources                                                                                    | ✅      |
+| 4     | Hybrid retrieval: FTS5 + vector search, rank fusion, cross-encoder reranking                                                                                       | ✅      |
+| 5     | Provider router: Groq → Gemini fallback, free-tier guard, circuit breaker, record and replay, cost                                                                 | ✅      |
+| 6     | Agent core: bounded state machine through MCP, validator, one repair attempt, fail-closed ESCALATE                                                                 | ✅      |
+| 7     | Eval harness: run all 40 cases, record responses, first honest scorecard                                                                                           | ✅      |
+| 8     | Fix the failures: grader fix measured (69.2%); agent fixes built but unmeasured, parked ([details](docs/failures.md))                                              | partial |
+| 9     | Judge (Gemini, a different model family) with 4 rubrics, adversarial guards, [SECURITY.md](SECURITY.md); judge recordings and your 15 hand labels pending          | partial |
+| 10    | API, queue and human approvals: Express, JWT roles, rate limit, idempotency, SSE, approval-gated writes                                                            | ✅      |
+| 11    | Tracing (OpenTelemetry GenAI spans), the trace viewer, approval queue and scorecard page (Next.js), [deployed on Vercel](https://triage-agent-demo-tau.vercel.app) | ✅      |
+| 12    | CI gate                                                                                                                                                            | planned |
 
 ## Measured so far
 

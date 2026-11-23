@@ -20,3 +20,4 @@ __pycache__/
 
 # Claude Code: personal settings stay local; .claude/settings.json is shared and committed
 .claude/settings.local.json
+.vercel
