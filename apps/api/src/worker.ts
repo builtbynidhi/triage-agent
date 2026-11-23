@@ -1,6 +1,13 @@
-import { runAgent, connectTools, type StepRecord as AgentStep } from "@triage/agent";
+import {
+  connectTools,
+  failureDetail,
+  loadSystemPrompt,
+  runAgent,
+  type StepRecord as AgentStep,
+} from "@triage/agent";
 import type { JobQueue, PolicyRetriever, RunStore, StepInput, TriageStore } from "@triage/data";
 import type { Router } from "@triage/providers";
+import type { SpanCollector } from "@triage/telemetry";
 
 /**
  * The worker drains the queue: claim a job under a lease, run the agent, store the trace and the
@@ -18,6 +25,10 @@ export interface WorkerDeps {
   /** Today, YYYY-MM-DD (the agent shows it to the model; tools use the same date). */
   today: () => string;
   leaseMs?: number;
+  /** Where each run's finished spans are collected, to be saved with the run. Unset: no trace is kept. */
+  collector?: SpanCollector;
+  /** Record prompts and tool content on the spans. Off unless CAPTURE_MESSAGE_CONTENT is true. */
+  captureContent?: boolean;
 }
 
 export type Outcome = "idle" | "done" | "retry" | "dead";
@@ -70,6 +81,8 @@ export function createWorker(deps: WorkerDeps) {
         router: deps.router,
         today,
         onStep: (s) => runs.appendStep(run.id, toStep(s)),
+        traceAttributes: { "triage.run_id": run.id, "triage.tenant_id": run.tenantId },
+        ...(deps.captureContent ? { captureContent: true } : {}),
       });
       // The model being unreachable is transient: retry the job rather than record a fake decision.
       if (result.exit === "provider_error")
@@ -85,6 +98,8 @@ export function createWorker(deps: WorkerDeps) {
           downgraded: result.downgraded,
           repaired: result.repaired,
           prompt: result.prompt,
+          // A run that ended early keeps what is needed to triage it without re-running it.
+          ...(result.exit !== "decided" ? { failure: failureDetail(result) } : {}),
         },
         inputTokens: modelSteps.reduce((n, s) => n + s.tokens!.input, 0),
         outputTokens: modelSteps.reduce((n, s) => n + s.tokens!.output + s.tokens!.thinking, 0),
@@ -97,13 +112,18 @@ export function createWorker(deps: WorkerDeps) {
             }
           : null,
       });
+      if (deps.collector) runs.saveTrace(run.id, deps.collector.take(result.traceId));
       queue.complete(job.id);
       return "done";
     } catch (err) {
       const message = (err as Error).message;
       const r = queue.fail(job.id, message);
       if (r.status === "dead") {
-        runs.failRun(run.id, { error: message, attempts: job.attempts });
+        runs.failRun(run.id, {
+          error: message,
+          attempts: job.attempts,
+          promptHash: loadSystemPrompt().hash, // the prompt it would have used, for triage
+        });
         return "dead";
       }
       return "retry";

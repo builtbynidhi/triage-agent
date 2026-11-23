@@ -10,9 +10,16 @@ const worker = createWorker({
   router: rt.router(),
   retriever: rt.retriever(),
   today: () => rt.pinnedToday ?? todayInIndia(),
+  collector: rt.telemetry.collector,
+  captureContent: rt.captureContent,
 });
 const loop = worker.start(1000);
-console.error("triage worker running (PROVIDER_MODE=%s)", rt.env.PROVIDER_MODE ?? "replay");
+console.error(
+  "triage worker running (PROVIDER_MODE=%s; traces: %s; message content %s)",
+  rt.env.PROVIDER_MODE ?? "replay",
+  rt.telemetry.exporters.join(", "),
+  rt.captureContent ? "CAPTURED" : "not captured",
+);
 for (const sig of ["SIGINT", "SIGTERM"] as const) {
   process.on(sig, () => void loop.stop().then(() => process.exit(0)));
 }

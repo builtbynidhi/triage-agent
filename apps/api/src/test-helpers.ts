@@ -14,7 +14,7 @@ import type { AddressInfo } from "node:net";
 import { createApp } from "./app.ts";
 import { signToken, type Role } from "./auth.ts";
 import { createRateLimiter } from "./rate-limit.ts";
-import { createWorker } from "./worker.ts";
+import { createWorker, type WorkerDeps } from "./worker.ts";
 
 export const SECRET = "test-secret-".padEnd(48, "x");
 
@@ -108,7 +108,10 @@ export interface TestApi {
     body?: unknown,
     headers?: Record<string, string>,
   ): Promise<{ status: number; headers: Headers; json: Record<string, any> | null; text: string }>; // eslint-disable-line @typescript-eslint/no-explicit-any
-  worker(router: ReturnType<typeof scriptedRouter>): ReturnType<typeof createWorker>;
+  worker(
+    router: ReturnType<typeof scriptedRouter>,
+    extra?: Partial<WorkerDeps>,
+  ): ReturnType<typeof createWorker>;
   close(): Promise<void>;
 }
 
@@ -163,8 +166,8 @@ export async function startTestApi(
     const text = await res.text();
     return { status: res.status, headers: res.headers, json: text ? safeJson(text) : null, text };
   };
-  const worker = (router: ReturnType<typeof scriptedRouter>) =>
-    createWorker({ store, runs, queue, router, today: () => SEED_TODAY });
+  const worker = (router: ReturnType<typeof scriptedRouter>, extra: Partial<WorkerDeps> = {}) =>
+    createWorker({ store, runs, queue, router, today: () => SEED_TODAY, ...extra });
   return {
     count: (table: string) =>
       (db.prepare(`SELECT COUNT(*) AS n FROM ${table}`).get() as { n: number }).n,

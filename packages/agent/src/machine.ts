@@ -1,3 +1,4 @@
+import { context, SpanKind, SpanStatusCode, trace, type Span } from "@opentelemetry/api";
 import {
   CassetteMissError,
   type ChatRequest,
@@ -94,6 +95,8 @@ export interface RunResult {
   citableClauseIds: string[];
   /** Retrieved clauses that gave orders to the assistant: never citable (guard.ts). */
   quarantinedClauseIds: string[];
+  /** The OpenTelemetry trace ID of this run's span tree (all zeros when tracing is off). */
+  traceId: string;
 }
 
 export interface AgentOptions {
@@ -108,6 +111,13 @@ export interface AgentOptions {
   maxGatherRounds?: number;
   prompt?: SystemPrompt;
   onStep?: (step: StepRecord) => void;
+  /**
+   * Record message and tool content (prompts, tool arguments and results) on the spans. OFF by
+   * default: they hold customer text. The OpenTelemetry GenAI conventions make this opt-in too.
+   */
+  captureContent?: boolean;
+  /** Extra attributes for the run's root span, e.g. { "triage.run_id": "run_..." }. */
+  traceAttributes?: Record<string, string | number | boolean>;
 }
 
 class StopRun extends Error {
@@ -159,6 +169,24 @@ export async function runAgent(opts: AgentOptions): Promise<RunResult> {
   let listPrice = 0;
   let modelCalls = 0;
   let repaired = false;
+  let inputTotal = 0;
+  let outputTotal = 0;
+
+  // One span per run (invoke_agent) with a chat span per model call and an execute_tool span per
+  // tool call, following the OpenTelemetry GenAI conventions (semantic-conventions-genai v0.1.0,
+  // status Development; DESIGN.md 2.8). With no SDK registered the tracer is a no-op.
+  const tracer = trace.getTracer("triage-agent", "0.1.0");
+  const rootSpan: Span = tracer.startSpan("invoke_agent triage-agent", {
+    kind: SpanKind.INTERNAL,
+    attributes: {
+      "gen_ai.operation.name": "invoke_agent",
+      "gen_ai.agent.name": "triage-agent",
+      ...opts.traceAttributes,
+    },
+  });
+  const rootCtx = trace.setSpan(context.active(), rootSpan);
+  const capture = opts.captureContent === true;
+  const PROVIDER_NAME: Record<string, string> = { groq: "groq", gemini: "gcp.gemini" };
 
   const record = (s: Omit<StepRecord, "seq" | "budget">) => {
     const step: StepRecord = {
@@ -167,6 +195,14 @@ export async function runAgent(opts: AgentOptions): Promise<RunResult> {
       budget: { steps: budget.steps, toolCalls: budget.toolCalls, tokens: budget.tokens },
     };
     steps.push(step);
+    if (s.kind === "validation") {
+      const o = s.output as { ok: boolean; errors?: string[] };
+      rootSpan.addEvent("validation", {
+        "triage.validation.name": s.name,
+        "triage.validation.ok": o.ok,
+        ...(o.errors ? { "triage.validation.errors": o.errors.join(" | ") } : {}),
+      });
+    }
     opts.onStep?.(step);
   };
   const transition = (state: State, name: string) =>
@@ -184,9 +220,20 @@ export async function runAgent(opts: AgentOptions): Promise<RunResult> {
         `${BUDGET_REASON[blocked]} exhausted before the ${state} model call`,
       );
     let res: ChatResponse;
+    const chat = tracer.startSpan(
+      "chat",
+      {
+        kind: SpanKind.CLIENT,
+        attributes: { "gen_ai.operation.name": "chat", "triage.stage": stage },
+      },
+      rootCtx,
+    );
     try {
       res = await opts.router.complete({ system: prompt.forStage(stage), ...req });
     } catch (err) {
+      chat.setStatus({ code: SpanStatusCode.ERROR, message: (err as Error).message.slice(0, 200) });
+      chat.setAttribute("error.type", (err as Error).name || "Error");
+      chat.end();
       if (err instanceof CassetteMissError) throw err; // a harness problem: fail loudly, never fake a decision
       throw new StopRun(
         "provider_error",
@@ -197,6 +244,31 @@ export async function runAgent(opts: AgentOptions): Promise<RunResult> {
     const u = res.usage;
     budget.spendModelCall(u.inputTokens + u.outputTokens + u.thinkingTokens);
     listPrice += res.listPriceUsd;
+    inputTotal += u.inputTokens;
+    outputTotal += u.outputTokens + u.thinkingTokens;
+    chat.updateName(`chat ${res.model}`);
+    chat.setAttributes({
+      "gen_ai.provider.name": PROVIDER_NAME[res.provider] ?? res.provider,
+      "gen_ai.request.model": res.model,
+      "gen_ai.response.model": res.model,
+      "gen_ai.response.finish_reasons": [res.finishReason],
+      "gen_ai.usage.input_tokens": u.inputTokens,
+      "gen_ai.usage.output_tokens": u.outputTokens + u.thinkingTokens,
+      "triage.usage.thinking_tokens": u.thinkingTokens,
+      "triage.source": res.source,
+      "triage.latency_ms": res.recordedLatencyMs ?? res.latencyMs,
+      "triage.list_price_usd": res.listPriceUsd,
+      "triage.tool_calls_requested": res.toolCalls.length,
+    });
+    if (capture) {
+      chat.setAttribute("gen_ai.system_instructions", prompt.forStage(stage));
+      chat.setAttribute("gen_ai.input.messages", JSON.stringify(req.messages));
+      chat.setAttribute(
+        "gen_ai.output.messages",
+        JSON.stringify({ text: res.text, tool_calls: res.toolCalls }),
+      );
+    }
+    chat.end();
     record({
       state,
       kind: "model_call",
@@ -286,8 +358,38 @@ export async function runAgent(opts: AgentOptions): Promise<RunResult> {
           throw new StopRun("budget", `${BUDGET_REASON[blocked]} exhausted before ${call.name}`);
         const state: State = call.name === "search_policy" ? "retrieve" : "gather";
         const t0 = performance.now();
+        const toolSpan = tracer.startSpan(
+          `execute_tool ${call.name}`,
+          {
+            kind: SpanKind.INTERNAL,
+            attributes: {
+              "gen_ai.operation.name": "execute_tool",
+              "gen_ai.tool.name": call.name,
+              "gen_ai.tool.call.id": call.id,
+              "gen_ai.tool.type": "function",
+              ...(capture ? { "gen_ai.tool.call.arguments": JSON.stringify(call.arguments) } : {}),
+            },
+          },
+          rootCtx,
+        );
         const result = await opts.tools.call(call.name, call.arguments);
         budget.spendToolCall();
+        const failed = result.structured.ok === false;
+        toolSpan.setAttribute("triage.tool.ok", !failed);
+        if (call.name === "search_policy" && Array.isArray(result.structured.results)) {
+          toolSpan.setAttribute(
+            "triage.clause_ids",
+            (result.structured.results as { clause_id?: string }[]).flatMap((r) =>
+              r.clause_id ? [r.clause_id] : [],
+            ),
+          );
+        }
+        if (failed)
+          toolSpan.setAttribute("error.type", String(result.structured.code ?? "tool_error"));
+        if (result.isError) toolSpan.setStatus({ code: SpanStatusCode.ERROR });
+        if (capture)
+          toolSpan.setAttribute("gen_ai.tool.call.result", JSON.stringify(result.structured));
+        toolSpan.end();
         harvest(call.name, result.structured);
         record({
           state,
@@ -353,7 +455,16 @@ export async function runAgent(opts: AgentOptions): Promise<RunResult> {
     );
     return finish(decision, "decided", undefined, downgraded);
   } catch (err) {
-    if (!(err instanceof StopRun)) throw err;
+    if (!(err instanceof StopRun)) {
+      // A harness problem (a missing recording): close the span honestly, then fail loudly.
+      rootSpan.recordException(err as Error);
+      rootSpan.setStatus({
+        code: SpanStatusCode.ERROR,
+        message: (err as Error).message.slice(0, 200),
+      });
+      rootSpan.end();
+      throw err;
+    }
     // Fail closed: a human gets the ticket with whatever was gathered.
     transition("escalate", `${err.exit} → escalate`);
     return finish(failClosed(err.message), err.exit, err.message, false);
@@ -422,6 +533,31 @@ export async function runAgent(opts: AgentOptions): Promise<RunResult> {
       proposal ? `propose ${proposal.action} (awaiting approval)` : "no proposal (REJECT)",
     );
     transition("closed", "closed");
+    rootSpan.setAttributes({
+      "gen_ai.usage.input_tokens": inputTotal,
+      "gen_ai.usage.output_tokens": outputTotal,
+      "triage.decision": decision.decision,
+      "triage.intent": decision.intent,
+      "triage.confidence": decision.confidence,
+      "triage.exit": exit,
+      "triage.repaired": repaired,
+      "triage.downgraded": downgraded,
+      "triage.budget.steps": budget.steps,
+      "triage.budget.tool_calls": budget.toolCalls,
+      "triage.budget.tokens": budget.tokens,
+      "triage.list_price_usd": Math.round(listPrice * 1e10) / 1e10,
+      "triage.prompt.version": prompt.version,
+      "triage.prompt.hash": prompt.hash,
+    });
+    if (exit !== "decided") {
+      // A safe ESCALATE, not a crash: the run ended early and a human gets what was gathered.
+      rootSpan.setAttribute("error.type", exit);
+      rootSpan.setStatus({
+        code: SpanStatusCode.ERROR,
+        message: exitReason?.slice(0, 200) ?? exit,
+      });
+    }
+    rootSpan.end();
     return {
       decision,
       proposal,
@@ -441,6 +577,7 @@ export async function runAgent(opts: AgentOptions): Promise<RunResult> {
       prompt: { version: prompt.version, hash: prompt.hash },
       citableClauseIds: [...citable].sort(),
       quarantinedClauseIds: [...quarantinedClauses].sort(),
+      traceId: rootSpan.spanContext().traceId,
     };
   }
 }

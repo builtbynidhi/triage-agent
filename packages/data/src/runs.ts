@@ -115,6 +115,11 @@ export interface RunStore {
   completeRun(runId: string, result: CompletedRun): boolean;
   failRun(runId: string, failure: unknown): boolean;
 
+  /** Save a run's span tree (idempotent: the latest save wins). */
+  saveTrace(runId: string, spans: unknown[]): void;
+  /** The run's span tree, or null for another merchant's run, an unknown run, or a run with no trace. */
+  getTrace(tenantId: string, runId: string): unknown[] | null;
+
   listApprovals(tenantId: string, opts?: { status?: ApprovalStatus }): ApprovalRecord[];
   getApproval(tenantId: string, approvalId: string): ApprovalRecord | null;
   /** The approved record for this run and action, or null: the one question a write tool asks. */
@@ -229,6 +234,12 @@ export function createRunStore(db: Db, options: { now?: () => Date } = {}): RunS
     ),
     insApproval: db.prepare(
       "INSERT OR IGNORE INTO approvals (id, run_id, action, payload_json, status, created_at) VALUES (?, ?, ?, ?, 'pending', ?)",
+    ),
+    saveSpans: db.prepare(
+      "INSERT INTO run_spans (run_id, spans_json, created_at) VALUES (?, ?, ?) ON CONFLICT(run_id) DO UPDATE SET spans_json = excluded.spans_json, created_at = excluded.created_at",
+    ),
+    spans: db.prepare(
+      "SELECT s.spans_json FROM run_spans s JOIN runs r ON r.id = s.run_id WHERE r.tenant_id = ? AND s.run_id = ?",
     ),
     approvals: db.prepare(
       `SELECT a.*, r.tenant_id FROM approvals a JOIN runs r ON r.id = a.run_id
@@ -374,6 +385,14 @@ export function createRunStore(db: Db, options: { now?: () => Date } = {}): RunS
     },
     failRun(runId, failure) {
       return q.fail.run(JSON.stringify(failure), now(), runId).changes > 0;
+    },
+
+    saveTrace(runId, spans) {
+      q.saveSpans.run(runId, JSON.stringify(spans), now());
+    },
+    getTrace(tenantId, runId) {
+      const r = q.spans.get(tenantId, runId) as { spans_json: string } | undefined;
+      return r ? (JSON.parse(r.spans_json) as unknown[]) : null;
     },
 
     listApprovals(tenantId, opts = {}) {

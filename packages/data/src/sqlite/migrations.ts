@@ -180,4 +180,17 @@ CREATE TABLE outbox (
 CREATE INDEX idx_outbox_tenant ON outbox(tenant_id, created_at DESC);
 `,
   },
+  {
+    id: 5,
+    name: "run-traces",
+    sql: `
+-- The span tree of a run (OpenTelemetry GenAI spans as JSON), saved with the run so the web app
+-- can draw it without reading trace files back. One row per run.
+CREATE TABLE run_spans (
+  run_id      TEXT PRIMARY KEY REFERENCES runs(id),
+  spans_json  TEXT NOT NULL,
+  created_at  TEXT NOT NULL
+);
+`,
+  },
 ];

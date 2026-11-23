@@ -13,6 +13,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
+import { failureDetail } from "@triage/agent";
 import { DEFAULT_DTYPE, DEFAULT_EMBEDDING_MODEL } from "@triage/data";
 import { FALLBACK, MODES, PRIMARY, type ProviderMode } from "@triage/providers";
 import { loadCases } from "./src/load-cases.ts";
@@ -88,14 +89,7 @@ writeFileSync(
         // What a failed run needs for triage without re-running (spec, Observability).
         ...(r.grade && !r.grade.pass
           ? {
-              failure: {
-                promptHash: r.result!.prompt.hash,
-                validation: r
-                  .result!.steps.filter((s) => s.kind === "validation")
-                  .map((s) => s.output),
-                budgetAtExit: r.result!.usage,
-                retrievedClauseIds: r.result!.citableClauseIds,
-              },
+              failure: failureDetail(r.result!),
             }
           : {}),
       })),

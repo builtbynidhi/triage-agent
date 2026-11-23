@@ -50,6 +50,7 @@ const result = (d: Partial<Decision>, extra: Partial<RunResult> = {}): RunResult
   prompt: { version: "system.v1", hash: "abc" },
   citableClauseIds: ["returns.window", "returns.process"],
   quarantinedClauseIds: [],
+  traceId: "0".repeat(32),
   ...extra,
 });
 

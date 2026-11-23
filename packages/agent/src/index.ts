@@ -20,6 +20,8 @@ export type { Validation, ValidationContext } from "./validate.ts";
 export { loadSystemPrompt, PROMPT_FILE } from "./prompts/index.ts";
 export type { SystemPrompt, PromptStage } from "./prompts/index.ts";
 export { ticketMessage } from "./ticket.ts";
+export { failureDetail } from "./failure.ts";
+export type { FailureDetail } from "./failure.ts";
 export { injectionMarkers, instructionLike, leaksPrompt, quarantineTicket } from "./guard.ts";
 export type { Ticket } from "./ticket.ts";
 export { connectTools } from "./tools.ts";

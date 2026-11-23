@@ -11,6 +11,7 @@
     "@triage/data": "workspace:*",
     "@triage/mcp-server": "workspace:*",
     "@triage/providers": "workspace:*",
+    "@triage/telemetry": "workspace:*",
     "express": "^5.3.0",
     "jose": "^6.2.18",
     "zod": "^4.6.7"

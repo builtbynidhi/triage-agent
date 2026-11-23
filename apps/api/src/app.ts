@@ -136,6 +136,7 @@ export function createApp(deps: AppDeps): Express {
       ...runView(run),
       result: run.decisionJson,
       steps: runs.listSteps(tenantId, run.id),
+      trace: runs.getTrace(tenantId, run.id) ?? [],
       approvals: runs
         .listApprovals(tenantId)
         .filter((a) => a.runId === run.id)
