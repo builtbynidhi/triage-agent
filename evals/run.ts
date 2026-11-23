@@ -6,6 +6,9 @@
  *   pnpm eval --case refund --repeats 1    a subset, one repeat
  *   pnpm eval --write-baseline             also write evals/baseline.json from this run
  *
+ * Recording modes use the primary model only, so a run ends cleanly at its daily cap instead of
+ * spending the fallback's small free quota; add --fallback to allow the fallback anyway.
+ *
  * Writes evals/report/report.json and report.md, prints the scorecard, and compares against
  * evals/baseline.json when it exists. Exits non-zero if any run is incomplete.
  */
@@ -27,6 +30,7 @@ const { values } = parseArgs({
     repeats: { type: "string", default: "3" },
     case: { type: "string" },
     "write-baseline": { type: "boolean", default: false },
+    fallback: { type: "boolean", default: false },
     out: { type: "string", default: join(root, "evals", "report") },
   },
 });
@@ -44,7 +48,14 @@ if (!cases.length) {
 }
 
 console.error(`eval: ${cases.length} cases × ${repeats} repeat(s), mode ${mode}`);
-const runs = await runSuite({ cases, repeats, mode, onProgress: (l) => console.error(`  ${l}`) });
+const recording = mode === "record" || mode === "record-missing";
+const runs = await runSuite({
+  cases,
+  repeats,
+  mode,
+  primaryOnly: recording && !values.fallback,
+  onProgress: (l) => console.error(`  ${l}`),
+});
 const card = score(runs);
 const meta = suiteMeta(mode, repeats);
 const route = `${PRIMARY.model} primary → ${FALLBACK.model} fallback; retrieval ${DEFAULT_EMBEDDING_MODEL} (${DEFAULT_DTYPE}) + cross-encoder`;

@@ -23,8 +23,7 @@ export interface GroqOptions {
 }
 
 /** Bump when the request mapping changes; part of every request key (see gemini.ts). */
-// 2: tool_choice can force one named tool (Phase 8).
-export const GROQ_ADAPTER_VERSION = 2;
+export const GROQ_ADAPTER_VERSION = 1;
 
 export function buildGroqBody(
   req: ChatRequest,
@@ -62,10 +61,7 @@ export function buildGroqBody(
       type: "function",
       function: { name: t.name, description: t.description, parameters: withoutMeta(t.parameters) },
     }));
-    body.tool_choice =
-      typeof req.toolChoice === "object"
-        ? { type: "function", function: { name: req.toolChoice.name } }
-        : "auto";
+    body.tool_choice = "auto";
     body.parallel_tool_calls = false; // not supported on gpt-oss-120b per Groq's tool-use docs
   }
   if (req.responseSchema) {

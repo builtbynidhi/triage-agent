@@ -1,12 +1,19 @@
 import {
   CassetteMissError,
+  ProviderError,
   type ChatRequest,
   type ChatResponse,
   type Message,
   type Router,
+  type ToolCall,
 } from "@triage/providers";
 import { Budget, type BudgetExhausted, type BudgetLimits } from "./budget.ts";
-import { DECISION_JSON_SCHEMA, type Decision } from "./decision.ts";
+import {
+  CLASSIFY_JSON_SCHEMA,
+  DECISION_JSON_SCHEMA,
+  parseClassification,
+  type Decision,
+} from "./decision.ts";
 import { loadSystemPrompt, type PromptStage, type SystemPrompt } from "./prompts/index.ts";
 import { ticketMessage, type Ticket } from "./ticket.ts";
 import type { McpTools } from "./tools.ts";
@@ -22,12 +29,15 @@ import {
  * The bounded agent: a state machine, not a loop that keeps calling the model until something
  * looks right.
  *
- *   CLASSIFY (forced search_policy) ─► RETRIEVE / GATHER (≤ 2 model turns, ≤ 6 tool calls) ─► DECIDE ─► VALIDATE
- *        └─────────────── budget hit / provider down ───────────────┐     │ fail: one REPAIR
- *                                                                   ▼     ▼ fail again
- *   PROPOSE (await human approval) ─► CLOSED            ESCALATE with the facts gathered so far
+ *   CLASSIFY ─► RETRIEVE ─► GATHER (≤ 2 model turns, ≤ 6 tool calls in all) ─► DECIDE ─► VALIDATE
+ *   (no tools)  (code)        └─────────── budget hit / provider down ──────────┐     │ fail: one REPAIR
+ *                                                                               ▼     ▼ fail again
+ *   PROPOSE (await human approval) ─► CLOSED                ESCALATE with the facts gathered so far
  *
- * The model reads the ticket and decides which tools to call (through MCP only); it never acts.
+ * CLASSIFY: the model names the intent and writes one short policy question; no tools, so there is
+ * nothing to mis-call. RETRIEVE: the machine itself calls search_policy with that question, so
+ * policy is always read before a decision (spec: "classifies the ticket's intent, then retrieves
+ * policy clauses"). GATHER: the model decides which other tools to call (through MCP only); it never acts.
  * Every outcome that is not a validated decision is a safe ESCALATE: a human gets a partly
  * researched ticket rather than a guess.
  */
@@ -71,7 +81,11 @@ export type Proposal =
   | { action: "send_reply"; payload: { body: string; clause_ids: string[] } }
   | { action: "create_escalation"; payload: { reason: string; summary: string; facts: string[] } };
 
-export type Exit = "decided" | "budget" | "validation_failed" | "provider_error";
+/**
+ * "model_error": the provider refused the model's own output twice (it called a tool it was not
+ * allowed to call). Fail-closed like the others, but the model's fault, so it is scored.
+ */
+export type Exit = "decided" | "budget" | "validation_failed" | "provider_error" | "model_error";
 
 export interface RunResult {
   decision: Decision;
@@ -160,51 +174,92 @@ export async function runAgent(opts: AgentOptions): Promise<RunResult> {
   const transition = (state: State, name: string) =>
     record({ state, kind: "transition", name, ms: 0 });
 
+  /** Appended on the one retry after the provider refused the model's output. */
+  const REJECTED_NOTE: Record<PromptStage, string> = {
+    classify:
+      "Your previous output was rejected because it tried to call a tool. No tools are available in this step: return only the JSON object.",
+    gather:
+      "Your previous output was rejected because it called a tool that is not in your tool list (decisions are not tools). Call one of the listed tools, or reply with the single word DONE.",
+    decide:
+      "Your previous output was rejected because it tried to call a tool. Tools are not available now: return only the decision as JSON.",
+    repair:
+      "Your previous output was rejected because it tried to call a tool. Tools are not available now: return only the corrected decision as JSON.",
+  };
+
   async function model(
     state: State,
     stage: PromptStage,
     req: Omit<ChatRequest, "system">,
   ): Promise<ChatResponse> {
-    const blocked = budget.blocksModelCall();
-    if (blocked)
-      throw new StopRun(
-        "budget",
-        `${BUDGET_REASON[blocked]} exhausted before the ${state} model call`,
-      );
-    let res: ChatResponse;
-    try {
-      res = await opts.router.complete({ system: prompt.forStage(stage), ...req });
-    } catch (err) {
-      if (err instanceof CassetteMissError) throw err; // a harness problem: fail loudly, never fake a decision
-      throw new StopRun(
-        "provider_error",
-        `model unavailable during ${state}: ${(err as Error).message}`,
-      );
+    // Two attempts at most: when the provider refuses the model's own output (a tool call it was
+    // not allowed to make), retry once with a note, then fail closed. Each attempt costs a step.
+    for (let attempt = 1; attempt <= 2; attempt++) {
+      const blocked = budget.blocksModelCall();
+      if (blocked)
+        throw new StopRun(
+          "budget",
+          `${BUDGET_REASON[blocked]} exhausted before the ${state} model call`,
+        );
+      const asked: Omit<ChatRequest, "system"> =
+        attempt === 1
+          ? req
+          : {
+              ...req,
+              messages: [...req.messages, { role: "user", content: REJECTED_NOTE[stage] }],
+            };
+      let res: ChatResponse;
+      try {
+        res = await opts.router.complete({ system: prompt.forStage(stage), ...asked });
+      } catch (err) {
+        if (err instanceof CassetteMissError) throw err; // a harness problem: fail loudly, never fake a decision
+        if (err instanceof ProviderError && err.code === "model_output_rejected") {
+          budget.spendModelCall(0);
+          record({
+            state,
+            kind: "model_call",
+            name: `${stage} (rejected)`,
+            ms: 0,
+            provider: err.provider,
+            output: { rejected: err.message },
+          });
+          if (attempt === 2)
+            throw new StopRun(
+              "model_error",
+              `the provider rejected the model's output twice during ${state}: ${err.message}`,
+            );
+          continue;
+        }
+        throw new StopRun(
+          "provider_error",
+          `model unavailable during ${state}: ${(err as Error).message}`,
+        );
+      }
+      modelCalls++;
+      const u = res.usage;
+      budget.spendModelCall(u.inputTokens + u.outputTokens + u.thinkingTokens);
+      listPrice += res.listPriceUsd;
+      record({
+        state,
+        kind: "model_call",
+        name: stage,
+        ms: res.latencyMs,
+        waitMs: res.waitMs,
+        ...(res.recordedLatencyMs !== undefined ? { recordedMs: res.recordedLatencyMs } : {}),
+        provider: res.provider,
+        model: res.model,
+        source: res.source,
+        tokens: { input: u.inputTokens, output: u.outputTokens, thinking: u.thinkingTokens },
+        listPriceUsd: res.listPriceUsd,
+        output: { finishReason: res.finishReason, toolCalls: res.toolCalls.map((c) => c.name) },
+      });
+      if (budget.overTokens())
+        throw new StopRun(
+          "budget",
+          `${BUDGET_REASON.tokens} exhausted after the ${state} model call`,
+        );
+      return res;
     }
-    modelCalls++;
-    const u = res.usage;
-    budget.spendModelCall(u.inputTokens + u.outputTokens + u.thinkingTokens);
-    listPrice += res.listPriceUsd;
-    record({
-      state,
-      kind: "model_call",
-      name: stage,
-      ms: res.latencyMs,
-      waitMs: res.waitMs,
-      ...(res.recordedLatencyMs !== undefined ? { recordedMs: res.recordedLatencyMs } : {}),
-      provider: res.provider,
-      model: res.model,
-      source: res.source,
-      tokens: { input: u.inputTokens, output: u.outputTokens, thinking: u.thinkingTokens },
-      listPriceUsd: res.listPriceUsd,
-      output: { finishReason: res.finishReason, toolCalls: res.toolCalls.map((c) => c.name) },
-    });
-    if (budget.overTokens())
-      throw new StopRun(
-        "budget",
-        `${BUDGET_REASON.tokens} exhausted after the ${state} model call`,
-      );
-    return res;
+    throw new StopRun("model_error", `no usable model output during ${state}`);
   }
 
   const messages: Message[] = [
@@ -220,53 +275,74 @@ export async function runAgent(opts: AgentOptions): Promise<RunResult> {
     providerState: r.providerState,
   });
 
+  /** Run one tool through MCP, charge the budget, and hand the result back as a tool message. */
+  async function runTool(call: ToolCall) {
+    const blocked = budget.blocksToolCall();
+    if (blocked)
+      throw new StopRun("budget", `${BUDGET_REASON[blocked]} exhausted before ${call.name}`);
+    const state: State = call.name === "search_policy" ? "retrieve" : "gather";
+    const t0 = performance.now();
+    const result = await opts.tools.call(call.name, call.arguments);
+    budget.spendToolCall();
+    harvest(call.name, result.structured);
+    record({
+      state,
+      kind: "tool_call",
+      name: call.name,
+      input: call.arguments,
+      output: result.structured,
+      ms: Math.round(performance.now() - t0),
+    });
+    // Tool results go back as tool messages, never into the system prompt.
+    messages.push({
+      role: "tool",
+      toolCallId: call.id,
+      name: call.name,
+      content: modelView(call.name, result.structured),
+    });
+  }
+
   const validateText = (text: string): Validation => {
     const parsed = parseDecision(text);
     return parsed.ok ? validateDecision(parsed.decision, { citableClauseIds: citable }) : parsed;
   };
 
   try {
+    // CLASSIFY: schema-shaped answer, no tools. The model names the intent and writes one short
+    // question for the policy search; with no tools on offer it cannot call the wrong one.
     transition("classify", "start → classify");
+    const classifyTurn = await model("classify", "classify", {
+      messages,
+      responseSchema: { name: "classification", schema: CLASSIFY_JSON_SCHEMA },
+      maxOutputTokens: 256,
+    });
+    const classification = parseClassification(classifyTurn.text);
+    // An unusable classification still gets a search: with the ticket text, never with nothing.
+    const policyQuery =
+      classification?.policy_query.trim() || opts.ticket.text.trim().slice(0, 300);
 
-    // CLASSIFY, then RETRIEVE / GATHER: the model chooses tools; the machine executes them.
-    // RETRIEVE is enforced: the first turn must call search_policy (the model writes the query).
-    // Without this, 27 of 39 eval runs never read a policy and cited or invented clauses from
-    // memory (docs/failures.md, G1). Later turns choose freely.
-    const canSearch = opts.tools.specs.some((t) => t.name === "search_policy");
+    // RETRIEVE: the machine calls search_policy itself, so policy is always read before a
+    // decision. The result goes back as a tool message, like any other tool result.
+    transition("retrieve", `classified as ${classification?.intent ?? "unknown"} → search_policy`);
+    const search: ToolCall = {
+      id: "retrieve-1",
+      name: "search_policy",
+      arguments: { query: policyQuery },
+    };
+    messages.push({ role: "assistant", content: "", toolCalls: [search] });
+    await runTool(search);
+
+    // GATHER: the model chooses any tool it still needs; the machine executes them.
+    transition("gather", "retrieve → gather");
     for (let round = 0; round < maxRounds; round++) {
-      const turn = await model(round === 0 ? "classify" : "gather", "gather", {
+      const turn = await model("gather", "gather", {
         messages,
         tools: opts.tools.specs,
-        ...(round === 0 && canSearch ? { toolChoice: { name: "search_policy" } } : {}),
         maxOutputTokens: 512,
       });
       if (!turn.toolCalls.length) break;
       messages.push(assistantTurn(turn));
-      for (const call of turn.toolCalls) {
-        const blocked = budget.blocksToolCall();
-        if (blocked)
-          throw new StopRun("budget", `${BUDGET_REASON[blocked]} exhausted before ${call.name}`);
-        const state: State = call.name === "search_policy" ? "retrieve" : "gather";
-        const t0 = performance.now();
-        const result = await opts.tools.call(call.name, call.arguments);
-        budget.spendToolCall();
-        harvest(call.name, result.structured);
-        record({
-          state,
-          kind: "tool_call",
-          name: call.name,
-          input: call.arguments,
-          output: result.structured,
-          ms: Math.round(performance.now() - t0),
-        });
-        // Tool results go back as tool messages, never into the system prompt.
-        messages.push({
-          role: "tool",
-          toolCallId: call.id,
-          name: call.name,
-          content: modelView(call.name, result.structured),
-        });
-      }
+      for (const call of turn.toolCalls) await runTool(call);
     }
 
     // DECIDE: schema-shaped answer, no tools.

@@ -28,6 +28,8 @@ export interface SuiteOptions {
   repeats: number;
   mode: ProviderMode;
   router?: Pick<Router, "complete">;
+  /** Never call the fallback provider (recording runs). Replay is unaffected. */
+  primaryOnly?: boolean;
   onProgress?: (line: string) => void;
 }
 
@@ -58,7 +60,9 @@ function storeWithPlantedPolicy(c: EvalCase): TriageStore {
 }
 
 export async function runSuite(opts: SuiteOptions): Promise<ScoredRun[]> {
-  const router = opts.router ?? createDefaultRouter({ mode: opts.mode });
+  const router =
+    opts.router ??
+    createDefaultRouter({ mode: opts.mode, ...(opts.primaryOnly ? { primaryOnly: true } : {}) });
   const shared = seededStore();
   const sharedRetriever = createDefaultRetriever(shared);
   const runs: ScoredRun[] = [];

@@ -10,7 +10,7 @@ import { fileURLToPath } from "node:url";
  */
 export const PROMPT_FILE = "system.v2.md";
 
-export type PromptStage = "gather" | "decide" | "repair";
+export type PromptStage = "classify" | "gather" | "decide" | "repair";
 
 export interface SystemPrompt {
   version: string;
@@ -31,7 +31,7 @@ export function loadSystemPrompt(file = PROMPT_FILE): SystemPrompt {
   });
   const shared = sections.get("shared");
   if (!shared) throw new Error(`${file}: missing <!-- @shared --> section`);
-  for (const s of ["gather", "decide", "repair"] as const) {
+  for (const s of ["classify", "gather", "decide", "repair"] as const) {
     if (!sections.get(s)) throw new Error(`${file}: missing <!-- @${s} --> section`);
   }
   return {

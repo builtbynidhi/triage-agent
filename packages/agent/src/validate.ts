@@ -59,6 +59,14 @@ export function parseDecision(text: string): Validation {
   return { ok: true, decision: parsed.data };
 }
 
+/**
+ * Intents whose outcome no tool can perform: the six tools read orders, check eligibility, create
+ * an escalation and send a reply, and change nothing (CLAUDE.md, "Address changes and
+ * cancellations escalate"; damaged items are always verified by a human, policy damaged.resolution).
+ * An AUTO_REPLY here would tell the customer something is done that nobody has done.
+ */
+const HUMAN_ACTION_INTENTS: readonly string[] = ["address_change", "cancellation", "damaged_item"];
+
 export function validateDecision(d: Decision, ctx: ValidationContext): Validation {
   const errors: string[] = [];
   const reply = d.reply_draft.trim();
@@ -72,6 +80,11 @@ export function validateDecision(d: Decision, ctx: ValidationContext): Validatio
 
   switch (d.decision) {
     case "AUTO_REPLY":
+      if (HUMAN_ACTION_INTENTS.includes(d.intent)) {
+        errors.push(
+          `Intent ${d.intent} cannot be AUTO_REPLY: no tool changes orders or judges damage, so a human must act. Return ESCALATE, cite the clause, and in the reply say only that a person will complete it; never say it has been done.`,
+        );
+      }
       if (!reply) errors.push("AUTO_REPLY needs a non-empty reply_draft.");
       if (!d.clause_ids.length && d.intent !== "acknowledgement") {
         errors.push(

@@ -38,12 +38,6 @@ export interface ChatRequest {
   system: string;
   messages: Message[];
   tools?: ToolSpec[];
-  /**
-   * Which tool the model may call. "auto" (default): any tool, or none. { name }: the model
-   * must call exactly that tool this turn (Groq `tool_choice`, Gemini `functionCallingConfig`
-   * mode ANY with one allowed name). Requires `tools` containing that name.
-   */
-  toolChoice?: "auto" | { name: string };
   responseSchema?: { name: string; schema: JsonSchema };
   /** Visible output cap. Defaults to 1024. */
   maxOutputTokens?: number;
@@ -121,7 +115,13 @@ export type ProviderErrorCode =
   | "billing"
   | "bad_request"
   | "blocked"
-  | "bad_response";
+  | "bad_response"
+  /**
+   * The provider refused the MODEL'S OWN OUTPUT (it called a tool that was not offered, or a tool
+   * when none were allowed). Not a bad request on our side, not transient, and another provider
+   * would not see the same history: never retried, never falls back (see the router).
+   */
+  | "model_output_rejected";
 
 /** A failed call, classified so the router can decide: retry, fall back, or stop. */
 export class ProviderError extends Error {
@@ -149,7 +149,21 @@ export class ProviderError extends Error {
   }
 }
 
-/** Map an HTTP status to an error code. Shared by both adapters. */
+/**
+ * Groq returns 400 with these messages when gpt-oss emits a tool call that the request did not
+ * allow ("attempted to call tool 'ESCALATE' which was not in request.tools", "Tool choice is
+ * none, but model called a tool", "Failed to call a function"). That is the model misbehaving.
+ */
+const MODEL_OUTPUT_REJECTED =
+  /tool call validation failed|tool choice is none|not in request\.tools|request\.tool_choice|failed to call a function|tool_use_failed/i;
+
+/** Map an HTTP status (and, for 400s, the message) to an error code. Shared by both adapters. */
+export function codeForResponse(status: number, message: string): ProviderErrorCode {
+  if (status === 400 && MODEL_OUTPUT_REJECTED.test(message)) return "model_output_rejected";
+  return codeForStatus(status);
+}
+
+/** Map an HTTP status to an error code. */
 export function codeForStatus(status: number): ProviderErrorCode {
   if (status === 429) return "rate_limited";
   if (status === 401 || status === 403) return "auth";

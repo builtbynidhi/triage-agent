@@ -80,3 +80,36 @@ export const DECISION_JSON_SCHEMA = {
   ],
   additionalProperties: false,
 } as const;
+
+/**
+ * The CLASSIFY step's answer (no tools, schema-shaped). `policy_query` is the one short question
+ * the machine sends to search_policy; the model never calls the search itself.
+ */
+export const ClassificationSchema = z
+  .object({ intent: z.enum(INTENTS), policy_query: z.string() })
+  .strict();
+export type Classification = z.infer<typeof ClassificationSchema>;
+
+export const CLASSIFY_JSON_SCHEMA = {
+  type: "object",
+  properties: {
+    intent: { type: "string", enum: [...INTENTS] },
+    policy_query: { type: "string" },
+  },
+  required: ["intent", "policy_query"],
+  additionalProperties: false,
+} as const;
+
+/** Parse a classification, or null if the text is not one (the machine then searches with the ticket). */
+export function parseClassification(text: string): Classification | null {
+  const cleaned = text
+    .trim()
+    .replace(/^```(?:json)?\s*/i, "")
+    .replace(/\s*```$/, "");
+  try {
+    const parsed = ClassificationSchema.safeParse(JSON.parse(cleaned));
+    return parsed.success ? parsed.data : null;
+  } catch {
+    return null;
+  }
+}

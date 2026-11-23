@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import type { StoredResponse } from "./cache.ts";
-import type { ChatRequest } from "./types.ts";
+import type { ChatRequest, ProviderId } from "./types.ts";
 
 /**
  * Record and replay of model calls.
@@ -24,7 +24,7 @@ export function modeFromEnv(env: Record<string, string | undefined> = process.en
   return v as ProviderMode;
 }
 
-export interface Cassette extends StoredResponse {
+interface CassetteBase {
   version: 1;
   key: string;
   recordedAt: string;
@@ -33,6 +33,20 @@ export interface Cassette extends StoredResponse {
   /** Provider latency when recorded (excluding pacing), so replayed runs can report real latency. */
   latencyMs?: number;
 }
+
+/** A recorded answer. */
+export interface ResponseCassette extends StoredResponse, CassetteBase {}
+
+/**
+ * A recorded refusal: the provider rejected the model's own output (a tool call it was not
+ * allowed to make). Recorded so replay reproduces the failure exactly, and so the agent's
+ * handling of it can be tested and scored without any API call.
+ */
+export interface RejectionCassette extends CassetteBase {
+  rejection: { provider: ProviderId; model: string; status?: number; message: string };
+}
+
+export type Cassette = ResponseCassette | RejectionCassette;
 
 export class CassetteMissError extends Error {
   readonly key: string;

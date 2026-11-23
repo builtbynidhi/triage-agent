@@ -17,7 +17,7 @@ import {
 } from "./replay.ts";
 import { createRouter } from "./router.ts";
 import { fakeClock, fakeFetch, geminiOk, groqOk } from "./test-helpers.ts";
-import type { ChatRequest } from "./types.ts";
+import { codeForResponse, ProviderError, type ChatRequest } from "./types.ts";
 import { createDefaultRouter } from "./index.ts";
 
 /**
@@ -430,6 +430,85 @@ describe("free-tier guard", () => {
     expect(second.latencyMs).toBe(0); // the fake provider itself takes no time
   });
 
+  const REFUSED = {
+    status: 400,
+    body: {
+      error: {
+        message:
+          "Tool call validation failed: attempted to call tool 'ESCALATE' which was not in request.tools",
+      },
+    },
+  };
+
+  it("classifies a provider refusing the model's own tool call, and nothing else, as model_output_rejected", () => {
+    for (const m of [
+      "Tool call validation failed: attempted to call tool 'ESCALATE' which was not in request.tools",
+      "Tool choice is none, but model called a tool",
+      "Failed to call a function. Please adjust your prompt.",
+    ])
+      expect(codeForResponse(400, m)).toBe("model_output_rejected");
+    expect(codeForResponse(400, "Invalid JSON schema")).toBe("bad_request");
+    expect(codeForResponse(429, "Tool choice is none")).toBe("rate_limited"); // only a 400 qualifies
+    expect(codeForResponse(503, "x")).toBe("unavailable");
+  });
+
+  it("a refused model output is never retried and never sent to the fallback", async () => {
+    const { router, gemini, groq } = setup({ primary: [REFUSED] });
+    const err = await router.complete(req()).catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(ProviderError);
+    expect((err as ProviderError).code).toBe("model_output_rejected");
+    expect(gemini.calls).toHaveLength(1); // no retry
+    expect(groq.calls).toHaveLength(0); // the other provider would not see the same history
+  });
+
+  it("records a refusal as a cassette, and replays it exactly, with no API call", async () => {
+    const { router, gemini, cassettes } = setup({ mode: "record-missing", primary: [REFUSED] });
+    await expect(router.complete(req())).rejects.toMatchObject({ code: "model_output_rejected" });
+    expect(cassettes.all()).toHaveLength(1);
+    expect(cassettes.all()[0]).toMatchObject({
+      rejection: { provider: "gemini", status: 400, message: expect.stringContaining("ESCALATE") },
+    });
+    // Asking again is served from the recording: no second call.
+    await expect(router.complete(req())).rejects.toMatchObject({ code: "model_output_rejected" });
+    expect(gemini.calls).toHaveLength(1);
+    // A replay-mode router over the same recordings reproduces it too, and needs no ledger or keys.
+    const replay = createRouter({
+      providers: [
+        createGeminiProvider({ apiKey: "", model: "gemini-3.6-flash" }),
+        createGroqProvider({ apiKey: "", model: "openai/gpt-oss-120b" }),
+      ],
+      mode: "replay",
+      cassettes,
+    });
+    await expect(replay.complete(req())).rejects.toMatchObject({ code: "model_output_rejected" });
+  });
+
+  it("primaryOnly: a failing primary is never followed by the fallback", async () => {
+    const { router: both, groq: g1 } = setup({
+      primary: [{ status: 503, body: {} }],
+      maxAttempts: 1,
+    });
+    await both.complete(req());
+    expect(g1.calls).toHaveLength(1); // by default the fallback answers
+    const gemini = fakeFetch([{ status: 503, body: {} }]);
+    const groq = fakeFetch([{ body: groqOk("x") }]);
+    const clock = fakeClock();
+    const only = createRouter({
+      providers: [
+        createGeminiProvider({ apiKey: "g", model: "gemini-3.6-flash", fetch: gemini }),
+        createGroqProvider({ apiKey: "q", model: "openai/gpt-oss-120b", fetch: groq }),
+      ],
+      mode: "live",
+      primaryOnly: true,
+      ledger: createLedger({ clock }),
+      maxAttempts: 1,
+      clock,
+    });
+    await expect(only.complete(req())).rejects.toThrow(/All providers failed/);
+    expect(groq.calls).toHaveLength(0);
+    expect(only.id).toBe(both.id); // the recording key is unchanged
+  });
+
   it("enforces a daily token cap (Groq's free tier limits tokens per day)", async () => {
     const ledger = createLedger({ clock: fakeClock(), limits: { groq: { tokensPerDay: 1000 } } });
     await ledger.acquire("groq", 400);
@@ -461,13 +540,6 @@ describe("free-tier guard", () => {
     const b = await make("groq-first").complete(req());
     expect(a.key).toBe(b.key);
     expect([a.provider, b.provider]).toEqual(["gemini", "groq"]); // order still decides who answers
-  });
-
-  it("refuses a toolChoice that names a tool the request does not offer", async () => {
-    const { router } = setup({});
-    await expect(
-      router.complete({ ...req(), tools: [], toolChoice: { name: "search_policy" } }),
-    ).rejects.toThrow(/not among the request's tools/);
   });
 
   it("only approved, priced models can be routed to", () => {

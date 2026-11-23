@@ -30,6 +30,12 @@ export function reply(
   };
 }
 
+/** The CLASSIFY step's answer: an intent and the one question the machine sends to search_policy. */
+export const classify = (
+  query = "return window and pickup for a sealed item",
+  intent = "return_request",
+) => reply({ text: JSON.stringify({ intent, policy_query: query }) });
+
 export const decisionText = (d: Partial<Decision>): string =>
   JSON.stringify({
     decision: "AUTO_REPLY",

@@ -35,6 +35,18 @@ describe("validator rules", () => {
     ).toEqual([]);
   });
 
+  it("an order change or a damaged item can never be AUTO_REPLY: no tool performs it, a human must", () => {
+    for (const intent of ["address_change", "cancellation", "damaged_item"] as const) {
+      expect(errorsOf(d({ intent })).join()).toMatch(/cannot be AUTO_REPLY/);
+      // Escalating (or asking for missing details) is fine.
+      expect(
+        errorsOf(d({ intent, decision: "ESCALATE", escalation_reason: "a human must change it" })),
+      ).toEqual([]);
+    }
+    // Other intents are unaffected.
+    expect(errorsOf(d({ intent: "return_request" }))).toEqual([]);
+  });
+
   it("a clause_id not returned this run is a hard failure", () => {
     expect(errorsOf(d({ clause_ids: ["returns.window", "returns.forever"] })).join()).toMatch(
       /not returned by any tool this run.*returns\.forever/,

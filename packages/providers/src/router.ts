@@ -29,6 +29,13 @@ export interface RouterOptions {
    * Default 15 minutes.
    */
   rateLimitCooldownMs?: number;
+  /**
+   * Try only the first provider; never fall back. For recording runs: the fallback cannot read
+   * the primary's tool history, and a run should end cleanly at the primary's daily cap instead
+   * of spending the fallback's small quota on cases that will fail anyway. The recording key is
+   * unaffected (it covers the whole route).
+   */
+  primaryOnly?: boolean;
   clock?: Clock;
   /** Date used to pick the list price (YYYY-MM-DD); defaults to today. */
   priceDate?: () => string;
@@ -58,12 +65,6 @@ function validate(req: ChatRequest) {
     );
   }
   if (!req.messages.length) throw new Error("A request needs at least one message.");
-  if (typeof req.toolChoice === "object") {
-    const forced = req.toolChoice.name;
-    if (!req.tools?.some((t) => t.name === forced)) {
-      throw new Error(`toolChoice names "${forced}", which is not among the request's tools.`);
-    }
-  }
 }
 
 /** Rough pre-call token estimate (4 characters a token) for tokens-per-minute pacing. */
@@ -130,7 +131,7 @@ export function createRouter(opts: RouterOptions): Router {
     let waitMs = 0; // time spent in our own pacing, reported apart from model latency
     const attempts: Attempt[] = [];
     let lastError: unknown;
-    for (const provider of opts.providers) {
+    for (const provider of opts.primaryOnly ? opts.providers.slice(0, 1) : opts.providers) {
       if ((coolingUntil.get(provider.id) ?? 0) > clock.now()) {
         // Circuit open: this provider rate-limited recently. Skip it without spending anything.
         attempts.push({
@@ -187,6 +188,9 @@ export function createRouter(opts: RouterOptions): Router {
             message: (err as Error)?.message?.slice(0, 300),
             ms: clock.now() - started,
           });
+          // The model's own output was refused: another provider would see the same history and
+          // fail differently. Stop here so the caller can record it and handle it.
+          if (pe?.code === "model_output_rejected") throw pe;
           if (pe?.code === "rate_limited") {
             // Never retry a rate limit: open the circuit and fall back straight away.
             coolingUntil.set(provider.id, clock.now() + cooldownMs);
@@ -221,6 +225,10 @@ export function createRouter(opts: RouterOptions): Router {
 
       if (opts.mode === "replay" || opts.mode === "record-missing") {
         const hit = opts.cassettes!.get(key);
+        if (hit && "rejection" in hit) {
+          stats.fromCassette++;
+          throw new ProviderError({ ...hit.rejection, code: "model_output_rejected" });
+        }
         if (hit) {
           stats.fromCassette++;
           return {
@@ -238,7 +246,31 @@ export function createRouter(opts: RouterOptions): Router {
         }
       }
 
-      const { stored, attempts, waitMs } = await callLive(req);
+      let live: Awaited<ReturnType<typeof callLive>>;
+      try {
+        live = await callLive(req);
+      } catch (err) {
+        if (
+          err instanceof ProviderError &&
+          err.code === "model_output_rejected" &&
+          (opts.mode === "record" || opts.mode === "record-missing")
+        ) {
+          opts.cassettes!.put({
+            version: 1,
+            key,
+            recordedAt: new Date(clock.now()).toISOString(),
+            request: redactDeep(req),
+            rejection: redactDeep({
+              provider: err.provider,
+              model: opts.providers.find((p) => p.id === err.provider)?.model ?? "unknown",
+              ...(err.status !== undefined ? { status: err.status } : {}),
+              message: err.message,
+            }),
+          });
+        }
+        throw err;
+      }
+      const { stored, attempts, waitMs } = live;
       if (opts.mode === "record" || opts.mode === "record-missing") {
         // Return exactly what was stored, so the rest of this run matches a later replay.
         const redacted = redactDeep(stored);

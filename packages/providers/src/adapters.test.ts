@@ -108,20 +108,6 @@ describe("Gemini request mapping", () => {
     });
   });
 
-  it("forces one named tool with functionCallingConfig ANY and a single allowed name", () => {
-    const base: ChatRequest = {
-      system: "S",
-      messages: [{ role: "user", content: "u" }],
-      tools: [tool],
-    };
-    expect(
-      dig(buildGeminiBody({ ...base, toolChoice: { name: "get_order" } }, "LOW"), "toolConfig"),
-    ).toEqual({
-      functionCallingConfig: { mode: "ANY", allowedFunctionNames: ["get_order"] },
-    });
-    expect(dig(buildGeminiBody(base, "LOW"), "toolConfig.functionCallingConfig.mode")).toBe("AUTO");
-  });
-
   it("parses text, tool calls with ids, usage, and keeps raw parts for the next turn", () => {
     const parts = [
       { text: "thinking…", thought: true },
@@ -207,18 +193,6 @@ describe("Groq request mapping", () => {
       seed: 7,
       temperature: 0,
     });
-  });
-
-  it("forces one named tool with tool_choice when the request says so", () => {
-    const body = buildGroqBody(
-      { ...req, toolChoice: { name: "get_order" } },
-      "openai/gpt-oss-120b",
-      "low",
-    );
-    expect(body.tool_choice).toEqual({ type: "function", function: { name: "get_order" } });
-    expect(
-      buildGroqBody({ ...req, toolChoice: "auto" }, "openai/gpt-oss-120b", "low").tool_choice,
-    ).toBe("auto");
   });
 
   it("uses strict json_schema only when the schema qualifies", () => {

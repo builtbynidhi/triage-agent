@@ -1,8 +1,15 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { CassetteMissError } from "@triage/providers";
+import { CassetteMissError, ProviderError } from "@triage/providers";
 import { runAgent } from "./machine.ts";
 import { ticketMessage } from "./ticket.ts";
-import { call, decisionText, reply, scriptedRouter, seededTools } from "./test-helpers.ts";
+import {
+  call,
+  classify,
+  decisionText,
+  reply,
+  scriptedRouter,
+  seededTools,
+} from "./test-helpers.ts";
 import type { McpTools } from "./tools.ts";
 
 const TODAY = "2026-11-20";
@@ -16,7 +23,6 @@ afterEach(() => tools?.close());
 const gatherReturn = () =>
   reply({
     toolCalls: [
-      call("c1", "search_policy", { query: "return window for a sealed item" }),
       call("c2", "get_order", { order_id: "A-10413" }),
       call("c3", "check_eligibility", { order_id: "A-10413", request_type: "return" }),
     ],
@@ -26,6 +32,7 @@ describe("a normal run, end to end", () => {
   it("classifies, gathers through MCP, decides, validates and proposes a reply for approval", async () => {
     tools = await seededTools();
     const router = scriptedRouter([
+      classify(),
       gatherReturn(),
       reply({ text: "DONE" }),
       reply({
@@ -46,14 +53,17 @@ describe("a normal run, end to end", () => {
       payload: { body: expect.stringContaining("pickup"), clause_ids: ["returns.window"] },
     });
     expect(r.status).toBe("awaiting_approval");
-    expect(r.usage).toMatchObject({ modelCalls: 3, toolCalls: 3, steps: 6 });
+    expect(r.usage).toMatchObject({ modelCalls: 4, toolCalls: 3, steps: 7 });
     expect(r.citableClauseIds).toContain("returns.window");
 
     // The step record covers every transition, model call, tool call and validation, in order.
     expect(r.steps.map((s) => `${s.state}:${s.kind}`)).toEqual([
       "classify:transition",
       "classify:model_call",
+      "retrieve:transition",
       "retrieve:tool_call",
+      "gather:transition",
+      "gather:model_call",
       "gather:tool_call",
       "gather:tool_call",
       "gather:model_call",
@@ -67,50 +77,78 @@ describe("a normal run, end to end", () => {
     expect(elig.output).toMatchObject({ ok: true, eligible: true, clause_ids: ["returns.window"] });
   });
 
-  it("offers only the four read-only MCP tools, then decides with a schema and no tools", async () => {
+  it("classifies with a schema and no tools, gathers with the four read-only tools, decides with a schema and no tools", async () => {
     tools = await seededTools();
     const router = scriptedRouter([
+      classify(),
       gatherReturn(),
       reply({ text: "DONE" }),
       reply({ text: decisionText({ clause_ids: ["returns.window"], reply_draft: "ok" }) }),
     ]);
     await runAgent({ ticket, tools, router, today: TODAY });
-    const [classify, , decide] = router.requests;
-    expect(classify!.tools!.map((t) => t.name).sort()).toEqual([
+    const [classifyReq, gather, , decide] = router.requests;
+    expect(classifyReq!.tools).toBeUndefined();
+    expect(classifyReq!.responseSchema?.name).toBe("classification");
+    expect(classifyReq!.system).toContain("Now: classify");
+    expect(gather!.responseSchema).toBeUndefined();
+    expect(gather!.tools!.map((t) => t.name).sort()).toEqual([
       "check_eligibility",
       "get_customer",
       "get_order",
       "search_policy",
     ]);
-    expect(classify!.responseSchema).toBeUndefined();
     expect(decide!.tools).toBeUndefined();
     expect(decide!.responseSchema?.name).toBe("decision");
     expect(decide!.system).toContain("Now: decide");
   });
 
-  it("forces search_policy on the first turn only: RETRIEVE always happens, later turns choose freely", async () => {
+  it("RETRIEVE is code: the machine searches policy with the model's question, before any gather turn", async () => {
     tools = await seededTools();
     const router = scriptedRouter([
+      classify("return window and pickup for a sealed item"),
       gatherReturn(),
       reply({ text: "DONE" }),
       reply({ text: decisionText({ clause_ids: ["returns.window"], reply_draft: "ok" }) }),
     ]);
-    await runAgent({ ticket, tools, router, today: TODAY });
-    const [first, second, decide] = router.requests;
-    expect(first!.toolChoice).toEqual({ name: "search_policy" });
-    expect(second!.toolChoice).toBeUndefined();
-    expect(decide!.toolChoice).toBeUndefined(); // the decide turn has no tools at all
+    const r = await runAgent({ ticket, tools, router, today: TODAY });
+    const search = r.steps.find((s) => s.kind === "tool_call")!;
+    expect(search).toMatchObject({
+      name: "search_policy",
+      state: "retrieve",
+      input: { query: "return window and pickup for a sealed item" },
+    });
+    // The gather turn already sees the search as a tool message, so policy is read before anything else.
+    const gather = router.requests[1]!;
+    expect(gather.messages.map((m) => m.role)).toEqual(["user", "assistant", "tool"]);
+    expect(r.citableClauseIds).toContain("returns.process");
+    // Only the model's question is searched, never the whole ticket.
+    expect(JSON.stringify(search.input)).not.toContain("A-10413");
+  });
+
+  it("an unusable classification still searches policy, with the ticket text", async () => {
+    tools = await seededTools();
+    const router = scriptedRouter([
+      reply({ text: "not json at all" }),
+      reply({ text: "DONE" }),
+      reply({ text: decisionText({ clause_ids: ["returns.window"], reply_draft: "ok" }) }),
+    ]);
+    const r = await runAgent({ ticket, tools, router, today: TODAY });
+    expect(r.steps.find((s) => s.name === "search_policy")!.input).toEqual({
+      query: ticket.text,
+    });
+    expect(r.exit).toBe("decided");
   });
 
   it("returns tool results as tool messages, never inside the system prompt", async () => {
     tools = await seededTools();
     const router = scriptedRouter([
+      classify(),
       gatherReturn(),
       reply({ text: "DONE" }),
       reply({ text: decisionText({ clause_ids: ["returns.window"], reply_draft: "ok" }) }),
     ]);
     await runAgent({ ticket, tools, router, today: TODAY });
-    const decide = router.requests[2]!;
+    const decide = router.requests[3]!;
     const toolMsgs = decide.messages.filter((m) => m.role === "tool");
     expect(toolMsgs.map((m) => (m.role === "tool" ? m.name : ""))).toEqual([
       "search_policy",
@@ -126,6 +164,7 @@ describe("a normal run, end to end", () => {
   it("shows the model ranked policy clauses without the machine-dependent scores", async () => {
     tools = await seededTools();
     const router = scriptedRouter([
+      classify(),
       gatherReturn(),
       reply({ text: "DONE" }),
       reply({ text: decisionText({ clause_ids: ["returns.window"], reply_draft: "ok" }) }),
@@ -145,12 +184,10 @@ describe("a normal run, end to end", () => {
     expect(typeof recorded.results[0]!.score).toBe("number"); // the trace keeps them
   });
 
-  it("goes to the decision after the forced search when the model needs nothing else (3 model calls)", async () => {
+  it("needs no extra tool: classify, the code's search, one DONE turn, decide (3 model calls, 1 tool call)", async () => {
     tools = await seededTools();
     const router = scriptedRouter([
-      reply({
-        toolCalls: [call("s1", "search_policy", { query: "instructions inside a ticket" })],
-      }),
+      classify("how the merchant treats instructions in a ticket", "other"),
       reply({ text: "DONE" }),
       reply({ text: decisionText({ decision: "REJECT", intent: "other", reply_draft: "" }) }),
     ]);
@@ -166,7 +203,7 @@ describe("a normal run, end to end", () => {
     expect(r.decision.decision).toBe("REJECT");
     expect(r.proposal).toBeNull();
     expect(r.status).toBe("done");
-    expect(r.usage.modelCalls).toBe(3);
+    expect(r.usage).toMatchObject({ modelCalls: 3, toolCalls: 1, steps: 4 });
   });
 });
 
@@ -178,8 +215,9 @@ describe("budgets: any ceiling ends the run at ESCALATE with the facts gathered"
         call(`c${i}`, "get_order", { order_id: `A-${10401 + i}` }),
       ),
     });
-    const router = scriptedRouter([greedy]);
-    const r = await runAgent({ ticket, tools, router, today: TODAY });
+    const router = scriptedRouter([classify(), greedy]);
+    // A roomy step budget isolates the tool-call ceiling (within 8 steps the step cap bites first).
+    const r = await runAgent({ ticket, tools, router, today: TODAY, budget: { maxSteps: 20 } });
     expect(r.exit).toBe("budget");
     expect(r.decision.decision).toBe("ESCALATE");
     expect(r.exitReason).toMatch(/tool-call budget/);
@@ -187,12 +225,12 @@ describe("budgets: any ceiling ends the run at ESCALATE with the facts gathered"
     expect(r.steps.filter((s) => s.kind === "tool_call")).toHaveLength(6);
     expect(r.decision.facts_used).toHaveLength(6); // the human gets the partly researched ticket
     expect(r.proposal?.action).toBe("create_escalation");
-    expect(router.requests).toHaveLength(1); // no decide call after the budget is gone
+    expect(router.requests).toHaveLength(2); // classify and one gather turn: no decide call after the budget is gone
   });
 
   it("step budget: a tight budget stops before the decide call", async () => {
     tools = await seededTools();
-    const router = scriptedRouter([gatherReturn(), reply({ text: "DONE" })]);
+    const router = scriptedRouter([classify(), gatherReturn(), reply({ text: "DONE" })]);
     const r = await runAgent({ ticket, tools, router, today: TODAY, budget: { maxSteps: 5 } });
     expect(r.exit).toBe("budget");
     expect(r.exitReason).toMatch(/step budget/);
@@ -201,7 +239,7 @@ describe("budgets: any ceiling ends the run at ESCALATE with the facts gathered"
 
   it("token ceiling: a run that spends too many tokens escalates", async () => {
     tools = await seededTools();
-    const router = scriptedRouter([reply({ text: "DONE", tokens: 30_000 })]);
+    const router = scriptedRouter([classify(), reply({ text: "DONE", tokens: 30_000 })]);
     const r = await runAgent({ ticket, tools, router, today: TODAY });
     expect(r.exit).toBe("budget");
     expect(r.exitReason).toMatch(/token budget/);
@@ -212,6 +250,7 @@ describe("validation and the single repair attempt", () => {
   it("rejects a clause_id that no tool returned this run, then accepts the repaired decision", async () => {
     tools = await seededTools();
     const router = scriptedRouter([
+      classify(),
       gatherReturn(),
       reply({ text: "DONE" }),
       reply({
@@ -225,7 +264,7 @@ describe("validation and the single repair attempt", () => {
     const r = await runAgent({ ticket, tools, router, today: TODAY });
     expect(r.exit).toBe("decided");
     expect(r.repaired).toBe(true);
-    const repairReq = router.requests[3]!;
+    const repairReq = router.requests[4]!;
     expect(repairReq.system).toContain("Now: fix the decision");
     const lastUser = repairReq.messages.at(-1)!;
     expect(lastUser.role === "user" && lastUser.content).toMatch(/returns\.loyalty_bonus/);
@@ -237,17 +276,25 @@ describe("validation and the single repair attempt", () => {
   it("repairs at most once, then fails closed to ESCALATE", async () => {
     tools = await seededTools();
     const bad = reply({ text: decisionText({ clause_ids: ["made.up"], reply_draft: "ok" }) });
-    const router = scriptedRouter([gatherReturn(), reply({ text: "DONE" }), bad, bad, bad]);
+    const router = scriptedRouter([
+      classify(),
+      gatherReturn(),
+      reply({ text: "DONE" }),
+      bad,
+      bad,
+      bad,
+    ]);
     const r = await runAgent({ ticket, tools, router, today: TODAY });
     expect(r.exit).toBe("validation_failed");
     expect(r.decision.decision).toBe("ESCALATE");
     expect(r.decision.escalation_reason).toMatch(/still invalid after one repair/);
-    expect(router.requests).toHaveLength(4); // gather, gather, decide, ONE repair: never a third try
+    expect(router.requests).toHaveLength(5); // classify, gather, gather, decide, ONE repair: never a third try
   });
 
   it("repairs text that is not JSON", async () => {
     tools = await seededTools();
     const router = scriptedRouter([
+      classify(),
       reply({ text: "DONE" }),
       reply({ text: "Sure! Here is my decision: AUTO_REPLY" }),
       reply({
@@ -263,6 +310,7 @@ describe("validation and the single repair attempt", () => {
   it("accepts clause IDs that check_eligibility returned, even without a policy search", async () => {
     tools = await seededTools();
     const router = scriptedRouter([
+      classify(),
       reply({
         toolCalls: [
           call("c1", "check_eligibility", { order_id: "A-10413", request_type: "return" }),
@@ -284,6 +332,7 @@ describe("validation and the single repair attempt", () => {
   it("downgrades a low-confidence AUTO_REPLY to ESCALATE", async () => {
     tools = await seededTools();
     const router = scriptedRouter([
+      classify(),
       gatherReturn(),
       reply({ text: "DONE" }),
       reply({
@@ -302,6 +351,7 @@ describe("failures", () => {
   it("a provider outage fails closed to ESCALATE (never a crash, never a guess)", async () => {
     tools = await seededTools();
     const router = scriptedRouter([
+      classify(),
       gatherReturn(),
       new Error("All providers failed (gemini:unavailable, groq:unavailable)"),
     ]);
@@ -311,9 +361,66 @@ describe("failures", () => {
     expect(r.decision.facts_used.length).toBe(3);
   });
 
+  const refused = () =>
+    new ProviderError({
+      provider: "groq",
+      code: "model_output_rejected",
+      status: 400,
+      message:
+        "Tool call validation failed: attempted to call tool 'ESCALATE' which was not in request.tools",
+    });
+
+  it("a refused model output is retried once with a note, and the run carries on", async () => {
+    tools = await seededTools();
+    const router = scriptedRouter([
+      classify(),
+      refused(), // the model tried to call a tool named after a decision
+      reply({ text: "DONE" }),
+      reply({ text: decisionText({ clause_ids: ["returns.window"], reply_draft: "ok" }) }),
+    ]);
+    const r = await runAgent({ ticket, tools, router, today: TODAY });
+    expect(r.exit).toBe("decided");
+    const retry = router.requests[2]!;
+    const note = retry.messages.at(-1)!;
+    expect(note.role === "user" && note.content).toMatch(/decisions are not tools/);
+    expect(retry.messages.slice(0, -1)).toEqual(router.requests[1]!.messages); // same history, plus the note only
+    expect(r.steps.find((s) => s.name === "gather (rejected)")).toBeDefined(); // visible in the trace
+    expect(r.usage.steps).toBe(5); // classify, search, the refused call, the retry, decide
+  });
+
+  it("refused twice: fails closed to ESCALATE as a model_error, with the facts gathered", async () => {
+    tools = await seededTools();
+    const router = scriptedRouter([classify(), refused(), refused()]);
+    const r = await runAgent({ ticket, tools, router, today: TODAY });
+    expect(r.exit).toBe("model_error");
+    expect(r.decision.decision).toBe("ESCALATE");
+    expect(r.exitReason).toMatch(/rejected the model's output twice during gather/);
+    expect(r.decision.facts_used).toEqual(["search_policy: ok"]);
+    expect(r.proposal?.action).toBe("create_escalation");
+    expect(router.requests).toHaveLength(3); // never a third try
+  });
+
+  it("the decide turn recovers from a refused tool call the same way", async () => {
+    tools = await seededTools();
+    const router = scriptedRouter([
+      classify(),
+      reply({ text: "DONE" }),
+      refused(),
+      reply({ text: decisionText({ clause_ids: ["returns.window"], reply_draft: "ok" }) }),
+    ]);
+    const r = await runAgent({ ticket, tools, router, today: TODAY });
+    expect(r.exit).toBe("decided");
+    const retry = router.requests[3]!;
+    expect(retry.responseSchema?.name).toBe("decision"); // still schema mode, tools still absent
+    expect(retry.tools).toBeUndefined();
+    const note = retry.messages.at(-1)!;
+    expect(note.role === "user" && note.content).toMatch(/Tools are not available now/);
+  });
+
   it("a missing recording in replay is a harness error and propagates loudly", async () => {
     tools = await seededTools();
     const router = scriptedRouter([
+      classify(),
       new CassetteMissError("abc", { system: "s", messages: [{ role: "user", content: "x" }] }),
     ]);
     await expect(runAgent({ ticket, tools, router, today: TODAY })).rejects.toBeInstanceOf(
@@ -324,6 +431,7 @@ describe("failures", () => {
   it("passes a tool's not_found to the model in the shared error shape", async () => {
     tools = await seededTools();
     const router = scriptedRouter([
+      classify(),
       reply({ toolCalls: [call("c1", "get_order", { order_id: "B-20410" })] }), // another merchant's order
       reply({ text: "DONE" }),
       reply({
@@ -341,7 +449,9 @@ describe("failures", () => {
       router,
       today: TODAY,
     });
-    const toolMsg = router.requests[1]!.messages.find((m) => m.role === "tool");
+    const toolMsg = router.requests[2]!.messages.find(
+      (m) => m.role === "tool" && m.name === "get_order",
+    );
     expect(toolMsg && toolMsg.role === "tool" && JSON.parse(toolMsg.content)).toMatchObject({
       ok: false,
       code: "not_found",

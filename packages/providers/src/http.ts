@@ -1,4 +1,4 @@
-import { ProviderError, codeForStatus, type ProviderId } from "./types.ts";
+import { ProviderError, codeForResponse, type ProviderId } from "./types.ts";
 
 export type FetchLike = (url: string, init: RequestInit) => Promise<Response>;
 
@@ -47,7 +47,7 @@ export async function postJson(
     const message = errorMessage(parsed) ?? `HTTP ${res.status}`;
     throw new ProviderError({
       provider,
-      code: codeForStatus(res.status),
+      code: codeForResponse(res.status, message),
       status: res.status,
       message: `${provider}: ${message}`,
       retryAfterMs: retryAfterMs(res.headers),

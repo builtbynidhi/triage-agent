@@ -28,7 +28,13 @@ export {
   CassetteMissError,
   MODES,
 } from "./replay.ts";
-export type { Cassette, CassetteStore, ProviderMode } from "./replay.ts";
+export type {
+  Cassette,
+  CassetteStore,
+  ProviderMode,
+  RejectionCassette,
+  ResponseCassette,
+} from "./replay.ts";
 export { createLedger, BudgetExceededError, DEFAULT_LIMITS, realClock } from "./ledger.ts";
 export type { UsageLedger, ProviderLimits, Clock } from "./ledger.ts";
 export { RATES, listPriceUsd, rateFor, UnknownRateError } from "./cost.ts";
@@ -90,6 +96,8 @@ export function loadDotEnv(file = join(repoRoot, ".env")): Record<string, string
 export function createDefaultRouter(
   options: {
     mode?: ProviderMode;
+    /** Never fall back to the second provider (recording runs). */
+    primaryOnly?: boolean;
     env?: Record<string, string | undefined>;
     cassetteDir?: string;
   } = {},
@@ -124,6 +132,7 @@ export function createDefaultRouter(
   return createRouter({
     providers,
     mode,
+    ...(options.primaryOnly ? { primaryOnly: true } : {}),
     cassettes: createCassetteStore(options.cassetteDir ?? CASSETTE_DIR),
     cache: createFileCache(join(repoRoot, ".cache", "llm")),
     ledger: mode === "replay" ? undefined : createLedger({ dir: defaultLedgerDir(repoRoot) }),
