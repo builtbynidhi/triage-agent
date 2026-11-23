@@ -187,6 +187,36 @@ Below the confidence threshold (0.5 for now; Phase 8 sets it from data), an AUTO
 
 **Not here.** No login endpoint, no token revocation, no delivery of the approved reply, no editing of a proposal before approval. The rate limiter is in memory (one API process).
 
+### 2.8 Tracing (Phase 11)
+
+Every run is an OpenTelemetry span tree: `invoke_agent triage-agent` (internal) wrapping one `chat {model}` span (client) per model call and one `execute_tool {tool}` span (internal) per tool call. Attributes follow the OpenTelemetry GenAI conventions: `gen_ai.operation.name`, `gen_ai.provider.name` (`groq`, `gcp.gemini`), `gen_ai.request.model`, `gen_ai.response.model`, `gen_ai.response.finish_reasons`, `gen_ai.usage.input_tokens` and `output_tokens` (reasoning tokens are counted in output), `gen_ai.agent.name`, `gen_ai.tool.name`, `gen_ai.tool.call.id` and `gen_ai.tool.type`. Our own facts live under `triage.*` (decision, exit, budget, prompt hash, recorded latency, list price).
+
+**Status and pinning.** These conventions are still **Development**, not Stable, and they have already moved: the GenAI conventions left the main `semantic-conventions` repository for `open-telemetry/semantic-conventions-genai`. They were read from that repository at release **v0.1.0 (21 Nov 2026)**, and that is the version this code targets. Packages: `@opentelemetry/api` 1.10.0, `sdk-trace-base` 2.12.1, `exporter-trace-otlp-http` 0.301.2. If the names change, the one place to update is the agent's span code (`packages/agent/src/machine.ts`) and the readers (`packages/telemetry`, `apps/web/lib/spans.ts`).
+
+**Content is opt-in.** Prompts, replies, tool arguments and results (`gen_ai.input.messages`, `gen_ai.output.messages`, `gen_ai.system_instructions`, `gen_ai.tool.call.arguments`, `gen_ai.tool.call.result`) are recorded only when `CAPTURE_MESSAGE_CONTENT=true`, because they hold customer text. By default no span, no JSONL line and no saved trace contains any (tested).
+
+**Exporters, both free.** A JSONL file (`traces/spans-DATE.jsonl`, one span per line) by default. OTLP/HTTP to any backend, such as Langfuse's free tier, when `OTLP_ENDPOINT` is set (headers come from the standard `OTEL_EXPORTER_OTLP_HEADERS`). Swapping the backend is a configuration change. The agent depends only on `@opentelemetry/api`; with no SDK registered the tracer is a no-op, so tests and replay are untouched.
+
+**Per-run trace.** The worker collects each run's spans in memory (`packages/telemetry` collector, bounded) and saves them with the run (`run_spans`, migration 5), so the API and the web app draw the tree without reading files back.
+
+**One quirk worth knowing.** The span clock ticks in whole milliseconds here, so spans that start in the same millisecond are ordered by creation order. And a replayed model call takes no time now, so every `chat` span also carries the latency it had when recorded (`triage.latency_ms`), which the viewer lays out.
+
+**Failures.** A run that ends early keeps its prompt hash, validation errors, budget at exit and retrieved clause IDs (`failureDetail`); `pnpm triage-failures` groups the failing eval cases by reason.
+
+### 2.9 apps/web (Phase 11)
+
+**Two modes, one data layer** (`lib/data.ts`). _Snapshot_ (default) reads `data/snapshot.json`, a read-only copy of real runs built by `pnpm web:snapshot`: every eval ticket with a committed recording is put through the real worker with the model replayed, so the data is real and the build costs nothing. _Live_ (`TRIAGE_API_URL` and `TRIAGE_API_TOKEN`) reads the Express API with a reviewer token held on the server.
+
+**Why a snapshot.** The live system keeps runs in SQLite with FTS5 and sqlite-vec, native code Vercel's serverless runtime cannot load. A JSON snapshot is the honest way to put a populated viewer online. It is labelled as such on every page.
+
+**Pages.** Runs (decision, status, recorded latency, tokens, list-price cost, filter by decision); run detail (span tree, tool calls and results, retrieved clauses with scores, validation, final decision, approvals, live view); approvals; scorecard (from `evals/report/report.json`).
+
+**The virtual timeline.** The waterfall lays each span's recorded duration end to end in the order things happened (`lib/spans.ts`), because a replayed run finishes in milliseconds while its model calls took seconds when recorded.
+
+**Live view.** In live mode it follows a running run over SSE through a route handler that holds the token. Otherwise it replays the recorded steps at 25× and says "not a live run".
+
+**Writes are off by default.** The app has no login of its own, so approving from the UI needs `TRIAGE_WEB_ALLOW_APPROVE=true` and live mode; reviewers otherwise approve through the API. The token never reaches the browser (tested).
+
 ## 3. Trade-offs
 
 - Hand-written state machine vs a framework (and the LangGraph port): ADR 0001

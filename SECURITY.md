@@ -70,7 +70,7 @@ Retrieval is tenant-scoped (`policy_chunks.tenant_id`); user text never reaches 
 
 ### LLM10 Improper Output Handling
 
-Model output is parsed against a strict Zod schema, then validated (`validate.ts`); an invalid answer gets one repair and then fails closed. Tool arguments are validated by Zod in `invokeTool`, never by the SDK. The reply is plain text proposed for approval: nothing is executed or rendered from it.
+Model output is parsed against a strict Zod schema, then validated (`validate.ts`); an invalid answer gets one repair and then fails closed. Tool arguments are validated by Zod in `invokeTool`, never by the SDK. The reply is plain text proposed for approval: nothing is executed from it. **The web UI never turns text into markup:** React escapes everything it renders, and a test (`apps/web/lib/safety.test.ts`) fails if any source file uses `dangerouslySetInnerHTML`, `innerHTML` or `eval`. Pages carry `nosniff`, `X-Frame-Options: DENY` and a strict referrer policy.
 
 ## The HTTP API (Phase 10)
 
@@ -83,13 +83,22 @@ Model output is parsed against a strict Zod schema, then validated (`validate.ts
 | Errors are RFC 9457 problem documents: no stack trace, no internal detail, and "missing" reads the same as "not yours".                                                                                              | `problem.ts`                 | `api.test.ts`                                               |
 | The job queue is bounded: a lease, a few retries with backoff, then a dead letter. A job that keeps killing its worker is dead-lettered, not retried forever.                                                        | `packages/data/src/queue.ts` | `runs.test.ts`                                              |
 
+## Tracing and the web app (Phase 11)
+
+| Control                                                                                                                                                                                                                          | Where                                        | Proof                           |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- | ------------------------------- |
+| **Message content is off by default.** Prompts, replies and tool arguments and results are recorded on spans only when `CAPTURE_MESSAGE_CONTENT=true`; otherwise no span, JSONL line or saved trace holds customer text. (LLM02) | `packages/agent/src/machine.ts`              | `apps/api/src/tracing.test.ts`  |
+| The public demo is a **read-only snapshot**: no API, no database, no secret, no write. A test fails if message content or a key-shaped string ever appears in it. (LLM02, LLM03)                                                 | `apps/web/data/snapshot.json`, `lib/data.ts` | `apps/web/lib/snapshot.test.ts` |
+| **The API token never reaches the browser:** the live view goes through a server-side route, and only server files read the token. (LLM02)                                                                                       | `apps/web/app/api/runs/[id]/stream/route.ts` | `apps/web/lib/safety.test.ts`   |
+| Approving from the web UI needs live mode **and** an explicit `TRIAGE_WEB_ALLOW_APPROVE=true`. (LLM03)                                                                                                                           | `apps/web/app/actions.ts`, `lib/data.ts`     | `approvals` page in the demo    |
+
 ## Measured
 
 `pnpm eval` replays all 40 cases with no API call. On the committed recordings, **8 of the 10 adversarial cases are scored and held on every repeat (24 of 24 runs)**; the other 2 (`policy-block-injection-refund`, `quoted-email-injection`) answer the customer's real question, so they wait for their judge recordings. The guard markers are what moved `fake-system-message-vip-override` from failing (the agent asked for more details) to passing. The judge agreement rate appears in the scorecard once you have hand-labelled the 15 replies (`evals/labels/to-label.md`).
 
 ## Gaps
 
-- **Not built (Phase 11):** the UI. It must escape model text when it renders it. The API also has no login endpoint: tokens come from whoever holds `JWT_SECRET`, with no revocation before expiry.
+- **The API has no login endpoint:** tokens come from whoever holds `JWT_SECRET`, with no revocation before expiry. The web app has no login either, which is why approving from it is off by default.
 - **One API process.** The rate limiter and stream counter are in memory; several processes would need a shared store. The MCP HTTP transport still trusts a loopback header for the merchant; only the API uses tokens.
 - **An approval cannot be edited.** A reviewer approves the exact text or rejects it.
 - **Marker patterns catch only unmistakable attacks.** A paraphrased injection reaches the model, which then relies on the prompt, tenant scoping and PII masking. This is why the other controls exist.

@@ -175,3 +175,13 @@ Prompt structure: role, rules and schema in the system prompt (a versioned file)
 - A decision, `ESCALATE` or `AUTO_REPLY`, waits as a `pending` approval; `REJECT` has nothing to approve and the run is `done`.
 - New dependencies: `express` (spec's HTTP framework) and `jose` (JWT), and nothing else; rate limit, SSE and tests use the standard library.
 - Tests run over real HTTP on a real Express server with a scripted model: `apps/api/src/api.test.ts`.
+
+## Tracing and the web app (Phase 11)
+
+- **Tracing:** `packages/telemetry` (JSONL exporter, optional OTLP, bounded per-run collector); the agent only imports `@opentelemetry/api`. Spans follow the GenAI conventions read from `open-telemetry/semantic-conventions-genai` **v0.1.0** (they moved out of the main semantic-conventions repo and are status Development: re-read before changing a name). Content capture is off unless `CAPTURE_MESSAGE_CONTENT=true`. Details: DESIGN.md 2.8.
+- Each run's spans are saved with it (`run_spans`, migration 5) and returned by `GET /v1/runs/:id` as `trace`. A run that ends early keeps `failureDetail` (prompt hash, validation, budget at exit, retrieved clauses). `pnpm triage-failures` groups failing eval cases by reason.
+- **Web app:** `apps/web`, Next.js 16 (params and searchParams are Promises; read `node_modules/next/dist/docs` before changing conventions), React 19, Tailwind 4. Run: `pnpm web:dev` (port 3300). It imports no workspace package: it reads the snapshot or the API over HTTP. Imports there are extensionless (Next's convention), unlike the Node packages.
+- **Snapshot:** `pnpm web:snapshot` replays every recorded eval ticket through the real worker and writes `apps/web/data/snapshot.json` (committed; excluded from Prettier; 0 API calls). Rebuild it when the agent, the prompt or the recordings change, and commit it.
+- **Live mode:** `TRIAGE_API_URL` and `TRIAGE_API_TOKEN` (a reviewer token) on the server. Approving from the UI also needs `TRIAGE_WEB_ALLOW_APPROVE=true`: the web app has no login, so use it on localhost only.
+- **Deploying the demo:** docs/deploy-demo.md. Vercel needs the owner's account (Root Directory `apps/web`); a clone installed with `pnpm install --frozen-lockfile --filter @triage/web...` builds all 42 pages. It has not been deployed from here.
+- New dependencies: OpenTelemetry (`api`, `sdk-trace-base`, `exporter-trace-otlp-http`, `core`) and `next`, `react`, `react-dom`, `tailwindcss` with `@tailwindcss/postcss` and `postcss`.

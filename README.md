@@ -6,6 +6,10 @@ A bounded AI agent that triages customer-support tickets, drafts policy-grounded
 
 > **Work in progress.** Phases 1 to 7 of 12 are done (data, the 40-case eval suite, the MCP tool server, hybrid retrieval, the model router, the agent, and the eval harness). Phases 8 and 9 are partial: the failure analysis and the judge are built, but the agent fixes are unmeasured and the judge is not fully recorded. Phases 10 to 12 (API and approvals, UI, CI gate) are not built. Every number on this page was measured. **One-page summary: [docs/OVERVIEW.md](docs/OVERVIEW.md).**
 
+![The trace viewer: one run's span tree, tool calls, retrieved policy clauses with scores, validation and decision](docs/images/trace-viewer.png)
+
+_The trace viewer, showing one real run: the span tree, tool calls, retrieved policy with scores, the validation outcome and the decision. (A screenshot, not yet the 20-second GIF the spec asks for.)_
+
 ## What it will do
 
 Given a support ticket for a small e-commerce merchant, the agent returns exactly one decision, with a draft reply citing the policy clauses it relied on:
@@ -21,19 +25,20 @@ It is **bounded**: a state machine with a step, tool-call and token budget; six 
 
 ## Status
 
-| Phase    | What                                                                                                                                                      | Status  |
-| -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
-| 1        | SQLite schema, deterministic seed (2 merchants, 20 customers, 50 orders), 8 policy documents                                                              | ✅      |
-| 2        | 40 eval cases, **written before the agent**: 15 normal, 15 edge, 10 adversarial                                                                           | ✅      |
-| 3        | MCP server: 4 read-only tools, stdio and streamable HTTP, policies as resources                                                                           | ✅      |
-| 4        | Hybrid retrieval: FTS5 + vector search, rank fusion, cross-encoder reranking                                                                              | ✅      |
-| 5        | Provider router: Groq → Gemini fallback, free-tier guard, circuit breaker, record and replay, cost                                                        | ✅      |
-| 6        | Agent core: bounded state machine through MCP, validator, one repair attempt, fail-closed ESCALATE                                                        | ✅      |
-| 7        | Eval harness: run all 40 cases, record responses, first honest scorecard                                                                                  | ✅      |
-| 8        | Fix the failures: grader fix measured (69.2%); agent fixes built but unmeasured, parked ([details](docs/failures.md))                                     | partial |
-| 9        | Judge (Gemini, a different model family) with 4 rubrics, adversarial guards, [SECURITY.md](SECURITY.md); judge recordings and your 15 hand labels pending | partial |
-| 10       | API, queue and human approvals: Express, JWT roles, rate limit, idempotency, SSE, approval-gated writes                                                   | ✅      |
-| 11 to 12 | UI and tracing, CI gate                                                                                                                                   | planned |
+| Phase | What                                                                                                                                                        | Status  |
+| ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
+| 1     | SQLite schema, deterministic seed (2 merchants, 20 customers, 50 orders), 8 policy documents                                                                | ✅      |
+| 2     | 40 eval cases, **written before the agent**: 15 normal, 15 edge, 10 adversarial                                                                             | ✅      |
+| 3     | MCP server: 4 read-only tools, stdio and streamable HTTP, policies as resources                                                                             | ✅      |
+| 4     | Hybrid retrieval: FTS5 + vector search, rank fusion, cross-encoder reranking                                                                                | ✅      |
+| 5     | Provider router: Groq → Gemini fallback, free-tier guard, circuit breaker, record and replay, cost                                                          | ✅      |
+| 6     | Agent core: bounded state machine through MCP, validator, one repair attempt, fail-closed ESCALATE                                                          | ✅      |
+| 7     | Eval harness: run all 40 cases, record responses, first honest scorecard                                                                                    | ✅      |
+| 8     | Fix the failures: grader fix measured (69.2%); agent fixes built but unmeasured, parked ([details](docs/failures.md))                                       | partial |
+| 9     | Judge (Gemini, a different model family) with 4 rubrics, adversarial guards, [SECURITY.md](SECURITY.md); judge recordings and your 15 hand labels pending   | partial |
+| 10    | API, queue and human approvals: Express, JWT roles, rate limit, idempotency, SSE, approval-gated writes                                                     | ✅      |
+| 11    | Tracing (OpenTelemetry GenAI spans), the trace viewer, approval queue and scorecard page (Next.js); public deploy is pending ([steps](docs/deploy-demo.md)) | partial |
+| 12    | CI gate                                                                                                                                                     | planned |
 
 ## Measured so far
 
@@ -99,6 +104,10 @@ pnpm eval:retrieval             # re-measures retrieval and rewrites docs/retrie
 pnpm eval                       # the scorecard: all 40 cases × 3, replayed (no keys, no calls)
 pnpm agent:run --ticket "got my blender on 13th nov, still sealed, want to return it. order A-10413"
                                 # runs the agent on a recorded ticket: no API keys, no calls
+
+pnpm web:dev                    # the web app at http://localhost:3300: runs, trace viewer, approvals, scorecard
+pnpm web:snapshot               # rebuild the demo snapshot from the recorded tickets (0 API calls)
+pnpm triage-failures            # the failing eval cases, grouped by reason
 ```
 
 ## Use the tools from Claude Desktop or Claude Code
