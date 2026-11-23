@@ -99,6 +99,25 @@ describe("live steps and the worker's view", () => {
   });
 });
 
+describe("a run's latency", () => {
+  it("is the sum of its model and tool step durations, and nothing else", () => {
+    const { run } = runs.createRun(ticket);
+    runs.completeRun(
+      run.id,
+      done({
+        steps: [
+          { seq: 1, kind: "transition", name: "start", durationMs: 999 }, // bookkeeping: not counted
+          { seq: 2, kind: "model_call", name: "gather", durationMs: 2000 },
+          { seq: 3, kind: "tool_call", name: "get_order", durationMs: 5 },
+          { seq: 4, kind: "validation", name: "validate", durationMs: 7 }, // not counted
+        ],
+      }),
+    );
+    expect(runs.getRun("tenant_a", run.id)!.latencyMs).toBe(2005);
+    expect(runs.listRuns("tenant_a")[0]!.latencyMs).toBe(2005);
+  });
+});
+
 describe("tenant scoping", () => {
   it("another merchant's run, steps and approvals are not found, exactly like a missing one", () => {
     const { run } = runs.createRun(ticket);

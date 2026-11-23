@@ -29,7 +29,8 @@
     "api:start": "pnpm --filter @triage/api start",
     "api:worker": "pnpm --filter @triage/api worker",
     "api:token": "pnpm --filter @triage/api make-token",
-    "triage-failures": "pnpm --filter @triage/evals triage-failures"
+    "triage-failures": "pnpm --filter @triage/evals triage-failures",
+    "web:snapshot": "pnpm --filter @triage/api snapshot"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

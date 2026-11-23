@@ -56,6 +56,7 @@ const runView = (r: RunRecord) => ({
   decision: r.decision,
   ticket: { channel: r.ticket.channel, text: r.ticket.text, order_id: r.ticket.orderId },
   usage: { input_tokens: r.inputTokens, output_tokens: r.outputTokens, cost_usd: r.costUsd },
+  latency_ms: Math.round(r.latencyMs),
   failure: r.failure,
   created_at: r.createdAt,
   finished_at: r.finishedAt,

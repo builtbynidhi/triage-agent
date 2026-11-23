@@ -24,6 +24,8 @@ export interface RunRecord {
   inputTokens: number;
   outputTokens: number;
   costUsd: number;
+  /** Model latency (recorded latency on replay) plus tool time, in ms: what the run's steps took. */
+  latencyMs: number;
   failure: unknown;
   createdAt: string;
   finishedAt: string | null;
@@ -146,6 +148,7 @@ interface RunRow {
   input_tokens: number;
   output_tokens: number;
   cost_usd: number;
+  latency_ms: number;
   failure_json: string | null;
   created_at: string;
   finished_at: string | null;
@@ -177,6 +180,7 @@ const toRun = (r: RunRow): RunRecord => ({
   inputTokens: r.input_tokens,
   outputTokens: r.output_tokens,
   costUsd: r.cost_usd,
+  latencyMs: r.latency_ms,
   failure: json(r.failure_json),
   createdAt: r.created_at,
   finishedAt: r.finished_at,
@@ -199,7 +203,9 @@ export function createRunStore(db: Db, options: { now?: () => Date } = {}): RunS
   const now = () => (options.now ?? (() => new Date()))().toISOString();
   const id = (prefix: string) => `${prefix}_${randomUUID().replace(/-/g, "").slice(0, 16)}`;
 
-  const RUN_SELECT = `SELECT r.*, t.channel AS t_channel, t.text AS t_text, t.order_id AS t_order_id
+  const RUN_SELECT = `SELECT r.*, t.channel AS t_channel, t.text AS t_text, t.order_id AS t_order_id,
+                             (SELECT COALESCE(SUM(s.duration_ms), 0) FROM run_steps s
+                              WHERE s.run_id = r.id AND s.kind IN ('model_call','tool_call')) AS latency_ms
                       FROM runs r JOIN tickets t ON t.id = r.ticket_id`;
   const q = {
     byKey: db.prepare(`${RUN_SELECT} WHERE r.tenant_id = ? AND r.idempotency_key = ?`),

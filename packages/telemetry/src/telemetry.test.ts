@@ -16,11 +16,10 @@ function tracerWith(...processors: ConstructorParameters<typeof SimpleSpanProces
 }
 
 describe("the span collector", () => {
-  it("hands back one trace's spans in start order, and forgets them", async () => {
+  it("hands back one trace's spans in start order, even when they start in the same millisecond", () => {
     const collector = createSpanCollector();
     const tracer = new BasicTracerProvider({ spanProcessors: [collector] }).getTracer("t");
     const a = tracer.startSpan("first");
-    await new Promise((r) => setTimeout(r, 5)); // real runs never start two spans in the same instant
     const b = tracer.startSpan("second", {}, trace.setSpan(context.active(), a)); // a child: same trace
     b.end();
     a.end();

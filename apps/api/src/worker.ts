@@ -46,7 +46,9 @@ function toStep(s: AgentStep): StepInput {
           ...(s.output as object),
         }
       : s.output;
-  return { seq: s.seq, kind: s.kind, name: s.name, input: s.input, output, durationMs: s.ms };
+  // A replayed model call took no time now, but it took `recordedMs` when it was recorded: show that.
+  const durationMs = s.kind === "model_call" ? (s.recordedMs ?? s.ms) : s.ms;
+  return { seq: s.seq, kind: s.kind, name: s.name, input: s.input, output, durationMs };
 }
 
 export function createWorker(deps: WorkerDeps) {
