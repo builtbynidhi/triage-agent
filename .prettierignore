@@ -9,3 +9,4 @@ evals/case.schema.json
 docs/retrieval.md
 .venv
 .cache
+apps/web/data/snapshot.json
