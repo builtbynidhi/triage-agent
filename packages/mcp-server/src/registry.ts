@@ -1,5 +1,5 @@
 import type { McpServer } from "@modelcontextprotocol/server";
-import type { PolicyHit, TriageStore } from "@triage/data";
+import type { PolicyHit, RunStore, TriageStore } from "@triage/data";
 import type { z } from "zod";
 import { ToolFailure, toolError, type ToolError } from "./errors.ts";
 
@@ -17,6 +17,11 @@ export interface ToolContext {
   today: () => string;
   /** Policy retrieval. Keyword search now; Phase 4 swaps in hybrid search behind the same signature. */
   searchPolicies: (query: string, limit: number) => Promise<PolicyHit[]>;
+  /**
+   * Runs, approvals and the outbox. Present only where writes are possible (the API). Without it,
+   * a write tool refuses with needs_approval: a server that cannot check an approval never writes.
+   */
+  runs?: RunStore;
 }
 
 export interface ToolAnnotations {
@@ -25,6 +30,17 @@ export interface ToolAnnotations {
   idempotentHint: boolean;
   openWorldHint: boolean;
 }
+
+/**
+ * A write tool's hints (spec): not read-only, never destructive (it adds a record, deletes none),
+ * nothing reaches the open internet. send_reply is not idempotent: it contacts a customer.
+ */
+export const WRITE = (o: { idempotent: boolean }): ToolAnnotations => ({
+  readOnlyHint: false,
+  destructiveHint: false,
+  idempotentHint: o.idempotent,
+  openWorldHint: false,
+});
 
 /** All four read tools: no side effects, safe to repeat, and nothing reaches the internet. */
 export const READ_ONLY: ToolAnnotations = {

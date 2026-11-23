@@ -2,10 +2,14 @@ export { createTriageServer, createToolContext, SERVER_INFO } from "./server.ts"
 export type { TriageServerOptions } from "./server.ts";
 export { startHttpServer, TENANT_HEADER, MCP_PATH } from "./http.ts";
 export type { HttpServerOptions, RunningHttpServer } from "./http.ts";
-export { invokeTool, READ_ONLY } from "./registry.ts";
+export { invokeTool, READ_ONLY, WRITE } from "./registry.ts";
 export type { ToolContext, ToolDefinition, ToolOutcome } from "./registry.ts";
 export {
+  ALL_TOOLS,
   READ_TOOLS,
+  WRITE_TOOLS,
+  createEscalation,
+  sendReply,
   searchPolicy,
   getOrder,
   getCustomer,
