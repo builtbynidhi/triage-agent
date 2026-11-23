@@ -6,7 +6,7 @@ import { createMemoryCache } from "./cache.ts";
 import { listPriceUsd, rateFor, UnknownRateError } from "./cost.ts";
 import { createGeminiProvider } from "./gemini.ts";
 import { createGroqProvider } from "./groq.ts";
-import { BudgetExceededError, createLedger } from "./ledger.ts";
+import { BudgetExceededError, createLedger, quotaDay } from "./ledger.ts";
 import { canonicalJson, redactDeep, redactText } from "./redact.ts";
 import {
   CassetteMissError,
@@ -395,6 +395,33 @@ describe("free-tier guard", () => {
     await expect(
       createLedger({ dir, clock, limits: { groq: { callsPerDay: 2 } } }).acquire("groq", 10),
     ).rejects.toBeInstanceOf(BudgetExceededError);
+  });
+
+  it("counts each provider on its own quota day: Groq resets at 00:00 UTC, Gemini at midnight Pacific", async () => {
+    const dir = mkdtempSync(join(tmpdir(), "usage-"));
+    const clock = fakeClock(Date.parse("2026-11-23T08:05:00Z")); // 13:35 IST: Gemini's day just began
+    const ledger = () =>
+      createLedger({ dir, clock, limits: { gemini: { callsPerDay: 2, minIntervalMs: 0 } } });
+    await ledger().acquire("gemini", 10);
+    await ledger().acquire("gemini", 10);
+    // 05:40 IST next morning: a new UTC day, so Groq's count is fresh...
+    await clock.sleep(Date.parse("2026-11-24T00:10:00Z") - clock.now());
+    expect(ledger().snapshot().days).toEqual({ gemini: "2026-11-23", groq: "2026-11-24" });
+    await ledger().acquire("groq", 10);
+    // ...but Gemini has not reset yet, so its cap still holds (the bug this ledger once had).
+    await expect(ledger().acquire("gemini", 10)).rejects.toThrow(/daily cap of 2 calls/);
+    // 13:31 IST: Gemini's new day.
+    await clock.sleep(Date.parse("2026-11-24T08:01:00Z") - clock.now());
+    await ledger().acquire("gemini", 10);
+    expect(ledger().snapshot().calls).toEqual({ gemini: 1, groq: 1 });
+  });
+
+  it("Gemini's day follows Pacific daylight saving time", () => {
+    expect(quotaDay(Date.parse("2026-07-15T06:59:00Z"), "America/Los_Angeles")).toBe("2026-07-14");
+    expect(quotaDay(Date.parse("2026-07-15T07:00:00Z"), "America/Los_Angeles")).toBe("2026-07-15");
+    expect(quotaDay(Date.parse("2026-12-15T07:59:00Z"), "America/Los_Angeles")).toBe("2026-12-14");
+    expect(quotaDay(Date.parse("2026-12-15T08:00:00Z"), "America/Los_Angeles")).toBe("2026-12-15");
+    expect(quotaDay(Date.parse("2026-12-15T00:00:00Z"), "UTC")).toBe("2026-12-15");
   });
 
   it("caps live calls per process", async () => {

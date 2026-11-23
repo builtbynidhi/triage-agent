@@ -17,14 +17,24 @@ export interface ProviderLimits {
   tokensPerMinute: number;
   /** Daily token cap (Groq's free tier limits tokens per day as well as requests). */
   tokensPerDay: number;
+  /**
+   * The IANA time zone whose midnight starts the provider's quota day. Each provider is counted
+   * on its own clock, because they do not reset together: Groq at 00:00 UTC (05:30 IST),
+   * Gemini at midnight Pacific (13:30 IST in winter, 12:30 IST in summer).
+   */
+  resetTimeZone: string;
 }
 
 /**
- * Set below the MEASURED free limits (2026-11-22):
+ * Set below the MEASURED free limits (2026-11-22), with each provider's MEASURED reset time:
  *   Gemini gemini-3.6-flash: 20 requests per day per project (Google's own 429:
  *     "GenerateRequestsPerDayPerProjectPerModel-FreeTier", limit 20). An earlier guess of 200
  *     was ten times too high; Google publishes free limits only inside AI Studio.
  *   Groq gpt-oss-120b: 30 RPM, 1,000 RPD, 8,000 TPM (response headers), 200,000 TPD (docs).
+ * Gemini's day starts at midnight Pacific (Google's documented reset; seen here at 13:30 IST).
+ * Counting it on the UTC day instead, as this ledger first did, reset Gemini's count at 05:30 IST
+ * while Google's did not reset until 13:30 IST: for those eight hours the ledger allowed 18 calls
+ * when only what was left of the real quota remained. Groq's day was measured at 00:00 UTC.
  */
 export const DEFAULT_LIMITS: Record<ProviderId, ProviderLimits> = {
   gemini: {
@@ -32,9 +42,26 @@ export const DEFAULT_LIMITS: Record<ProviderId, ProviderLimits> = {
     minIntervalMs: 6_000,
     tokensPerMinute: 100_000,
     tokensPerDay: 1_000_000,
+    resetTimeZone: "America/Los_Angeles",
   },
-  groq: { callsPerDay: 700, minIntervalMs: 3_000, tokensPerMinute: 6_000, tokensPerDay: 180_000 },
+  groq: {
+    callsPerDay: 700,
+    minIntervalMs: 3_000,
+    tokensPerMinute: 6_000,
+    tokensPerDay: 180_000,
+    resetTimeZone: "UTC",
+  },
 };
+
+/** The provider's quota day at `ms`, as YYYY-MM-DD in its reset time zone. */
+export function quotaDay(ms: number, timeZone: string): string {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date(ms));
+}
 
 export class BudgetExceededError extends Error {
   readonly provider: ProviderId;
@@ -56,7 +83,11 @@ export const realClock: Clock = {
 };
 
 export interface LedgerOptions {
-  /** Directory for per-day usage files. Omit for an in-memory ledger (tests). */
+  /**
+   * Directory for per-day usage files. Omit for an in-memory ledger (tests). `<date>.json` holds,
+   * for each provider, its count for ITS quota day named `<date>`: for Groq the UTC day, for
+   * Gemini the Pacific day. The format is unchanged, so readers of Groq's count are unaffected.
+   */
   dir?: string;
   limits?: Partial<Record<ProviderId, Partial<ProviderLimits>>>;
   maxCallsPerProcess?: number;
@@ -74,7 +105,8 @@ export interface UsageLedger {
   acquire(provider: ProviderId, estimatedTokens: number): Promise<void>;
   /** Record the tokens a finished call actually used. */
   record(provider: ProviderId, tokens: number): void;
-  snapshot(): { date: string; calls: Record<string, number>; processCalls: number };
+  /** Each provider's quota day and its call count on that day. */
+  snapshot(): { days: Record<string, string>; calls: Record<string, number>; processCalls: number };
 }
 
 export function createLedger(opts: LedgerOptions = {}): UsageLedger {
@@ -84,16 +116,16 @@ export function createLedger(opts: LedgerOptions = {}): UsageLedger {
   let processCalls = 0;
   const lastCallAt: Partial<Record<ProviderId, number>> = {};
   const window: Record<string, { at: number; tokens: number }[]> = {};
-  let memory: DayFile | undefined;
+  const memory = new Map<string, DayFile>();
 
-  const today = () => new Date(clock.now()).toISOString().slice(0, 10);
+  const dayOf = (p: ProviderId) => quotaDay(clock.now(), limits(p).resetTimeZone);
   const pathFor = (date: string) => join(opts.dir!, `${date}.json`);
 
-  const load = (): DayFile => {
-    const date = today();
+  const load = (provider: ProviderId): DayFile => {
+    const date = dayOf(provider);
     if (!opts.dir) {
-      if (memory?.date !== date) memory = { date, calls: {}, tokens: {} };
-      return memory;
+      if (!memory.has(date)) memory.set(date, { date, calls: {}, tokens: {} });
+      return memory.get(date)!;
     }
     try {
       return JSON.parse(readFileSync(pathFor(date), "utf8")) as DayFile;
@@ -103,7 +135,7 @@ export function createLedger(opts: LedgerOptions = {}): UsageLedger {
   };
   const save = (f: DayFile) => {
     if (!opts.dir) {
-      memory = f;
+      memory.set(f.date, f);
       return;
     }
     mkdirSync(opts.dir, { recursive: true });
@@ -115,7 +147,7 @@ export function createLedger(opts: LedgerOptions = {}): UsageLedger {
   return {
     async acquire(provider, estimatedTokens) {
       const l = limits(provider);
-      const day = load();
+      const day = load(provider);
       if (processCalls >= maxPerProcess) {
         throw new BudgetExceededError(
           provider,
@@ -156,13 +188,19 @@ export function createLedger(opts: LedgerOptions = {}): UsageLedger {
       const w = window[provider];
       const last = w?.at(-1);
       if (last) last.tokens = tokens; // replace the estimate with the real count
-      const day = load();
+      const day = load(provider);
       day.tokens[provider] = (day.tokens[provider] ?? 0) + tokens;
       save(day);
     },
     snapshot() {
-      const day = load();
-      return { date: day.date, calls: { ...day.calls }, processCalls };
+      const days: Record<string, string> = {};
+      const calls: Record<string, number> = {};
+      for (const p of Object.keys(DEFAULT_LIMITS) as ProviderId[]) {
+        const day = load(p);
+        days[p] = day.date;
+        calls[p] = day.calls[p] ?? 0;
+      }
+      return { days, calls, processCalls };
     },
   };
 }

@@ -18,7 +18,8 @@ if [ -z "$ids" ]; then echo "all judgements are recorded"; exit 0; fi
 echo "judgements still to record: $(echo $ids | wc -w)"
 [ "${DRY:-}" = "1" ] && { echo $ids | tr ' ' '\n'; exit 0; }
 
-used() { node -e "try { console.log(require('./.cache/usage/' + new Date().toISOString().slice(0,10) + '.json').calls.gemini || 0) } catch { console.log(0) }"; }
+# Gemini's count lives under its own quota day, the Pacific date (packages/providers/src/ledger.ts).
+used() { node -e "const d = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Los_Angeles' }).format(new Date()); try { console.log(require('./.cache/usage/' + d + '.json').calls.gemini || 0) } catch { console.log(0) }"; }
 for id in $ids; do
   if [ "$(used)" -ge 18 ]; then echo "Gemini cap reached ($(used) of 18 today): run again after 13:30 IST"; break; fi
   pnpm -s eval --mode record-missing --repeats 1 --case "$id" --out "$OUT/last" 2>&1 | grep -E "#1:" | sed 's/^ *//' | cut -c1-130 || true
