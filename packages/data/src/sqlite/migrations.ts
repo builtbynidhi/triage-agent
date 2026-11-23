@@ -159,4 +159,25 @@ CREATE TABLE policy_vec_meta (
 );
 `,
   },
+  {
+    id: 4,
+    name: "approvals-and-outbox",
+    sql: `
+-- One proposal per run and action: a retried worker cannot file a second approval.
+CREATE UNIQUE INDEX idx_approvals_run_action ON approvals(run_id, action);
+
+-- The record of a write that actually happened. One row per approval (UNIQUE), so approving the
+-- same proposal twice cannot send the same reply twice. Nothing leaves the system except through here.
+CREATE TABLE outbox (
+  id           TEXT PRIMARY KEY,
+  approval_id  TEXT NOT NULL UNIQUE REFERENCES approvals(id),
+  run_id       TEXT NOT NULL REFERENCES runs(id),
+  tenant_id    TEXT NOT NULL REFERENCES tenants(id),
+  action       TEXT NOT NULL CHECK (action IN ('create_escalation','send_reply')),
+  payload_json TEXT NOT NULL,
+  created_at   TEXT NOT NULL
+);
+CREATE INDEX idx_outbox_tenant ON outbox(tenant_id, created_at DESC);
+`,
+  },
 ];

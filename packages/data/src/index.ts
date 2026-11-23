@@ -6,6 +6,22 @@ export type { PolicyChunk } from "./policies.ts";
 export { seed, SEED_TODAY, dateMinus } from "../seed/seed.ts";
 export type { SeedOptions } from "../seed/seed.ts";
 export { createSqliteStore, toFtsQuery } from "./store.ts";
+export { createRunStore, IdempotencyConflict } from "./runs.ts";
+export type {
+  ApprovalRecord,
+  ApprovalStatus,
+  CompletedRun,
+  NewRun,
+  OutboxRecord,
+  RunRecord,
+  RunStatus,
+  RunStore,
+  StepInput,
+  StepRecord,
+  WriteAction,
+} from "./runs.ts";
+export { createJobQueue, DEFAULT_LEASE_MS, defaultBackoffMs } from "./queue.ts";
+export type { Job, JobQueue } from "./queue.ts";
 export type {
   TriageStore,
   OrderRecord,
