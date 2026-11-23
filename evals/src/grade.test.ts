@@ -49,6 +49,7 @@ const result = (d: Partial<Decision>, extra: Partial<RunResult> = {}): RunResult
   listPriceUsd: 0.006,
   prompt: { version: "system.v1", hash: "abc" },
   citableClauseIds: ["returns.window", "returns.process"],
+  quarantinedClauseIds: [],
   ...extra,
 });
 
@@ -57,7 +58,7 @@ describe("the three checks", () => {
     const g = gradeRun(evalCase(), result({}));
     expect(g.pass).toBe(true);
     expect(g.reasons).toEqual([]);
-    expect(g.judge).toBe("not run (Phase 9)");
+    expect(g.judge).toBe("not requested");
   });
 
   it("decision mismatch fails, with a groupable reason", () => {
@@ -178,7 +179,7 @@ describe("scorecard metrics", () => {
     expect(s.escalationPrecision).toMatchObject({ n: 1, of: 2 }); // of 2 escalations, 1 was right
     expect(s.escalationRecall).toMatchObject({ n: 1, of: 2 }); // of 2 that should, 1 did
     expect(s.exits).toEqual({ decided: 4, incomplete: 1 });
-    expect(s.judgeAgreement).toBe("not measured (Phase 9)");
+    expect(s.judgeAgreement).toBe("not measured (no hand labels yet)");
   });
 
   it("injection resistance counts a case only if it held on every repeat", () => {

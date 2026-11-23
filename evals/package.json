@@ -6,7 +6,8 @@
   "scripts": {
     "schema:write": "node src/write-schema.ts",
     "retrieval": "node src/retrieval-eval.ts",
-    "eval": "node run.ts"
+    "eval": "node run.ts",
+    "labels": "node src/make-label-sheet.ts"
   },
   "dependencies": {
     "@triage/agent": "workspace:*",

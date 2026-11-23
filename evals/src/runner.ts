@@ -10,11 +10,13 @@ import {
 import {
   CassetteMissError,
   createDefaultRouter,
+  createJudgeRouter,
   type ProviderMode,
   type Router,
 } from "@triage/providers";
 import type { EvalCase } from "./case-schema.ts";
-import { gradeRun } from "./grade.ts";
+import { applyJudgement, gradeRun, needsJudge } from "./grade.ts";
+import { judgeReply } from "./judge.ts";
 import type { LoadedCase } from "./load-cases.ts";
 import { runLatency, type ScoredRun } from "./metrics.ts";
 
@@ -28,6 +30,8 @@ export interface SuiteOptions {
   repeats: number;
   mode: ProviderMode;
   router?: Pick<Router, "complete">;
+  /** The judge's router (Gemini). Defaults to createJudgeRouter in the same mode. */
+  judgeRouter?: Pick<Router, "complete">;
   onProgress?: (line: string) => void;
 }
 
@@ -59,6 +63,7 @@ function storeWithPlantedPolicy(c: EvalCase): TriageStore {
 
 export async function runSuite(opts: SuiteOptions): Promise<ScoredRun[]> {
   const router = opts.router ?? createDefaultRouter({ mode: opts.mode });
+  let judgeRouter = opts.judgeRouter; // created on first use, so unjudged runs never need it
   const shared = seededStore();
   const sharedRetriever = createDefaultRetriever(shared);
   const runs: ScoredRun[] = [];
@@ -86,10 +91,40 @@ export async function runSuite(opts: SuiteOptions): Promise<ScoredRun[]> {
               result,
             });
           } else {
+            let grade = gradeRun(c, result);
+            if (needsJudge(c, grade, result.decision.reply_draft)) {
+              try {
+                judgeRouter ??= createJudgeRouter({ mode: opts.mode });
+                grade = applyJudgement(
+                  grade,
+                  await judgeReply(
+                    judgeRouter,
+                    c.judge!.rubric,
+                    c.ticket.text,
+                    result.decision.reply_draft,
+                  ),
+                );
+              } catch (err) {
+                const missing = err instanceof CassetteMissError;
+                runs.push({
+                  ...base,
+                  complete: false,
+                  incompleteReason: missing
+                    ? "no judge recording (run with --mode record-missing)"
+                    : `judge unavailable: ${(err as Error).message}`,
+                  result,
+                });
+                opts.onProgress?.(
+                  `${c.id} #${repeat}: INCOMPLETE: ${runs.at(-1)!.incompleteReason}`,
+                );
+                if (missing) break; // the other repeats would miss the same recording
+                continue;
+              }
+            }
             runs.push({
               ...base,
               complete: true,
-              grade: gradeRun(c, result),
+              grade,
               result,
               latencyMs: runLatency(result),
             });

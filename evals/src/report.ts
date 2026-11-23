@@ -95,7 +95,7 @@ export function renderMarkdown(
 
 Run on ${meta.date} in **${meta.mode}** mode, ${routeLabel}, prompt \`${meta.prompt.version}#${meta.prompt.hash}\`, ${meta.repeats} repeat${meta.repeats === 1 ? "" : "s"} per case, ticket date ${meta.today}.
 ${meta.mode === "replay" ? "In replay mode every repeat of a case serves the same recording, so repeats measure the pipeline, not run-to-run model variation.\n" : ""}
-**The judge is not run yet** (Phase 9): the reply check is phrases only. A case passes when the decision matches, grounding holds, and the required phrases are present and the forbidden ones absent.
+A case passes when the decision matches, grounding holds, the required phrases are present and the forbidden ones absent, and, for a case with a rubric, the judge (Gemini, a different model family from the agent) scores the reply 3 or more out of 5.${card.judge.judged.of ? "" : " **No reply has been judged in this run.**"}
 
 | Metric | Result |
 |---|---|
@@ -113,7 +113,9 @@ ${meta.mode === "replay" ? "In replay mode every repeat of a case serves the sam
 | Tool calls per run (mean / max) | ${card.toolCallsPerRun.mean === null ? "n/a" : card.toolCallsPerRun.mean.toFixed(1)} / ${card.toolCallsPerRun.max ?? "n/a"} |
 | Repair rate | ${pct(card.repairRate)} |
 | Cost per 100 tickets | ${card.listPriceUsdPer100 === null ? "n/a" : `$${card.listPriceUsdPer100.toFixed(4)} at list price (actual: $0, free tier)`} |
-| Judge agreement | not measured (Phase 9) |
+| Judge pass rate (replies scored) | ${pct(card.judge.judged)} |
+| Judge mean score (1 to 5) | ${card.judge.meanScore === null ? "n/a" : card.judge.meanScore.toFixed(2)} |
+| Judge agreement with hand labels | ${agreementLine(card.judgeAgreement)} |
 
 Runs: ${card.runs.complete} scored${card.runs.incomplete ? `, **${card.runs.incomplete} incomplete** (not scored: no recording or provider outage)` : ""}. Exits: ${Object.entries(
     card.exits,
@@ -138,4 +140,16 @@ ${
 |---|---|---|---|---|---|
 ${caseRows.join("\n")}
 `;
+}
+
+function agreementLine(a: Scorecard["judgeAgreement"]): string {
+  if (typeof a === "string") return a;
+  const head = `${a.n}/${a.of} (${a.of ? ((100 * a.n) / a.of).toFixed(0) : "n/a"}%)`;
+  const extra = [
+    a.disagreements.length
+      ? `disagreed on ${a.disagreements.map((d) => `\`${d.case_id}\` (you: ${d.label}, judge: ${d.judge})`).join(", ")}`
+      : "",
+    a.unjudged ? `${a.unjudged} labelled repl${a.unjudged === 1 ? "y" : "ies"} not judged yet` : "",
+  ].filter(Boolean);
+  return extra.length ? `${head}; ${extra.join("; ")}` : head;
 }

@@ -1,21 +1,26 @@
 import type { RunResult } from "@triage/agent";
 import type { EvalCase } from "./case-schema.ts";
+import type { Judgement } from "./judge.ts";
 
 /**
  * The three checks per run, all of which must pass (spec, "How a case is graded"):
  *   1. decision match;
  *   2. grounding: every must_cite clause cited, no must_not_cite clause cited, and nothing
  *      cited that the run's tools did not return;
- *   3. reply: required phrases present, forbidden phrases absent. The judge model's rubric
- *      score is the third part of this check and arrives in Phase 9; until then it is reported
- *      as not run, never assumed to pass.
+ *   3. reply: required phrases present, forbidden phrases absent, and, for a case that declares
+ *      a rubric, a judge score of 3 or more (evals/src/judge.ts). The judge only runs on a reply
+ *      whose decision was right: grading the tone of a reply the case did not want is wasted.
  */
 export interface Grade {
   pass: boolean;
   decision: { ok: boolean; expected: string; got: string };
   grounding: { ok: boolean; missing: string[]; forbidden: string[]; invented: string[] };
   reply: { ok: boolean; missing: string[][]; forbidden: string[] };
-  judge: "not run (Phase 9)";
+  /**
+   * "not requested": the case has no rubric. "skipped": it has one, but there was no right-decision
+   * reply to judge. Otherwise the judge's score (see applyJudgement).
+   */
+  judge: Judgement | "not requested" | "skipped";
   /** Short labels for grouping failures by cause, e.g. "decision ESCALATE→AUTO_REPLY". */
   reasons: string[];
 }
@@ -77,8 +82,23 @@ export function gradeRun(c: EvalCase, r: RunResult): Grade {
     decision,
     grounding,
     reply: replyCheck,
-    judge: "not run (Phase 9)",
+    judge: c.judge ? "skipped" : "not requested",
     reasons,
+  };
+}
+
+/** Does this run's reply need the judge? Only when the case declares a rubric and the decision was right. */
+export function needsJudge(c: EvalCase, g: Grade, reply: string): boolean {
+  return !!c.judge && g.decision.ok && reply.trim().length > 0;
+}
+
+/** Fold a judge score into a grade: below 3 fails the run, with a groupable reason. */
+export function applyJudgement(g: Grade, j: Judgement): Grade {
+  return {
+    ...g,
+    judge: j,
+    pass: g.pass && j.pass,
+    reasons: j.pass ? g.reasons : [...g.reasons, `judge ${j.rubric} scored ${j.score}`],
   };
 }
 

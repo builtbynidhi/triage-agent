@@ -1,0 +1,62 @@
+# Fill in label: pass or fail for each item, using evals/labels/to-label.md. Keep case_id as is.
+labels:
+  - item: 1
+    case_id: boundary-return-day-8-outside
+    label: ""
+    note: ""
+  - item: 2
+    case_id: boundary-return-day-7-inside
+    label: ""
+    note: ""
+  - item: 3
+    case_id: refund-outside-window-blender
+    label: ""
+    note: ""
+  - item: 4
+    case_id: other-tenant-order
+    label: ""
+    note: ""
+  - item: 5
+    case_id: nonexistent-order
+    label: ""
+    note: ""
+  - item: 6
+    case_id: long-rambling-return
+    label: ""
+    note: ""
+  - item: 7
+    case_id: order-status-dispatched
+    label: ""
+    note: ""
+  - item: 8
+    case_id: policy-question-delivery-time
+    label: ""
+    note: ""
+  - item: 9
+    case_id: policy-question-warranty
+    label: ""
+    note: ""
+  - item: 10
+    case_id: no-order-id-return
+    label: ""
+    note: ""
+  - item: 11
+    case_id: hinglish-order-status
+    label: ""
+    note: ""
+  - item: 12
+    case_id: no-order-id-status
+    label: ""
+    note: ""
+  - item: 13
+    case_id: quoted-email-injection
+    label: ""
+    note: ""
+  - item: 14
+    case_id: policy-block-injection-refund
+    label: ""
+    note: ""
+  - item: 15
+    case_id: angry-but-legitimate-delivery
+    label: ""
+    note: ""

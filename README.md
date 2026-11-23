@@ -21,17 +21,18 @@ It is **bounded**: a state machine with a step, tool-call and token budget; six 
 
 ## Status
 
-| Phase   | What                                                                                                                  | Status  |
-| ------- | --------------------------------------------------------------------------------------------------------------------- | ------- |
-| 1       | SQLite schema, deterministic seed (2 merchants, 20 customers, 50 orders), 8 policy documents                          | ✅      |
-| 2       | 40 eval cases, **written before the agent**: 15 normal, 15 edge, 10 adversarial                                       | ✅      |
-| 3       | MCP server: 4 read-only tools, stdio and streamable HTTP, policies as resources                                       | ✅      |
-| 4       | Hybrid retrieval: FTS5 + vector search, rank fusion, cross-encoder reranking                                          | ✅      |
-| 5       | Provider router: Groq → Gemini fallback, free-tier guard, circuit breaker, record and replay, cost                    | ✅      |
-| 6       | Agent core: bounded state machine through MCP, validator, one repair attempt, fail-closed ESCALATE                    | ✅      |
-| 7       | Eval harness: run all 40 cases, record responses, first honest scorecard                                              | ✅      |
-| 8       | Fix the failures: grader fix measured (69.2%); agent fixes built but unmeasured, parked ([details](docs/failures.md)) | partial |
-| 9 to 12 | Judge and adversarial hardening, API and approvals, UI and tracing, CI gate                                           | planned |
+| Phase    | What                                                                                                                                                      | Status  |
+| -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
+| 1        | SQLite schema, deterministic seed (2 merchants, 20 customers, 50 orders), 8 policy documents                                                              | ✅      |
+| 2        | 40 eval cases, **written before the agent**: 15 normal, 15 edge, 10 adversarial                                                                           | ✅      |
+| 3        | MCP server: 4 read-only tools, stdio and streamable HTTP, policies as resources                                                                           | ✅      |
+| 4        | Hybrid retrieval: FTS5 + vector search, rank fusion, cross-encoder reranking                                                                              | ✅      |
+| 5        | Provider router: Groq → Gemini fallback, free-tier guard, circuit breaker, record and replay, cost                                                        | ✅      |
+| 6        | Agent core: bounded state machine through MCP, validator, one repair attempt, fail-closed ESCALATE                                                        | ✅      |
+| 7        | Eval harness: run all 40 cases, record responses, first honest scorecard                                                                                  | ✅      |
+| 8        | Fix the failures: grader fix measured (69.2%); agent fixes built but unmeasured, parked ([details](docs/failures.md))                                     | partial |
+| 9        | Judge (Gemini, a different model family) with 4 rubrics, adversarial guards, [SECURITY.md](SECURITY.md); judge recordings and your 15 hand labels pending | partial |
+| 10 to 12 | API and approvals, UI and tracing, CI gate                                                                                                                | planned |
 
 ## Measured so far
 
@@ -105,8 +106,8 @@ The MCP server works in any MCP client. Setup (one server per merchant): [packag
 
 ## What does not work yet
 
+- **The judge has not scored a single reply yet.** It is built and tested, but recording its 24 judgements takes two days of Gemini's free quota (18 calls a day), and the judge-agreement number needs you to label 15 replies (`evals/labels/to-label.md`). Until then the scorecard says so.
 - **The agent fixes are not measured.** The score is now 69.2%, but only because a grader bug was fixed (typographic hyphens and spaces). Three agent designs were built on branch `phase-8-v2`; on the 6 cases recorded the latest passes 3 where the current agent passes 5, so it is not merged. Measuring it fully needs about three days of Groq's free tier ([docs/failures.md](docs/failures.md)).
-- **No judge yet** (Phase 9), so reply quality is checked by required phrases only.
 - **The retrieval choice is unconfirmed.** It assumes the agent searches with short, focused questions. In the current agent, 27 of 39 runs never call `search_policy` at all.
 - **No API, UI or live demo yet** (Phases 10 and 11).
 

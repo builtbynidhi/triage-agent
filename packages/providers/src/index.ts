@@ -129,3 +129,36 @@ export function createDefaultRouter(
     ledger: mode === "replay" ? undefined : createLedger({ dir: defaultLedgerDir(repoRoot) }),
   });
 }
+
+/**
+ * The judge's router: Gemini only. The agent runs on gpt-oss (OpenAI family, served by Groq), so a
+ * Google model grades its replies and the judge never marks its own family's work. Same record and
+ * replay as the agent's router; its requests differ, so recordings never collide. The Gemini free
+ * cap (DEFAULT_LIMITS) still applies.
+ */
+export function createJudgeRouter(
+  options: {
+    mode?: ProviderMode;
+    env?: Record<string, string | undefined>;
+    cassetteDir?: string;
+  } = {},
+): Router {
+  const env = options.env ?? { ...loadDotEnv(), ...process.env };
+  const mode = options.mode ?? modeFromEnv(env);
+  if (mode !== "replay" && !env.GEMINI_API_KEY) {
+    throw new Error(`PROVIDER_MODE=${mode} calls the judge live and needs GEMINI_API_KEY in .env`);
+  }
+  return createRouter({
+    providers: [
+      createGeminiProvider({
+        apiKey: mode === "replay" ? "" : env.GEMINI_API_KEY!,
+        model: GEMINI_ROUTE.model,
+        thinkingLevel: GEMINI_ROUTE.thinkingLevel,
+      }),
+    ],
+    mode,
+    cassettes: createCassetteStore(options.cassetteDir ?? CASSETTE_DIR),
+    cache: createFileCache(join(repoRoot, ".cache", "llm")),
+    ledger: mode === "replay" ? undefined : createLedger({ dir: defaultLedgerDir(repoRoot) }),
+  });
+}

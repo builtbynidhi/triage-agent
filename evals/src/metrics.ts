@@ -1,6 +1,7 @@
 import type { RunResult } from "@triage/agent";
 import type { EvalCase } from "./case-schema.ts";
 import { held, type Grade } from "./grade.ts";
+import type { Agreement } from "./labels.ts";
 
 /** One graded run of one case. Incomplete runs (no recording, provider down) are never scored. */
 export interface ScoredRun {
@@ -50,7 +51,14 @@ export interface Scorecard {
   /** Mean list-price cost × 100. Actual spend on the free tiers is $0. */
   listPriceUsdPer100: number | null;
   exits: Record<string, number>;
-  judgeAgreement: "not measured (Phase 9)";
+  /** Replies a judge scored, over the rubric'd cases whose decision was right. */
+  judge: {
+    judged: Ratio;
+    meanScore: number | null;
+    byRubric: Record<string, { n: number; mean: number }>;
+  };
+  /** The judge against the owner's hand labels, or why it is not measured. */
+  judgeAgreement: Agreement | "not measured (no hand labels yet)";
 }
 
 export function score(runs: ScoredRun[]): Scorecard {
@@ -120,7 +128,26 @@ export function score(runs: ScoredRun[]): Scorecard {
     repairRate: ratio(done.filter((r) => res(r).repaired).length, done.length),
     listPriceUsdPer100: cost === null ? null : Math.round(cost * 100 * 1e6) / 1e6,
     exits,
-    judgeAgreement: "not measured (Phase 9)",
+    judge: judgeStats(done),
+    judgeAgreement: "not measured (no hand labels yet)",
+  };
+}
+
+function judgeStats(done: ScoredRun[]): Scorecard["judge"] {
+  const scored = done.flatMap((r) => {
+    const j = r.grade!.judge;
+    return typeof j === "string" ? [] : [j];
+  });
+  const byRubric: Scorecard["judge"]["byRubric"] = {};
+  for (const j of scored) {
+    const e = (byRubric[j.rubric] ??= { n: 0, mean: 0 });
+    e.mean = (e.mean * e.n + j.score) / (e.n + 1);
+    e.n++;
+  }
+  return {
+    judged: ratio(scored.filter((j) => j.pass).length, scored.length),
+    meanScore: scored.length ? scored.reduce((a, j) => a + j.score, 0) / scored.length : null,
+    byRubric,
   };
 }
 

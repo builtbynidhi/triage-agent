@@ -7,6 +7,7 @@ import {
 } from "@triage/providers";
 import { Budget, type BudgetExhausted, type BudgetLimits } from "./budget.ts";
 import { DECISION_JSON_SCHEMA, type Decision } from "./decision.ts";
+import { injectionMarkers, instructionLike, quarantineTicket } from "./guard.ts";
 import { loadSystemPrompt, type PromptStage, type SystemPrompt } from "./prompts/index.ts";
 import { ticketMessage, type Ticket } from "./ticket.ts";
 import type { McpTools } from "./tools.ts";
@@ -33,6 +34,7 @@ import {
  */
 export type State =
   | "start"
+  | "quarantine"
   | "classify"
   | "retrieve"
   | "gather"
@@ -71,7 +73,8 @@ export type Proposal =
   | { action: "send_reply"; payload: { body: string; clause_ids: string[] } }
   | { action: "create_escalation"; payload: { reason: string; summary: string; facts: string[] } };
 
-export type Exit = "decided" | "budget" | "validation_failed" | "provider_error";
+/** "quarantined": the ticket carried an unmistakable override attempt and was REJECTed before any model call. */
+export type Exit = "decided" | "budget" | "validation_failed" | "provider_error" | "quarantined";
 
 export interface RunResult {
   decision: Decision;
@@ -89,6 +92,8 @@ export interface RunResult {
   prompt: { version: string; hash: string };
   /** Clause IDs that tools returned this run: the only ones a decision may cite. */
   citableClauseIds: string[];
+  /** Retrieved clauses that gave orders to the assistant: never citable (guard.ts). */
+  quarantinedClauseIds: string[];
 }
 
 export interface AgentOptions {
@@ -143,7 +148,14 @@ export async function runAgent(opts: AgentOptions): Promise<RunResult> {
   const maxRounds = opts.maxGatherRounds ?? 2;
   const steps: StepRecord[] = [];
   const citable = new Set<string>();
+  const quarantinedClauses = new Set<string>();
   const facts: string[] = [];
+  // Input quarantine: invisible characters out, length capped. A normal ticket comes back unchanged.
+  const quarantined = quarantineTicket(opts.ticket);
+  const ticket = quarantined.ticket;
+  const promptText = (["gather", "decide", "repair"] as const)
+    .map((stage) => prompt.forStage(stage))
+    .join("\n");
   let listPrice = 0;
   let modelCalls = 0;
   let repaired = false;
@@ -210,7 +222,7 @@ export async function runAgent(opts: AgentOptions): Promise<RunResult> {
   const messages: Message[] = [
     {
       role: "user",
-      content: ticketMessage(opts.ticket, { merchant: opts.tools.merchant, today: opts.today }),
+      content: ticketMessage(ticket, { merchant: opts.tools.merchant, today: opts.today }),
     },
   ];
   const assistantTurn = (r: ChatResponse): Message => ({
@@ -222,10 +234,41 @@ export async function runAgent(opts: AgentOptions): Promise<RunResult> {
 
   const validateText = (text: string): Validation => {
     const parsed = parseDecision(text);
-    return parsed.ok ? validateDecision(parsed.decision, { citableClauseIds: citable }) : parsed;
+    return parsed.ok
+      ? validateDecision(parsed.decision, {
+          citableClauseIds: citable,
+          quarantinedClauseIds: quarantinedClauses,
+          promptText,
+        })
+      : parsed;
   };
 
   try {
+    if (quarantined.notes.length)
+      transition("quarantine", `ticket quarantined: ${quarantined.notes.join("; ")}`);
+
+    // An unmistakable override attempt is REJECTed before any model call: the cheapest and the
+    // safest answer, and one a clever prompt cannot talk the model out of.
+    const markers = injectionMarkers(ticket.text);
+    if (markers.length) {
+      transition("quarantine", `rejected before any model call: ${markers.join(", ")}`);
+      return finish(
+        {
+          decision: "REJECT",
+          intent: "other",
+          confidence: 1,
+          facts_used: [],
+          clause_ids: [],
+          reply_draft: "",
+          escalation_reason: "",
+          missing_fields: [],
+        },
+        "quarantined",
+        `ticket matched override markers: ${markers.join(", ")}`,
+        false,
+      );
+    }
+
     transition("classify", "start → classify");
 
     // CLASSIFY, then RETRIEVE / GATHER: the model chooses tools; the machine executes them.
@@ -318,8 +361,14 @@ export async function runAgent(opts: AgentOptions): Promise<RunResult> {
 
   function harvest(tool: string, s: Record<string, unknown>) {
     if (tool === "search_policy" && Array.isArray(s.results)) {
-      for (const r of s.results as { clause_id?: string }[])
-        if (r.clause_id) citable.add(r.clause_id);
+      for (const r of s.results as { clause_id?: string; text?: string }[]) {
+        if (!r.clause_id) continue;
+        // A clause that gives orders to the assistant is data: visible, but never citable.
+        if (instructionLike(r.text ?? "")) {
+          quarantinedClauses.add(r.clause_id);
+          facts.push(`quarantined clause ${r.clause_id}`);
+        } else citable.add(r.clause_id);
+      }
     }
     if (tool === "check_eligibility" && Array.isArray(s.clause_ids)) {
       for (const id of s.clause_ids as string[]) citable.add(id);
@@ -391,6 +440,7 @@ export async function runAgent(opts: AgentOptions): Promise<RunResult> {
       listPriceUsd: Math.round(listPrice * 1e10) / 1e10,
       prompt: { version: prompt.version, hash: prompt.hash },
       citableClauseIds: [...citable].sort(),
+      quarantinedClauseIds: [...quarantinedClauses].sort(),
     };
   }
 }
