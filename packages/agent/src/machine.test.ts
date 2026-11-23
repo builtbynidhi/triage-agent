@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { CassetteMissError, ProviderError } from "@triage/providers";
 import { runAgent } from "./machine.ts";
-import { ticketMessage } from "./ticket.ts";
+import { findOrderId, ticketMessage } from "./ticket.ts";
 import {
   call,
   classify,
@@ -22,10 +22,7 @@ afterEach(() => tools?.close());
 
 const gatherReturn = () =>
   reply({
-    toolCalls: [
-      call("c2", "get_order", { order_id: "A-10413" }),
-      call("c3", "check_eligibility", { order_id: "A-10413", request_type: "return" }),
-    ],
+    toolCalls: [call("c3", "check_eligibility", { order_id: "A-10413", request_type: "return" })],
   });
 
 describe("a normal run, end to end", () => {
@@ -61,11 +58,11 @@ describe("a normal run, end to end", () => {
       "classify:transition",
       "classify:model_call",
       "retrieve:transition",
-      "retrieve:tool_call",
+      "retrieve:tool_call", // search_policy, run by the machine
       "gather:transition",
+      "gather:tool_call", // get_order for the ID in the ticket, run by the machine
       "gather:model_call",
-      "gather:tool_call",
-      "gather:tool_call",
+      "gather:tool_call", // check_eligibility, chosen by the model
       "gather:model_call",
       "decide:transition",
       "decide:model_call",
@@ -119,7 +116,18 @@ describe("a normal run, end to end", () => {
     });
     // The gather turn already sees the search as a tool message, so policy is read before anything else.
     const gather = router.requests[1]!;
-    expect(gather.messages.map((m) => m.role)).toEqual(["user", "assistant", "tool"]);
+    expect(gather.messages.map((m) => m.role)).toEqual([
+      "user",
+      "assistant",
+      "tool",
+      "assistant",
+      "tool",
+    ]);
+    expect(r.steps.filter((s) => s.kind === "tool_call").map((s) => s.name)).toEqual([
+      "search_policy",
+      "get_order",
+      "check_eligibility",
+    ]);
     expect(r.citableClauseIds).toContain("returns.process");
     // Only the model's question is searched, never the whole ticket.
     expect(JSON.stringify(search.input)).not.toContain("A-10413");
@@ -385,7 +393,7 @@ describe("failures", () => {
     expect(note.role === "user" && note.content).toMatch(/decisions are not tools/);
     expect(retry.messages.slice(0, -1)).toEqual(router.requests[1]!.messages); // same history, plus the note only
     expect(r.steps.find((s) => s.name === "gather (rejected)")).toBeDefined(); // visible in the trace
-    expect(r.usage.steps).toBe(5); // classify, search, the refused call, the retry, decide
+    expect(r.usage.steps).toBe(6); // classify, search, get_order, the refused call, the retry, decide
   });
 
   it("refused twice: fails closed to ESCALATE as a model_error, with the facts gathered", async () => {
@@ -395,7 +403,7 @@ describe("failures", () => {
     expect(r.exit).toBe("model_error");
     expect(r.decision.decision).toBe("ESCALATE");
     expect(r.exitReason).toMatch(/rejected the model's output twice during gather/);
-    expect(r.decision.facts_used).toEqual(["search_policy: ok"]);
+    expect(r.decision.facts_used).toEqual(["search_policy: ok", "order A-10413: delivered"]);
     expect(r.proposal?.action).toBe("create_escalation");
     expect(router.requests).toHaveLength(3); // never a third try
   });
@@ -456,6 +464,78 @@ describe("failures", () => {
       ok: false,
       code: "not_found",
     });
+    expect(r.decision.decision).toBe("NEEDS_INFO");
+  });
+});
+
+describe("the order named in the ticket is looked up by code", () => {
+  const T = (text: string, orderId?: string) => ({
+    text,
+    channel: "email" as const,
+    ...(orderId ? { orderId } : {}),
+  });
+
+  it("finds an ID wherever it is written: brackets, mid-sentence, lower case, a separate field", () => {
+    expect(
+      findOrderId(T("want my money back for the smartwatch (B-20420). its been a month")),
+    ).toBe("B-20420");
+    expect(findOrderId(T("order a-10413 please"))).toBe("A-10413");
+    expect(findOrderId(T("see order:A-10413."))).toBe("A-10413");
+    expect(findOrderId(T("anything", "b-20402"))).toBe("B-20402"); // the channel's own field wins
+    expect(findOrderId(T("first A-10411 then B-20410"))).toBe("A-10411"); // only the first
+  });
+
+  it("finds nothing when there is no ID, and leaves slips and look-alikes to the model", () => {
+    expect(findOrderId(T("hello??"))).toBeNull();
+    expect(findOrderId(T("my order A 10413 is late"))).toBeNull();
+    expect(findOrderId(T("order AB-10413 or A-1041 or A-104133"))).toBeNull();
+  });
+
+  it("looks the order up before the model's first gather turn, even when the model would have skipped it", async () => {
+    tools = await seededTools("tenant_b");
+    const router = scriptedRouter([
+      classify("refund policy and window"),
+      reply({ text: "DONE" }), // the model asks for nothing more
+      reply({ text: decisionText({ clause_ids: ["refunds.window"], reply_draft: "ok" }) }),
+    ]);
+    const r = await runAgent({
+      ticket: T("want my money back for the smartwatch (B-20420). its been about a month"),
+      tools,
+      router,
+      today: TODAY,
+    });
+    const order = r.steps.find((s) => s.name === "get_order")!;
+    expect(order).toMatchObject({ state: "gather", input: { order_id: "B-20420" } });
+    expect(order.output).toMatchObject({ ok: true });
+    const gatherReq = router.requests[1]!;
+    expect(
+      gatherReq.messages
+        .filter((m) => m.role === "tool")
+        .map((m) => (m.role === "tool" ? m.name : "")),
+    ).toEqual(["search_policy", "get_order"]);
+  });
+
+  it("no ID in the ticket: no lookup, and the model still decides what to ask for", async () => {
+    tools = await seededTools();
+    const router = scriptedRouter([
+      classify("how returns work", "return_request"),
+      reply({ text: "DONE" }),
+      reply({
+        text: decisionText({
+          decision: "NEEDS_INFO",
+          missing_fields: ["order_id"],
+          clause_ids: [],
+          reply_draft: "Could you share your order ID?",
+        }),
+      }),
+    ]);
+    const r = await runAgent({
+      ticket: T("I want to return my blender"),
+      tools,
+      router,
+      today: TODAY,
+    });
+    expect(r.steps.some((s) => s.name === "get_order")).toBe(false);
     expect(r.decision.decision).toBe("NEEDS_INFO");
   });
 });

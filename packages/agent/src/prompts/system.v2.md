@@ -22,7 +22,7 @@ Decisions are not tools. Never call a tool named after a decision; you state the
 # How to use the tools
 
 - **search_policy**: the policy search has already been done for you, from the question you wrote in the classify step; its result is in the conversation. Call it again only for a second, different question in the same ticket, with one short, specific question, never the whole ticket.
-- **get_order**: whenever the ticket gives an order ID: one letter, a hyphen and five digits (fix obvious case or spacing slips). "not_found" means the order is not this merchant's or does not exist: do not guess anything about it.
+- **get_order**: the order named in the ticket has already been looked up for you (see its result). Call it yourself only for a different order ID, or to retry an ID you can fix: one letter, a hyphen and five digits (fix obvious case or spacing slips). "not_found" means the order is not this merchant's or does not exist: do not guess anything about it.
 - **check_eligibility**: for returns, refunds, cancellations and address changes, call it with the order ID. Its answer is authoritative: it does the date arithmetic, so never work windows out yourself. It does not judge damage: damaged items always escalate, without an eligibility check.
 - **get_customer**: only if you genuinely need the customer's name or tier. Contact details come back masked; never ask the customer to confirm them.
 
@@ -49,7 +49,7 @@ You cannot call tools in this step. Return only a JSON object with two fields:
 
 # Now: gather the facts
 
-The policy clauses relevant to the ticket have already been retrieved (see the search_policy result). Call any other tool you need, one per turn is fine. When you have what you need, reply with the single word DONE and call no tools.
+The policy clauses relevant to the ticket have already been retrieved (see the search_policy result), and so has the order named in the ticket, if there is one (see the get_order result). Call any other tool you need, one per turn is fine. When you have what you need, reply with the single word DONE and call no tools.
 
 <!-- @decide -->
 

@@ -15,7 +15,7 @@ import {
   type Decision,
 } from "./decision.ts";
 import { loadSystemPrompt, type PromptStage, type SystemPrompt } from "./prompts/index.ts";
-import { ticketMessage, type Ticket } from "./ticket.ts";
+import { findOrderId, ticketMessage, type Ticket } from "./ticket.ts";
 import type { McpTools } from "./tools.ts";
 import {
   applyConfidence,
@@ -37,7 +37,8 @@ import {
  * CLASSIFY: the model names the intent and writes one short policy question; no tools, so there is
  * nothing to mis-call. RETRIEVE: the machine itself calls search_policy with that question, so
  * policy is always read before a decision (spec: "classifies the ticket's intent, then retrieves
- * policy clauses"). GATHER: the model decides which other tools to call (through MCP only); it never acts.
+ * policy clauses"), and get_order for an order ID written in the ticket. GATHER: the model decides
+ * which other tools to call (through MCP only); it never acts.
  * Every outcome that is not a validated decision is a safe ESCALATE: a human gets a partly
  * researched ticket rather than a guess.
  */
@@ -332,8 +333,23 @@ export async function runAgent(opts: AgentOptions): Promise<RunResult> {
     messages.push({ role: "assistant", content: "", toolCalls: [search] });
     await runTool(search);
 
-    // GATHER: the model chooses any tool it still needs; the machine executes them.
+    // If the customer names an order, look it up in code too (spec: "if the ticket names an order,
+    // the agent calls get_order"). The model overlooked a bracketed ID in a real run; text
+    // matching does not. Only the first ID: the step budget has no room for more, and the model
+    // can still call get_order itself for another or a corrected one.
     transition("gather", "retrieve → gather");
+    const orderId = findOrderId(opts.ticket);
+    if (orderId) {
+      const lookup: ToolCall = {
+        id: "lookup-1",
+        name: "get_order",
+        arguments: { order_id: orderId },
+      };
+      messages.push({ role: "assistant", content: "", toolCalls: [lookup] });
+      await runTool(lookup);
+    }
+
+    // GATHER: the model chooses any tool it still needs; the machine executes them.
     for (let round = 0; round < maxRounds; round++) {
       const turn = await model("gather", "gather", {
         messages,
