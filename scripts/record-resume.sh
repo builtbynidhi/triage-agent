@@ -15,6 +15,8 @@ log() { printf '%s %s\n' "$(date '+%F %T')" "$*"; }
 # Absolute: `pnpm --filter` runs the eval from the evals/ folder, so a relative --out would land there.
 OUT="$PWD/.cache/phase8b"
 mkdir -p "$OUT"
+# Finished earlier: nothing more to do (delete $OUT/finished to run the comparison again).
+if [ -e "$OUT/finished" ]; then log "already finished: read $OUT/compare.txt"; exit 0; fi
 # One run at a time (a second trigger while one is running just exits).
 mkdir "$OUT/lock" 2>/dev/null || { log "another run is in progress (remove $OUT/lock if it crashed)"; exit 0; }
 trap 'rmdir "$OUT/lock"' EXIT
@@ -61,4 +63,6 @@ log "all 40 recorded: replaying 3 repeats (0 API calls) and comparing with main"
 pnpm -s eval --repeats 3 --out "$OUT/final" > "$OUT/final.log" 2>&1 || true
 git show main:evals/report/report.json > "$OUT/main-report.json"
 node scripts/compare-reports.mjs "$OUT/main-report.json" "$OUT/final/report.json" | tee "$OUT/compare.txt"
+touch "$OUT/finished"
 log "done. Nothing was merged. Read $OUT/compare.txt, then decide."
+osascript -e 'display notification "All 40 cases recorded. Read .cache/phase8b/compare.txt, then decide whether to merge." with title "triage-agent Phase 8b"' 2>/dev/null || true
