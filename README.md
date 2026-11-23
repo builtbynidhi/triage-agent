@@ -32,7 +32,8 @@ It is **bounded**: a state machine with a step, tool-call and token budget; six 
 | 7        | Eval harness: run all 40 cases, record responses, first honest scorecard                                                                                  | ✅      |
 | 8        | Fix the failures: grader fix measured (69.2%); agent fixes built but unmeasured, parked ([details](docs/failures.md))                                     | partial |
 | 9        | Judge (Gemini, a different model family) with 4 rubrics, adversarial guards, [SECURITY.md](SECURITY.md); judge recordings and your 15 hand labels pending | partial |
-| 10 to 12 | API and approvals, UI and tracing, CI gate                                                                                                                | planned |
+| 10       | API, queue and human approvals: Express, JWT roles, rate limit, idempotency, SSE, approval-gated writes                                                   | ✅      |
+| 11 to 12 | UI and tracing, CI gate                                                                                                                                   | planned |
 
 ## Measured so far
 

@@ -26,19 +26,19 @@ The agent only **proposes**. A human approves anything that would leave the syst
 | 7     | Eval harness and first scorecard             | done                                                                |
 | 8     | Fix the failures                             | partial: grader fix merged; agent changes parked, unmeasured        |
 | 9     | LLM judge and security hardening             | partial: built; 16 of 21 judge scores recorded, your labels pending |
-| 10    | API, queue, human approvals                  | not built                                                           |
+| 10    | API, queue, human approvals                  | done                                                                |
 | 11    | UI and tracing                               | not built                                                           |
 | 12    | CI gate and polish                           | not built                                                           |
 
 ## What it is built with
 
-TypeScript on Node 22 (pnpm workspace) · SQLite with FTS5 and sqlite-vec · MCP TypeScript SDK v2 · Vitest · Python and matplotlib (charts only). Planned: Express API, Next.js with Tailwind, OpenTelemetry.
+TypeScript on Node 22 (pnpm workspace) · SQLite with FTS5 and sqlite-vec · MCP TypeScript SDK v2 · Vitest · Python and matplotlib (charts only). Express and JWT for the API (Phase 10). Planned: Next.js with Tailwind, OpenTelemetry.
 
 ## The AI parts
 
 - **Models (free tiers only):** Groq `gpt-oss-120b` runs the agent. Gemini 3.6 Flash is the fallback and the judge. A router handles record and replay, a free-tier usage ledger, and a circuit breaker, so tests and CI call no API.
 - **The agent:** a hand-written state machine (classify, retrieve, gather, decide, validate, one repair, propose) with a budget of 8 steps, 6 tool calls and 24k tokens. Its output is schema-checked, and any failure ends in ESCALATE.
-- **Tools (MCP):** four read-only tools: `search_policy`, `get_order`, `get_customer`, `check_eligibility`. Eligibility is plain date arithmetic, never a model. The two write tools arrive with Phase 10.
+- **Tools (MCP):** four read-only tools: `search_policy`, `get_order`, `get_customer`, `check_eligibility`. Eligibility is plain date arithmetic, never a model. The two write tools (`create_escalation`, `send_reply`) refuse unless a reviewer approved exactly that action.
 - **Retrieval:** FTS5 keyword search plus local `bge-small-en-v1.5` embeddings, rank fusion, and a local cross-encoder reranker. All on CPU, all free.
 - **Evals:** 40 cases (15 normal, 15 edge, 10 adversarial), three checks each, and an LLM judge from a different model family than the agent, validated against hand labels.
 - **Safety:** ticket text is data, never instructions; override attempts are rejected before any model call; PII is masked and every read is scoped to one merchant. Mapped to the OWASP LLM Top 10 2026 in [SECURITY.md](../SECURITY.md).
@@ -47,7 +47,7 @@ TypeScript on Node 22 (pnpm workspace) · SQLite with FTS5 and sqlite-vec · MCP
 
 - **Measured:** 69.2% of eval runs pass (81 of 117, 40 cases × 3 repeats) on an untuned agent. Cost: $0 (about $0.16 per 100 tickets at list price).
 - **Judge:** 14 of the 16 replies scored so far pass (mean 4.38 out of 5). Agreement with human labels is **not measured yet**: it needs your 15 labels.
-- **Not done:** the agent fixes from Phase 8 are parked on a branch and unmeasured, and the API, UI and approvals are not built. Details: [docs/failures.md](failures.md).
+- **Not done:** the agent fixes from Phase 8 are parked on a branch and unmeasured, and the UI and the CI gate are not built. Details: [docs/failures.md](failures.md).
 
 ## Run it
 

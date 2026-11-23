@@ -164,3 +164,14 @@ Prompt structure: role, rules and schema in the system prompt (a versioned file)
 - **Hand labels:** `pnpm eval:labels` writes `evals/labels/to-label.md` (15 replies, no judge score shown) and a blank `judge-labels.yaml`; the owner fills in pass or fail. Agreement goes into the scorecard. Below about 80%: make the rubric more specific and re-record the judge. **Never edit a label to raise agreement.**
 - **Guards** (`packages/agent/src/guard.ts`, mapped to OWASP in `SECURITY.md`): input quarantine, override markers REJECTed before any model call (exit `quarantined`), retrieved clauses that give orders to the assistant cannot be cited, a reply may not repeat the system prompt. They are request-neutral: a normal ticket reaches the model unchanged, so recordings keep replaying. Any new pattern must come with a test that it matches none of the 40 eval tickets (except attacks), none of the real policy clauses and none of the agent's real replies.
 - The OWASP list used is **2026** (LLM01 Prompt Injection to LLM10 Improper Output Handling), read from the official repository: the poisoned-policy case maps to LLM09 and LLM05.
+
+## API, queue and approvals (Phase 10)
+
+- Code: `apps/api` (`app.ts` Express routes, `auth.ts` JWT, `rate-limit.ts`, `worker.ts`, entrypoints `server.ts`, `worker-main.ts`, `token.ts`), `packages/data/src/{runs,queue}.ts`, write tools `packages/mcp-server/src/tools/{create-escalation,send-reply}.ts`. Design: DESIGN.md 2.7.
+- Run: `pnpm api:start` (port 3200, loopback), `pnpm api:worker` in a second terminal, `pnpm api:token --tenant tenant_a --role reviewer` for a token. Needs `JWT_SECRET` (32+ characters) in `.env`. The worker uses `PROVIDER_MODE` (replay by default: a ticket with no recording fails after 3 attempts and the run is marked failed with the reason).
+- **The write tools refuse unless an approved record exists, and the call must match exactly what was approved.** The check lives inside the tool; every route goes through `invokeTool`. Never add a route or a code path that writes to `outbox` directly.
+- **Tenant from the token only.** Never read a merchant from a body, header or URL. Another merchant's run, approval or stream is a 404, identical to a missing one.
+- `RunStore.findRun` is for the worker only (it serves every merchant); requests use the tenant-scoped `getRun`.
+- A decision, `ESCALATE` or `AUTO_REPLY`, waits as a `pending` approval; `REJECT` has nothing to approve and the run is `done`.
+- New dependencies: `express` (spec's HTTP framework) and `jose` (JWT), and nothing else; rate limit, SSE and tests use the standard library.
+- Tests run over real HTTP on a real Express server with a scripted model: `apps/api/src/api.test.ts`.

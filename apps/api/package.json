@@ -18,6 +18,6 @@
   "scripts": {
     "start": "node src/server.ts",
     "worker": "node src/worker-main.ts",
-    "token": "node src/token.ts"
+    "make-token": "node src/token.ts"
   }
 }

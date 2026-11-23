@@ -173,6 +173,20 @@ Below the confidence threshold (0.5 for now; Phase 8 sets it from data), an AUTO
 
 **Recording reality.** One recording pass is about 3 model calls per case. Gemini 3.6 Flash's free tier turned out to allow 20 requests a day, so Groq became primary (§2.4); a 429 is never retried. Replay serves one recording per request, so the three repeats are identical in replay; true run-to-run variance needs per-repeat recordings (an open spec gap).
 
+### 2.7 apps/api and the worker (Phase 10)
+
+**Two processes, one SQLite file.** The API (`apps/api/src/app.ts`) only queues a ticket, shows what happened to it, and lets a reviewer decide. It never runs the agent. The worker (`worker.ts`) drains the `jobs` table: claim under a lease, run the real agent through the real MCP tools, store the trace (appended step by step, so the SSE stream is live) and the decision, and file the agent's proposal as one pending approval.
+
+**Queue.** `packages/data/src/queue.ts`. A claim counts as an attempt, so a worker that dies mid-job loses nothing (the lease expires and the job is claimed again) and a job that keeps killing workers is dead-lettered. A failure retries with backoff (2 s, 4 s, ... capped at 60 s) up to `max_attempts` (3), then the job is `dead` and the run is `failed` with the reason. A run, its ticket and its job are one transaction, so "run exists" and "job exists" cannot disagree.
+
+**Approvals, the part that matters.** The write tools refuse unless an approved record exists, and the approval is bound to the exact payload: the reply text and clauses, or the escalation reason and summary. `POST /approvals/:id/approve` records the decision, then performs the write _through the tool_, so the tool's own check is the single enforcement point: no route can skip it. A write goes into the `outbox` once per approval (a UNIQUE constraint), so approving twice sends nothing twice. Nothing is actually sent to a customer: the outbox is the record of what would be; delivery is out of scope.
+
+**Auth.** HS256 JWT with `sub`, `tenant` and `role` (`agent` or `reviewer`). `jose` verifies it (algorithm pinned, expiry required). The merchant is read from the token only.
+
+**Versioning and paths.** Routes live under `/v1` and also answer unversioned, as the spec writes them.
+
+**Not here.** No login endpoint, no token revocation, no delivery of the approved reply, no editing of a proposal before approval. The rate limiter is in memory (one API process).
+
 ## 3. Trade-offs
 
 - Hand-written state machine vs a framework (and the LangGraph port): ADR 0001
