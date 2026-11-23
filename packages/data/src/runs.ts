@@ -98,10 +98,19 @@ export interface RunStore {
   /** Atomically creates the ticket, the run and its job. A repeated idempotency key returns the original run. */
   createRun(input: NewRun): { run: RunRecord; created: boolean };
   getRun(tenantId: string, runId: string): RunRecord | null;
+  /**
+   * A run by ID alone, for the worker, which serves every tenant and takes the tenant from the run
+   * itself. Never expose this to a request: requests use getRun, which is tenant-scoped.
+   */
+  findRun(runId: string): RunRecord | null;
+  /** Append one step as it happens, so a run's trace can be streamed live. Repeating a seq is ignored. */
+  appendStep(runId: string, step: StepInput): void;
   /** Newest first. */
   listRuns(tenantId: string, opts?: { limit?: number }): RunRecord[];
   listSteps(tenantId: string, runId: string): StepRecord[] | null;
   markRunning(runId: string): void;
+  /** Clear a run's trace before a retried attempt, so two attempts never interleave their steps. */
+  resetSteps(runId: string): void;
   /** Idempotent: a run that is no longer queued or running is left as it is. Returns whether it changed. */
   completeRun(runId: string, result: CompletedRun): boolean;
   failRun(runId: string, failure: unknown): boolean;
@@ -207,8 +216,9 @@ export function createRunStore(db: Db, options: { now?: () => Date } = {}): RunS
       "SELECT seq, kind, name, input_json, output_json, duration_ms, created_at FROM run_steps WHERE run_id = ? ORDER BY seq",
     ),
     insStep: db.prepare(
-      "INSERT INTO run_steps (run_id, seq, kind, name, input_json, output_json, duration_ms, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+      "INSERT OR IGNORE INTO run_steps (run_id, seq, kind, name, input_json, output_json, duration_ms, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
     ),
+    clearSteps: db.prepare("DELETE FROM run_steps WHERE run_id = ?"),
     running: db.prepare("UPDATE runs SET status = 'running' WHERE id = ? AND status = 'queued'"),
     complete: db.prepare(
       `UPDATE runs SET status = ?, decision = ?, decision_json = ?, input_tokens = ?, output_tokens = ?,
@@ -286,6 +296,22 @@ export function createRunStore(db: Db, options: { now?: () => Date } = {}): RunS
       const r = q.run.get(tenantId, runId) as RunRow | undefined;
       return r ? toRun(r) : null;
     },
+    findRun(runId) {
+      const r = q.runAny.get(runId) as RunRow | undefined;
+      return r ? toRun(r) : null;
+    },
+    appendStep(runId, s) {
+      q.insStep.run(
+        runId,
+        s.seq,
+        s.kind,
+        s.name,
+        s.input === undefined ? null : JSON.stringify(s.input),
+        s.output === undefined ? null : JSON.stringify(s.output),
+        s.durationMs ?? null,
+        now(),
+      );
+    },
     listRuns(tenantId, opts = {}) {
       const limit = Math.min(Math.max(opts.limit ?? 50, 1), 200);
       return (q.list.all(tenantId, limit) as RunRow[]).map(toRun);
@@ -301,6 +327,9 @@ export function createRunStore(db: Db, options: { now?: () => Date } = {}): RunS
         durationMs: (s.duration_ms as number | null) ?? undefined,
         createdAt: s.created_at as string,
       }));
+    },
+    resetSteps(runId) {
+      q.clearSteps.run(runId);
     },
     markRunning(runId) {
       q.running.run(runId);

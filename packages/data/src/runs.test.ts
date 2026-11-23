@@ -82,6 +82,23 @@ describe("creating a run", () => {
   });
 });
 
+describe("live steps and the worker's view", () => {
+  it("steps appended one by one survive completion with no duplicates", () => {
+    const { run } = runs.createRun(ticket);
+    runs.appendStep(run.id, { seq: 1, kind: "transition", name: "start → classify" });
+    runs.appendStep(run.id, { seq: 1, kind: "transition", name: "start → classify" }); // repeated: ignored
+    expect(runs.listSteps("tenant_a", run.id)).toHaveLength(1);
+    runs.completeRun(run.id, done()); // carries seq 1 and 2 again
+    expect(runs.listSteps("tenant_a", run.id)!.map((s) => s.seq)).toEqual([1, 2]);
+  });
+
+  it("findRun is the worker's lookup by ID alone; requests still use the scoped getRun", () => {
+    const { run } = runs.createRun(ticket);
+    expect(runs.findRun(run.id)!.tenantId).toBe("tenant_a");
+    expect(runs.getRun("tenant_b", run.id)).toBeNull();
+  });
+});
+
 describe("tenant scoping", () => {
   it("another merchant's run, steps and approvals are not found, exactly like a missing one", () => {
     const { run } = runs.createRun(ticket);

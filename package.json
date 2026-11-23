@@ -25,7 +25,10 @@
     "agent:run": "pnpm --filter @triage/agent agent:run",
     "eval": "pnpm --filter @triage/evals eval",
     "eval:charts": ".venv/bin/python scripts/report.py",
-    "eval:labels": "pnpm --filter @triage/evals labels"
+    "eval:labels": "pnpm --filter @triage/evals labels",
+    "api:start": "pnpm --filter @triage/api start",
+    "api:worker": "pnpm --filter @triage/api worker",
+    "api:token": "pnpm --filter @triage/api token"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
