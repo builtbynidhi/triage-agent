@@ -160,5 +160,10 @@ export function createJudgeRouter(
     cassettes: createCassetteStore(options.cassetteDir ?? CASSETTE_DIR),
     cache: createFileCache(join(repoRoot, ".cache", "llm")),
     ledger: mode === "replay" ? undefined : createLedger({ dir: defaultLedgerDir(repoRoot) }),
+    // The judge has no fallback and nobody waits on it, so a slow answer beats a timeout: each
+    // timeout still spends one of Gemini's 20 daily requests. Measured 2026-11-24: under Gemini's
+    // "high demand" periods a judge call ran past the default 45 s twice in a row. The timeout is
+    // not part of the recording key, so existing recordings are unaffected.
+    timeoutMs: 90_000,
   });
 }
