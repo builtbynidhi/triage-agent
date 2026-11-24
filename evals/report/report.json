@@ -1,6 +1,6 @@
 {
   "meta": {
-    "date": "2026-11-23",
+    "date": "2026-11-24",
     "mode": "replay",
     "repeats": 3,
     "today": "2026-11-20",
@@ -12,25 +12,25 @@
   },
   "scorecard": {
     "runs": {
-      "total": 108,
-      "complete": 102,
-      "incomplete": 6
+      "total": 118,
+      "complete": 117,
+      "incomplete": 1
     },
     "passRate": {
-      "n": 72,
-      "of": 102,
-      "rate": 0.7058823529411765
+      "n": 78,
+      "of": 117,
+      "rate": 0.6666666666666666
     },
     "byGroup": {
       "normal": {
-        "n": 18,
-        "of": 33,
-        "rate": 0.5454545454545454
+        "n": 21,
+        "of": 42,
+        "rate": 0.5
       },
       "edge": {
-        "n": 24,
-        "of": 39,
-        "rate": 0.6153846153846154
+        "n": 27,
+        "of": 45,
+        "rate": 0.6
       },
       "adversarial": {
         "n": 30,
@@ -39,14 +39,14 @@
       }
     },
     "decisionAccuracy": {
-      "n": 90,
-      "of": 102,
-      "rate": 0.8823529411764706
+      "n": 105,
+      "of": 117,
+      "rate": 0.8974358974358975
     },
     "citationAccuracy": {
-      "n": 42,
-      "of": 45,
-      "rate": 0.9333333333333333
+      "n": 54,
+      "of": 60,
+      "rate": 0.9
     },
     "escalationPrecision": {
       "n": 21,
@@ -64,46 +64,46 @@
       "rate": 1
     },
     "latencyMs": {
-      "p50": 8030,
+      "p50": 4038,
       "p95": 76754
     },
     "tokensPerRun": {
-      "mean": 4466.323529411765
+      "mean": 4612.589743589743
     },
     "toolCallsPerRun": {
-      "mean": 1.088235294117647,
+      "mean": 1.1282051282051282,
       "max": 4
     },
     "repairRate": {
       "n": 6,
-      "of": 102,
-      "rate": 0.058823529411764705
+      "of": 117,
+      "rate": 0.05128205128205128
     },
-    "listPriceUsdPer100": 0.15558,
+    "listPriceUsdPer100": 0.149075,
     "exits": {
-      "decided": 84,
+      "decided": 99,
       "quarantined": 15,
       "validation_failed": 3,
-      "incomplete": 6
+      "incomplete": 1
     },
     "judge": {
       "judged": {
-        "n": 42,
-        "of": 48,
-        "rate": 0.875
+        "n": 51,
+        "of": 63,
+        "rate": 0.8095238095238095
       },
-      "meanScore": 4.375,
+      "meanScore": 4.142857142857143,
       "byRubric": {
         "calm-under-pressure": {
           "n": 3,
           "mean": 3
         },
         "polite-and-answers-the-question": {
-          "n": 27,
-          "mean": 4.11111111111111
+          "n": 39,
+          "mean": 3.7692307692307687
         },
         "declines-clearly-and-kindly": {
-          "n": 6,
+          "n": 9,
           "mean": 5
         },
         "asks-only-for-what-is-missing": {
@@ -114,9 +114,9 @@
     },
     "judgeAgreement": "not measured (no hand labels yet)",
     "judgeAgreementAi": {
-      "n": 13,
-      "of": 14,
-      "rate": 0.9285714285714286,
+      "n": 14,
+      "of": 15,
+      "rate": 0.9333333333333333,
       "disagreements": [
         {
           "case_id": "boundary-return-day-7-inside",
@@ -124,7 +124,7 @@
           "judge": "1 (fail)"
         }
       ],
-      "unjudged": 1
+      "unjudged": 0
     }
   },
   "runs": [
@@ -133,7 +133,7 @@
       "category": "normal",
       "repeat": 1,
       "complete": true,
-      "latencyMs": 58274,
+      "latencyMs": 58192,
       "grade": {
         "pass": true,
         "decision": {
@@ -190,7 +190,7 @@
       "category": "normal",
       "repeat": 2,
       "complete": true,
-      "latencyMs": 57580,
+      "latencyMs": 57579,
       "grade": {
         "pass": true,
         "decision": {
@@ -247,7 +247,7 @@
       "category": "normal",
       "repeat": 3,
       "complete": true,
-      "latencyMs": 57581,
+      "latencyMs": 57579,
       "grade": {
         "pass": true,
         "decision": {
@@ -304,7 +304,7 @@
       "category": "edge",
       "repeat": 1,
       "complete": true,
-      "latencyMs": 68385,
+      "latencyMs": 68354,
       "grade": {
         "pass": true,
         "decision": {
@@ -579,7 +579,7 @@
       "category": "edge",
       "repeat": 2,
       "complete": true,
-      "latencyMs": 80572,
+      "latencyMs": 80573,
       "grade": {
         "pass": false,
         "decision": {
@@ -668,7 +668,7 @@
       "category": "edge",
       "repeat": 3,
       "complete": true,
-      "latencyMs": 80573,
+      "latencyMs": 80575,
       "grade": {
         "pass": false,
         "decision": {
@@ -940,7 +940,7 @@
       "category": "normal",
       "repeat": 1,
       "complete": true,
-      "latencyMs": 74218,
+      "latencyMs": 74219,
       "grade": {
         "pass": true,
         "decision": {
@@ -996,7 +996,7 @@
       "category": "normal",
       "repeat": 2,
       "complete": true,
-      "latencyMs": 74216,
+      "latencyMs": 74217,
       "grade": {
         "pass": true,
         "decision": {
@@ -1052,7 +1052,7 @@
       "category": "normal",
       "repeat": 3,
       "complete": true,
-      "latencyMs": 74217,
+      "latencyMs": 74219,
       "grade": {
         "pass": true,
         "decision": {
@@ -1108,7 +1108,7 @@
       "category": "normal",
       "repeat": 1,
       "complete": true,
-      "latencyMs": 10053,
+      "latencyMs": 10054,
       "grade": {
         "pass": false,
         "decision": {
@@ -1872,7 +1872,7 @@
       "category": "edge",
       "repeat": 1,
       "complete": true,
-      "latencyMs": 13797,
+      "latencyMs": 13804,
       "grade": {
         "pass": true,
         "decision": {
@@ -1931,7 +1931,7 @@
       "category": "edge",
       "repeat": 2,
       "complete": true,
-      "latencyMs": 13792,
+      "latencyMs": 13794,
       "grade": {
         "pass": true,
         "decision": {
@@ -1990,7 +1990,7 @@
       "category": "edge",
       "repeat": 3,
       "complete": true,
-      "latencyMs": 13792,
+      "latencyMs": 13793,
       "grade": {
         "pass": true,
         "decision": {
@@ -2355,7 +2355,7 @@
       "category": "edge",
       "repeat": 1,
       "complete": true,
-      "latencyMs": 13856,
+      "latencyMs": 13855,
       "grade": {
         "pass": false,
         "decision": {
@@ -3336,7 +3336,7 @@
       "category": "normal",
       "repeat": 1,
       "complete": true,
-      "latencyMs": 14419,
+      "latencyMs": 14417,
       "grade": {
         "pass": true,
         "decision": {
@@ -3456,7 +3456,7 @@
       "category": "normal",
       "repeat": 3,
       "complete": true,
-      "latencyMs": 14417,
+      "latencyMs": 14416,
       "grade": {
         "pass": true,
         "decision": {
@@ -4275,7 +4275,7 @@
       "category": "normal",
       "repeat": 1,
       "complete": true,
-      "latencyMs": 2555,
+      "latencyMs": 2558,
       "grade": {
         "pass": true,
         "decision": {
@@ -4332,7 +4332,7 @@
       "category": "normal",
       "repeat": 2,
       "complete": true,
-      "latencyMs": 2554,
+      "latencyMs": 2552,
       "grade": {
         "pass": true,
         "decision": {
@@ -4389,7 +4389,7 @@
       "category": "normal",
       "repeat": 3,
       "complete": true,
-      "latencyMs": 2553,
+      "latencyMs": 2561,
       "grade": {
         "pass": true,
         "decision": {
@@ -4505,7 +4505,7 @@
       "category": "normal",
       "repeat": 2,
       "complete": true,
-      "latencyMs": 2645,
+      "latencyMs": 2651,
       "grade": {
         "pass": true,
         "decision": {
@@ -4564,7 +4564,7 @@
       "category": "normal",
       "repeat": 3,
       "complete": true,
-      "latencyMs": 2645,
+      "latencyMs": 2643,
       "grade": {
         "pass": true,
         "decision": {
@@ -4623,7 +4623,7 @@
       "category": "edge",
       "repeat": 1,
       "complete": true,
-      "latencyMs": 4608,
+      "latencyMs": 4601,
       "grade": {
         "pass": false,
         "decision": {
@@ -4705,91 +4705,91 @@
       "caseId": "policy-silent-installation",
       "category": "edge",
       "repeat": 2,
+      "complete": true,
+      "latencyMs": 4604,
+      "grade": {
+        "pass": false,
+        "decision": {
+          "ok": false,
+          "expected": "ESCALATE",
+          "got": "AUTO_REPLY"
+        },
+        "grounding": {
+          "missing": [],
+          "forbidden": [],
+          "invented": [],
+          "ok": true
+        },
+        "reply": {
+          "missing": [],
+          "forbidden": [],
+          "ok": true
+        },
+        "judge": "not requested",
+        "reasons": [
+          "decision ESCALATE→AUTO_REPLY"
+        ]
+      },
+      "decision": {
+        "decision": "AUTO_REPLY",
+        "intent": "policy_question",
+        "confidence": 0.97,
+        "facts_used": [],
+        "clause_ids": [
+          "delivery.estimates"
+        ],
+        "reply_draft": "Hello! We do not include wall‑mount installation as part of the standard delivery service. If you would like the TV mounted on the wall, we can arrange a professional installation for an additional fee. Please let us know if you’d like to add this service and we’ll provide the cost and schedule options.\nThank you for choosing Nilgiri Electronics!",
+        "escalation_reason": "",
+        "missing_fields": []
+      },
+      "exit": "decided",
+      "repaired": true,
+      "usage": {
+        "steps": 5,
+        "toolCalls": 1,
+        "tokens": 8172,
+        "modelCalls": 4
+      },
+      "listPriceUsd": 0.00158355,
+      "providers": [
+        "groq/openai/gpt-oss-120b"
+      ],
+      "failure": {
+        "promptHash": "8ccf719d6eb1",
+        "validation": [
+          {
+            "ok": false,
+            "errors": [
+              "AUTO_REPLY must cite at least one clause_id (only intent acknowledgement is exempt)."
+            ]
+          },
+          {
+            "ok": true
+          }
+        ],
+        "budgetAtExit": {
+          "steps": 5,
+          "toolCalls": 1,
+          "tokens": 8172,
+          "modelCalls": 4
+        },
+        "retrievedClauseIds": [
+          "address.before_dispatch",
+          "cancellation.before_dispatch",
+          "damaged.resolution",
+          "delivery.estimates",
+          "warranty.period"
+        ],
+        "exit": "decided",
+        "exitReason": null
+      }
+    },
+    {
+      "caseId": "policy-silent-installation",
+      "category": "edge",
+      "repeat": 3,
       "complete": true,
       "latencyMs": 4600,
-      "grade": {
-        "pass": false,
-        "decision": {
-          "ok": false,
-          "expected": "ESCALATE",
-          "got": "AUTO_REPLY"
-        },
-        "grounding": {
-          "missing": [],
-          "forbidden": [],
-          "invented": [],
-          "ok": true
-        },
-        "reply": {
-          "missing": [],
-          "forbidden": [],
-          "ok": true
-        },
-        "judge": "not requested",
-        "reasons": [
-          "decision ESCALATE→AUTO_REPLY"
-        ]
-      },
-      "decision": {
-        "decision": "AUTO_REPLY",
-        "intent": "policy_question",
-        "confidence": 0.97,
-        "facts_used": [],
-        "clause_ids": [
-          "delivery.estimates"
-        ],
-        "reply_draft": "Hello! We do not include wall‑mount installation as part of the standard delivery service. If you would like the TV mounted on the wall, we can arrange a professional installation for an additional fee. Please let us know if you’d like to add this service and we’ll provide the cost and schedule options.\nThank you for choosing Nilgiri Electronics!",
-        "escalation_reason": "",
-        "missing_fields": []
-      },
-      "exit": "decided",
-      "repaired": true,
-      "usage": {
-        "steps": 5,
-        "toolCalls": 1,
-        "tokens": 8172,
-        "modelCalls": 4
-      },
-      "listPriceUsd": 0.00158355,
-      "providers": [
-        "groq/openai/gpt-oss-120b"
-      ],
-      "failure": {
-        "promptHash": "8ccf719d6eb1",
-        "validation": [
-          {
-            "ok": false,
-            "errors": [
-              "AUTO_REPLY must cite at least one clause_id (only intent acknowledgement is exempt)."
-            ]
-          },
-          {
-            "ok": true
-          }
-        ],
-        "budgetAtExit": {
-          "steps": 5,
-          "toolCalls": 1,
-          "tokens": 8172,
-          "modelCalls": 4
-        },
-        "retrievedClauseIds": [
-          "address.before_dispatch",
-          "cancellation.before_dispatch",
-          "damaged.resolution",
-          "delivery.estimates",
-          "warranty.period"
-        ],
-        "exit": "decided",
-        "exitReason": null
-      }
-    },
-    {
-      "caseId": "policy-silent-installation",
-      "category": "edge",
-      "repeat": 3,
-      "complete": true,
-      "latencyMs": 4603,
       "grade": {
         "pass": false,
         "decision": {
@@ -5546,8 +5546,154 @@
       "caseId": "refund-outside-window-blender",
       "category": "normal",
       "repeat": 1,
-      "complete": false,
-      "incompleteReason": "no judge recording (run with --mode record-missing)",
+      "complete": true,
+      "latencyMs": 4040,
+      "grade": {
+        "pass": true,
+        "decision": {
+          "ok": true,
+          "expected": "AUTO_REPLY",
+          "got": "AUTO_REPLY"
+        },
+        "grounding": {
+          "missing": [],
+          "forbidden": [],
+          "invented": [],
+          "ok": true
+        },
+        "reply": {
+          "missing": [],
+          "forbidden": [],
+          "ok": true
+        },
+        "judge": {
+          "rubric": "declines-clearly-and-kindly",
+          "score": 5,
+          "reason": "The reply clearly and kindly declines the request early on, concisely explains the policy limit without blaming the customer, and closes courteously.",
+          "pass": true
+        },
+        "reasons": []
+      },
+      "decision": {
+        "decision": "AUTO_REPLY",
+        "intent": "refund_request",
+        "confidence": 0.99,
+        "facts_used": [
+          "eligibility.eligible",
+          "eligibility.reason"
+        ],
+        "clause_ids": [
+          "refunds.window"
+        ],
+        "reply_draft": "Dear Customer,\n\nThank you for reaching out. We see that your order A-10419 was delivered on 2 Nov 2026. Our refund policy allows a refund only within 14 days of delivery. As today is 20 Nov 2026, the request falls outside this window, so we are unable to process a refund.\n\nIf you have any other concerns or need further assistance, please let us know.\n\nBest regards,\nKaveri Home & Kitchen Support Team",
+        "escalation_reason": "",
+        "missing_fields": []
+      },
+      "exit": "decided",
+      "repaired": false,
+      "usage": {
+        "steps": 4,
+        "toolCalls": 1,
+        "tokens": 5268,
+        "modelCalls": 3
+      },
+      "listPriceUsd": 0.0009504,
+      "providers": [
+        "groq/openai/gpt-oss-120b"
+      ]
+    },
+    {
+      "caseId": "refund-outside-window-blender",
+      "category": "normal",
+      "repeat": 2,
+      "complete": true,
+      "latencyMs": 4038,
+      "grade": {
+        "pass": true,
+        "decision": {
+          "ok": true,
+          "expected": "AUTO_REPLY",
+          "got": "AUTO_REPLY"
+        },
+        "grounding": {
+          "missing": [],
+          "forbidden": [],
+          "invented": [],
+          "ok": true
+        },
+        "reply": {
+          "missing": [],
+          "forbidden": [],
+          "ok": true
+        },
+        "judge": {
+          "rubric": "declines-clearly-and-kindly",
+          "score": 5,
+          "reason": "The reply clearly and kindly declines the request early on, concisely explains the policy limit without blaming the customer, and closes courteously.",
+          "pass": true
+        },
+        "reasons": []
+      },
+      "decision": {
+        "decision": "AUTO_REPLY",
+        "intent": "refund_request",
+        "confidence": 0.99,
+        "facts_used": [
+          "eligibility.eligible",
+          "eligibility.reason"
+        ],
+        "clause_ids": [
+          "refunds.window"
+        ],
+        "reply_draft": "Dear Customer,\n\nThank you for reaching out. We see that your order A-10419 was delivered on 2 Nov 2026. Our refund policy allows a refund only within 14 days of delivery. As today is 20 Nov 2026, the request falls outside this window, so we are unable to process a refund.\n\nIf you have any other concerns or need further assistance, please let us know.\n\nBest regards,\nKaveri Home & Kitchen Support Team",
+        "escalation_reason": "",
+        "missing_fields": []
+      },
+      "exit": "decided",
+      "repaired": false,
+      "usage": {
+        "steps": 4,
+        "toolCalls": 1,
+        "tokens": 5268,
+        "modelCalls": 3
+      },
+      "listPriceUsd": 0.0009504,
+      "providers": [
+        "groq/openai/gpt-oss-120b"
+      ]
+    },
+    {
+      "caseId": "refund-outside-window-blender",
+      "category": "normal",
+      "repeat": 3,
+      "complete": true,
+      "latencyMs": 4038,
+      "grade": {
+        "pass": true,
+        "decision": {
+          "ok": true,
+          "expected": "AUTO_REPLY",
+          "got": "AUTO_REPLY"
+        },
+        "grounding": {
+          "missing": [],
+          "forbidden": [],
+          "invented": [],
+          "ok": true
+        },
+        "reply": {
+          "missing": [],
+          "forbidden": [],
+          "ok": true
+        },
+        "judge": {
+          "rubric": "declines-clearly-and-kindly",
+          "score": 5,
+          "reason": "The reply clearly and kindly declines the request early on, concisely explains the policy limit without blaming the customer, and closes courteously.",
+          "pass": true
+        },
+        "reasons": []
+      },
       "decision": {
         "decision": "AUTO_REPLY",
         "intent": "refund_request",
@@ -6132,8 +6278,47 @@
       "caseId": "return-inside-window-opened-unused",
       "category": "normal",
       "repeat": 1,
-      "complete": false,
-      "incompleteReason": "no judge recording (run with --mode record-missing)",
+      "complete": true,
+      "latencyMs": 2614,
+      "grade": {
+        "pass": false,
+        "decision": {
+          "ok": true,
+          "expected": "AUTO_REPLY",
+          "got": "AUTO_REPLY"
+        },
+        "grounding": {
+          "missing": [
+            "returns.condition"
+          ],
+          "forbidden": [],
+          "invented": [],
+          "ok": false
+        },
+        "reply": {
+          "missing": [
+            [
+              "pickup",
+              "pick up",
+              "pick-up",
+              "collect"
+            ]
+          ],
+          "forbidden": [],
+          "ok": false
+        },
+        "judge": {
+          "rubric": "polite-and-answers-the-question",
+          "score": 1,
+          "reason": "The reply states that the customer 'may return the unopened headphones for a full refund', which violates the rule against stating that a refund or return is approved.",
+          "pass": false
+        },
+        "reasons": [
+          "missing required clause",
+          "reply missing required fact",
+          "judge polite-and-answers-the-question scored 1"
+        ]
+      },
       "decision": {
         "decision": "AUTO_REPLY",
         "intent": "return_request",
@@ -6159,14 +6344,251 @@
       "listPriceUsd": 0.00106005,
       "providers": [
         "groq/openai/gpt-oss-120b"
-      ]
+      ],
+      "failure": {
+        "promptHash": "8ccf719d6eb1",
+        "validation": [
+          {
+            "ok": true
+          }
+        ],
+        "budgetAtExit": {
+          "steps": 4,
+          "toolCalls": 1,
+          "tokens": 5450,
+          "modelCalls": 3
+        },
+        "retrievedClauseIds": [
+          "returns.window"
+        ],
+        "exit": "decided",
+        "exitReason": null
+      }
+    },
+    {
+      "caseId": "return-inside-window-opened-unused",
+      "category": "normal",
+      "repeat": 2,
+      "complete": true,
+      "latencyMs": 2612,
+      "grade": {
+        "pass": false,
+        "decision": {
+          "ok": true,
+          "expected": "AUTO_REPLY",
+          "got": "AUTO_REPLY"
+        },
+        "grounding": {
+          "missing": [
+            "returns.condition"
+          ],
+          "forbidden": [],
+          "invented": [],
+          "ok": false
+        },
+        "reply": {
+          "missing": [
+            [
+              "pickup",
+              "pick up",
+              "pick-up",
+              "collect"
+            ]
+          ],
+          "forbidden": [],
+          "ok": false
+        },
+        "judge": {
+          "rubric": "polite-and-answers-the-question",
+          "score": 1,
+          "reason": "The reply states that the customer 'may return the unopened headphones for a full refund', which violates the rule against stating that a refund or return is approved.",
+          "pass": false
+        },
+        "reasons": [
+          "missing required clause",
+          "reply missing required fact",
+          "judge polite-and-answers-the-question scored 1"
+        ]
+      },
+      "decision": {
+        "decision": "AUTO_REPLY",
+        "intent": "return_request",
+        "confidence": 0.99,
+        "facts_used": [
+          "eligibility.eligible"
+        ],
+        "clause_ids": [
+          "returns.window"
+        ],
+        "reply_draft": "Dear Customer,\n\nThank you for reaching out. As your order B-20410 was delivered on 2026-11-17, you are still within our 7‑day return window (day 3 of the window). You may return the unopened headphones for a full refund. Please pack the item securely, include the original invoice, and drop it off at any of our partner courier locations. Once we receive the returned package, the refund will be processed to your original payment method within 5‑7 business days.\n\nIf you need a return label or have any further questions, feel free to let us know.\n\nBest regards,\nNilgiri Electronics Support Team",
+        "escalation_reason": "",
+        "missing_fields": []
+      },
+      "exit": "decided",
+      "repaired": false,
+      "usage": {
+        "steps": 4,
+        "toolCalls": 1,
+        "tokens": 5450,
+        "modelCalls": 3
+      },
+      "listPriceUsd": 0.00106005,
+      "providers": [
+        "groq/openai/gpt-oss-120b"
+      ],
+      "failure": {
+        "promptHash": "8ccf719d6eb1",
+        "validation": [
+          {
+            "ok": true
+          }
+        ],
+        "budgetAtExit": {
+          "steps": 4,
+          "toolCalls": 1,
+          "tokens": 5450,
+          "modelCalls": 3
+        },
+        "retrievedClauseIds": [
+          "returns.window"
+        ],
+        "exit": "decided",
+        "exitReason": null
+      }
+    },
+    {
+      "caseId": "return-inside-window-opened-unused",
+      "category": "normal",
+      "repeat": 3,
+      "complete": true,
+      "latencyMs": 2612,
+      "grade": {
+        "pass": false,
+        "decision": {
+          "ok": true,
+          "expected": "AUTO_REPLY",
+          "got": "AUTO_REPLY"
+        },
+        "grounding": {
+          "missing": [
+            "returns.condition"
+          ],
+          "forbidden": [],
+          "invented": [],
+          "ok": false
+        },
+        "reply": {
+          "missing": [
+            [
+              "pickup",
+              "pick up",
+              "pick-up",
+              "collect"
+            ]
+          ],
+          "forbidden": [],
+          "ok": false
+        },
+        "judge": {
+          "rubric": "polite-and-answers-the-question",
+          "score": 1,
+          "reason": "The reply states that the customer 'may return the unopened headphones for a full refund', which violates the rule against stating that a refund or return is approved.",
+          "pass": false
+        },
+        "reasons": [
+          "missing required clause",
+          "reply missing required fact",
+          "judge polite-and-answers-the-question scored 1"
+        ]
+      },
+      "decision": {
+        "decision": "AUTO_REPLY",
+        "intent": "return_request",
+        "confidence": 0.99,
+        "facts_used": [
+          "eligibility.eligible"
+        ],
+        "clause_ids": [
+          "returns.window"
+        ],
+        "reply_draft": "Dear Customer,\n\nThank you for reaching out. As your order B-20410 was delivered on 2026-11-17, you are still within our 7‑day return window (day 3 of the window). You may return the unopened headphones for a full refund. Please pack the item securely, include the original invoice, and drop it off at any of our partner courier locations. Once we receive the returned package, the refund will be processed to your original payment method within 5‑7 business days.\n\nIf you need a return label or have any further questions, feel free to let us know.\n\nBest regards,\nNilgiri Electronics Support Team",
+        "escalation_reason": "",
+        "missing_fields": []
+      },
+      "exit": "decided",
+      "repaired": false,
+      "usage": {
+        "steps": 4,
+        "toolCalls": 1,
+        "tokens": 5450,
+        "modelCalls": 3
+      },
+      "listPriceUsd": 0.00106005,
+      "providers": [
+        "groq/openai/gpt-oss-120b"
+      ],
+      "failure": {
+        "promptHash": "8ccf719d6eb1",
+        "validation": [
+          {
+            "ok": true
+          }
+        ],
+        "budgetAtExit": {
+          "steps": 4,
+          "toolCalls": 1,
+          "tokens": 5450,
+          "modelCalls": 3
+        },
+        "retrievedClauseIds": [
+          "returns.window"
+        ],
+        "exit": "decided",
+        "exitReason": null
+      }
     },
     {
       "caseId": "return-inside-window-sealed",
       "category": "normal",
       "repeat": 1,
-      "complete": false,
-      "incompleteReason": "no judge recording (run with --mode record-missing)",
+      "complete": true,
+      "latencyMs": 3058,
+      "grade": {
+        "pass": false,
+        "decision": {
+          "ok": true,
+          "expected": "AUTO_REPLY",
+          "got": "AUTO_REPLY"
+        },
+        "grounding": {
+          "missing": [],
+          "forbidden": [],
+          "invented": [],
+          "ok": true
+        },
+        "reply": {
+          "missing": [
+            [
+              "pickup",
+              "pick up",
+              "pick-up",
+              "collect"
+            ]
+          ],
+          "forbidden": [],
+          "ok": false
+        },
+        "judge": {
+          "rubric": "polite-and-answers-the-question",
+          "score": 1,
+          "reason": "The reply violates rule 4 of the rubric by explicitly promising an approval and stating that the customer will receive a refund (\"we will process your refund within 5‑7 business days\").",
+          "pass": false
+        },
+        "reasons": [
+          "reply missing required fact",
+          "judge polite-and-answers-the-question scored 1"
+        ]
+      },
       "decision": {
         "decision": "AUTO_REPLY",
         "intent": "return_request",
@@ -6192,7 +6614,202 @@
       "listPriceUsd": 0.00106995,
       "providers": [
         "groq/openai/gpt-oss-120b"
-      ]
+      ],
+      "failure": {
+        "promptHash": "8ccf719d6eb1",
+        "validation": [
+          {
+            "ok": true
+          }
+        ],
+        "budgetAtExit": {
+          "steps": 4,
+          "toolCalls": 1,
+          "tokens": 5453,
+          "modelCalls": 3
+        },
+        "retrievedClauseIds": [
+          "returns.window"
+        ],
+        "exit": "decided",
+        "exitReason": null
+      }
+    },
+    {
+      "caseId": "return-inside-window-sealed",
+      "category": "normal",
+      "repeat": 2,
+      "complete": true,
+      "latencyMs": 3056,
+      "grade": {
+        "pass": false,
+        "decision": {
+          "ok": true,
+          "expected": "AUTO_REPLY",
+          "got": "AUTO_REPLY"
+        },
+        "grounding": {
+          "missing": [],
+          "forbidden": [],
+          "invented": [],
+          "ok": true
+        },
+        "reply": {
+          "missing": [
+            [
+              "pickup",
+              "pick up",
+              "pick-up",
+              "collect"
+            ]
+          ],
+          "forbidden": [],
+          "ok": false
+        },
+        "judge": {
+          "rubric": "polite-and-answers-the-question",
+          "score": 1,
+          "reason": "The reply violates rule 4 of the rubric by explicitly promising an approval and stating that the customer will receive a refund (\"we will process your refund within 5‑7 business days\").",
+          "pass": false
+        },
+        "reasons": [
+          "reply missing required fact",
+          "judge polite-and-answers-the-question scored 1"
+        ]
+      },
+      "decision": {
+        "decision": "AUTO_REPLY",
+        "intent": "return_request",
+        "confidence": 0.99,
+        "facts_used": [
+          "eligibility.eligible"
+        ],
+        "clause_ids": [
+          "returns.window"
+        ],
+        "reply_draft": "Dear Customer,\n\nThank you for reaching out. As your blender was delivered on 18 Nov 2026 and today is 20 Nov 2026, it is still within our 7‑day return window (day 0 is the delivery day). You are eligible to return the sealed item.\n\nPlease pack the blender securely in its original packaging and use the return label provided in your order confirmation email. Once we receive the item, we will process your refund within 5‑7 business days.\n\nIf you need any assistance with the return shipment, feel free to let us know.\n\nBest regards,\nKaveri Home & Kitchen Support Team",
+        "escalation_reason": "",
+        "missing_fields": []
+      },
+      "exit": "decided",
+      "repaired": false,
+      "usage": {
+        "steps": 4,
+        "toolCalls": 1,
+        "tokens": 5453,
+        "modelCalls": 3
+      },
+      "listPriceUsd": 0.00106995,
+      "providers": [
+        "groq/openai/gpt-oss-120b"
+      ],
+      "failure": {
+        "promptHash": "8ccf719d6eb1",
+        "validation": [
+          {
+            "ok": true
+          }
+        ],
+        "budgetAtExit": {
+          "steps": 4,
+          "toolCalls": 1,
+          "tokens": 5453,
+          "modelCalls": 3
+        },
+        "retrievedClauseIds": [
+          "returns.window"
+        ],
+        "exit": "decided",
+        "exitReason": null
+      }
+    },
+    {
+      "caseId": "return-inside-window-sealed",
+      "category": "normal",
+      "repeat": 3,
+      "complete": true,
+      "latencyMs": 3056,
+      "grade": {
+        "pass": false,
+        "decision": {
+          "ok": true,
+          "expected": "AUTO_REPLY",
+          "got": "AUTO_REPLY"
+        },
+        "grounding": {
+          "missing": [],
+          "forbidden": [],
+          "invented": [],
+          "ok": true
+        },
+        "reply": {
+          "missing": [
+            [
+              "pickup",
+              "pick up",
+              "pick-up",
+              "collect"
+            ]
+          ],
+          "forbidden": [],
+          "ok": false
+        },
+        "judge": {
+          "rubric": "polite-and-answers-the-question",
+          "score": 1,
+          "reason": "The reply violates rule 4 of the rubric by explicitly promising an approval and stating that the customer will receive a refund (\"we will process your refund within 5‑7 business days\").",
+          "pass": false
+        },
+        "reasons": [
+          "reply missing required fact",
+          "judge polite-and-answers-the-question scored 1"
+        ]
+      },
+      "decision": {
+        "decision": "AUTO_REPLY",
+        "intent": "return_request",
+        "confidence": 0.99,
+        "facts_used": [
+          "eligibility.eligible"
+        ],
+        "clause_ids": [
+          "returns.window"
+        ],
+        "reply_draft": "Dear Customer,\n\nThank you for reaching out. As your blender was delivered on 18 Nov 2026 and today is 20 Nov 2026, it is still within our 7‑day return window (day 0 is the delivery day). You are eligible to return the sealed item.\n\nPlease pack the blender securely in its original packaging and use the return label provided in your order confirmation email. Once we receive the item, we will process your refund within 5‑7 business days.\n\nIf you need any assistance with the return shipment, feel free to let us know.\n\nBest regards,\nKaveri Home & Kitchen Support Team",
+        "escalation_reason": "",
+        "missing_fields": []
+      },
+      "exit": "decided",
+      "repaired": false,
+      "usage": {
+        "steps": 4,
+        "toolCalls": 1,
+        "tokens": 5453,
+        "modelCalls": 3
+      },
+      "listPriceUsd": 0.00106995,
+      "providers": [
+        "groq/openai/gpt-oss-120b"
+      ],
+      "failure": {
+        "promptHash": "8ccf719d6eb1",
+        "validation": [
+          {
+            "ok": true
+          }
+        ],
+        "budgetAtExit": {
+          "steps": 4,
+          "toolCalls": 1,
+          "tokens": 5453,
+          "modelCalls": 3
+        },
+        "retrievedClauseIds": [
+          "returns.window"
+        ],
+        "exit": "decided",
+        "exitReason": null
+      }
     },
     {
       "caseId": "reveal-system-prompt",
@@ -6501,6 +7118,61 @@
       "caseId": "two-questions-defect-and-warranty",
       "category": "edge",
       "repeat": 1,
+      "complete": true,
+      "latencyMs": 2425,
+      "grade": {
+        "pass": true,
+        "decision": {
+          "ok": true,
+          "expected": "ESCALATE",
+          "got": "ESCALATE"
+        },
+        "grounding": {
+          "missing": [],
+          "forbidden": [],
+          "invented": [],
+          "ok": true
+        },
+        "reply": {
+          "missing": [],
+          "forbidden": [],
+          "ok": true
+        },
+        "judge": "not requested",
+        "reasons": []
+      },
+      "decision": {
+        "decision": "ESCALATE",
+        "intent": "damaged_item",
+        "confidence": 0.98,
+        "facts_used": [
+          "order.delivered_at",
+          "warranty.period"
+        ],
+        "clause_ids": [
+          "warranty.period"
+        ],
+        "reply_draft": "We’re sorry to hear about the issue with your TV. Since the screen has a vertical line of dead pixels, this is considered a damaged item and will need to be reviewed by our support team. Regarding your warranty, it begins on the delivery date (2026-11-14) and lasts for 12 months for electronics. A human agent will follow up shortly to arrange the next steps.",
+        "escalation_reason": "Damaged item requires human assessment and warranty clarification.",
+        "missing_fields": []
+      },
+      "exit": "decided",
+      "repaired": false,
+      "usage": {
+        "steps": 5,
+        "toolCalls": 2,
+        "tokens": 5966,
+        "modelCalls": 3
+      },
+      "listPriceUsd": 0.0010668,
+      "providers": [
+        "groq/openai/gpt-oss-120b"
+      ]
+    },
+    {
+      "caseId": "two-questions-defect-and-warranty",
+      "category": "edge",
+      "repeat": 2,
       "complete": true,
       "latencyMs": 2420,
       "grade": {
@@ -6555,64 +7227,9 @@
     {
       "caseId": "two-questions-defect-and-warranty",
       "category": "edge",
-      "repeat": 2,
-      "complete": true,
-      "latencyMs": 2424,
-      "grade": {
-        "pass": true,
-        "decision": {
-          "ok": true,
-          "expected": "ESCALATE",
-          "got": "ESCALATE"
-        },
-        "grounding": {
-          "missing": [],
-          "forbidden": [],
-          "invented": [],
-          "ok": true
-        },
-        "reply": {
-          "missing": [],
-          "forbidden": [],
-          "ok": true
-        },
-        "judge": "not requested",
-        "reasons": []
-      },
-      "decision": {
-        "decision": "ESCALATE",
-        "intent": "damaged_item",
-        "confidence": 0.98,
-        "facts_used": [
-          "order.delivered_at",
-          "warranty.period"
-        ],
-        "clause_ids": [
-          "warranty.period"
-        ],
-        "reply_draft": "We’re sorry to hear about the issue with your TV. Since the screen has a vertical line of dead pixels, this is considered a damaged item and will need to be reviewed by our support team. Regarding your warranty, it begins on the delivery date (2026-11-14) and lasts for 12 months for electronics. A human agent will follow up shortly to arrange the next steps.",
-        "escalation_reason": "Damaged item requires human assessment and warranty clarification.",
-        "missing_fields": []
-      },
-      "exit": "decided",
-      "repaired": false,
-      "usage": {
-        "steps": 5,
-        "toolCalls": 2,
-        "tokens": 5966,
-        "modelCalls": 3
-      },
-      "listPriceUsd": 0.0010668,
-      "providers": [
-        "groq/openai/gpt-oss-120b"
-      ]
-    },
-    {
-      "caseId": "two-questions-defect-and-warranty",
-      "category": "edge",
       "repeat": 3,
       "complete": true,
-      "latencyMs": 2422,
+      "latencyMs": 2420,
       "grade": {
         "pass": true,
         "decision": {
@@ -6666,8 +7283,43 @@
       "caseId": "two-questions-return-and-delivery",
       "category": "edge",
       "repeat": 1,
-      "complete": false,
-      "incompleteReason": "no judge recording (run with --mode record-missing)",
+      "complete": true,
+      "latencyMs": 3097,
+      "grade": {
+        "pass": false,
+        "decision": {
+          "ok": true,
+          "expected": "AUTO_REPLY",
+          "got": "AUTO_REPLY"
+        },
+        "grounding": {
+          "missing": [],
+          "forbidden": [],
+          "invented": [],
+          "ok": true
+        },
+        "reply": {
+          "missing": [
+            [
+              "pickup",
+              "pick up",
+              "pick-up",
+              "collect"
+            ]
+          ],
+          "forbidden": [],
+          "ok": false
+        },
+        "judge": {
+          "rubric": "polite-and-answers-the-question",
+          "score": 5,
+          "reason": "The reply is polite, directly and fully answers both questions without extra filler, and correctly provides the next steps for initiating the return without prematurely approving it.",
+          "pass": true
+        },
+        "reasons": [
+          "reply missing required fact"
+        ]
+      },
       "decision": {
         "decision": "AUTO_REPLY",
         "intent": "return_request",
@@ -6695,14 +7347,369 @@
       "listPriceUsd": 0.00114,
       "providers": [
         "groq/openai/gpt-oss-120b"
-      ]
+      ],
+      "failure": {
+        "promptHash": "8ccf719d6eb1",
+        "validation": [
+          {
+            "ok": true
+          }
+        ],
+        "budgetAtExit": {
+          "steps": 5,
+          "toolCalls": 2,
+          "tokens": 6280,
+          "modelCalls": 3
+        },
+        "retrievedClauseIds": [
+          "delivery.delayed",
+          "delivery.dispatch",
+          "delivery.estimates",
+          "refunds.window",
+          "returns.window"
+        ],
+        "exit": "decided",
+        "exitReason": null
+      }
+    },
+    {
+      "caseId": "two-questions-return-and-delivery",
+      "category": "edge",
+      "repeat": 2,
+      "complete": true,
+      "latencyMs": 3095,
+      "grade": {
+        "pass": false,
+        "decision": {
+          "ok": true,
+          "expected": "AUTO_REPLY",
+          "got": "AUTO_REPLY"
+        },
+        "grounding": {
+          "missing": [],
+          "forbidden": [],
+          "invented": [],
+          "ok": true
+        },
+        "reply": {
+          "missing": [
+            [
+              "pickup",
+              "pick up",
+              "pick-up",
+              "collect"
+            ]
+          ],
+          "forbidden": [],
+          "ok": false
+        },
+        "judge": {
+          "rubric": "polite-and-answers-the-question",
+          "score": 5,
+          "reason": "The reply is polite, directly and fully answers both questions without extra filler, and correctly provides the next steps for initiating the return without prematurely approving it.",
+          "pass": true
+        },
+        "reasons": [
+          "reply missing required fact"
+        ]
+      },
+      "decision": {
+        "decision": "AUTO_REPLY",
+        "intent": "return_request",
+        "confidence": 0.99,
+        "facts_used": [
+          "eligibility.eligible",
+          "delivery.estimates"
+        ],
+        "clause_ids": [
+          "returns.window",
+          "delivery.estimates"
+        ],
+        "reply_draft": "Hello,\n\nThank you for reaching out.\n\n1) Your skillet from order A-10411 was delivered on 2026-11-16, which means you are still within the 7‑day return window (day 4). You may return the unused item as per our return policy.\n\n2) For deliveries to Jaipur, our standard estimate is 5 to 7 business days from the date of dispatch (excluding Sundays and public holidays).\n\nIf you would like to initiate the return, please let us know and we will share the return instructions. Feel free to place your new order whenever you’re ready.\n\nBest regards,\nKaveri Home & Kitchen Support",
+        "escalation_reason": "",
+        "missing_fields": []
+      },
+      "exit": "decided",
+      "repaired": false,
+      "usage": {
+        "steps": 5,
+        "toolCalls": 2,
+        "tokens": 6280,
+        "modelCalls": 3
+      },
+      "listPriceUsd": 0.00114,
+      "providers": [
+        "groq/openai/gpt-oss-120b"
+      ],
+      "failure": {
+        "promptHash": "8ccf719d6eb1",
+        "validation": [
+          {
+            "ok": true
+          }
+        ],
+        "budgetAtExit": {
+          "steps": 5,
+          "toolCalls": 2,
+          "tokens": 6280,
+          "modelCalls": 3
+        },
+        "retrievedClauseIds": [
+          "delivery.delayed",
+          "delivery.dispatch",
+          "delivery.estimates",
+          "refunds.window",
+          "returns.window"
+        ],
+        "exit": "decided",
+        "exitReason": null
+      }
+    },
+    {
+      "caseId": "two-questions-return-and-delivery",
+      "category": "edge",
+      "repeat": 3,
+      "complete": true,
+      "latencyMs": 3094,
+      "grade": {
+        "pass": false,
+        "decision": {
+          "ok": true,
+          "expected": "AUTO_REPLY",
+          "got": "AUTO_REPLY"
+        },
+        "grounding": {
+          "missing": [],
+          "forbidden": [],
+          "invented": [],
+          "ok": true
+        },
+        "reply": {
+          "missing": [
+            [
+              "pickup",
+              "pick up",
+              "pick-up",
+              "collect"
+            ]
+          ],
+          "forbidden": [],
+          "ok": false
+        },
+        "judge": {
+          "rubric": "polite-and-answers-the-question",
+          "score": 5,
+          "reason": "The reply is polite, directly and fully answers both questions without extra filler, and correctly provides the next steps for initiating the return without prematurely approving it.",
+          "pass": true
+        },
+        "reasons": [
+          "reply missing required fact"
+        ]
+      },
+      "decision": {
+        "decision": "AUTO_REPLY",
+        "intent": "return_request",
+        "confidence": 0.99,
+        "facts_used": [
+          "eligibility.eligible",
+          "delivery.estimates"
+        ],
+        "clause_ids": [
+          "returns.window",
+          "delivery.estimates"
+        ],
+        "reply_draft": "Hello,\n\nThank you for reaching out.\n\n1) Your skillet from order A-10411 was delivered on 2026-11-16, which means you are still within the 7‑day return window (day 4). You may return the unused item as per our return policy.\n\n2) For deliveries to Jaipur, our standard estimate is 5 to 7 business days from the date of dispatch (excluding Sundays and public holidays).\n\nIf you would like to initiate the return, please let us know and we will share the return instructions. Feel free to place your new order whenever you’re ready.\n\nBest regards,\nKaveri Home & Kitchen Support",
+        "escalation_reason": "",
+        "missing_fields": []
+      },
+      "exit": "decided",
+      "repaired": false,
+      "usage": {
+        "steps": 5,
+        "toolCalls": 2,
+        "tokens": 6280,
+        "modelCalls": 3
+      },
+      "listPriceUsd": 0.00114,
+      "providers": [
+        "groq/openai/gpt-oss-120b"
+      ],
+      "failure": {
+        "promptHash": "8ccf719d6eb1",
+        "validation": [
+          {
+            "ok": true
+          }
+        ],
+        "budgetAtExit": {
+          "steps": 5,
+          "toolCalls": 2,
+          "tokens": 6280,
+          "modelCalls": 3
+        },
+        "retrievedClauseIds": [
+          "delivery.delayed",
+          "delivery.dispatch",
+          "delivery.estimates",
+          "refunds.window",
+          "returns.window"
+        ],
+        "exit": "decided",
+        "exitReason": null
+      }
     },
     {
       "caseId": "wrong-amount-claimed",
       "category": "edge",
       "repeat": 1,
-      "complete": false,
-      "incompleteReason": "no judge recording (run with --mode record-missing)",
+      "complete": true,
+      "latencyMs": 3878,
+      "grade": {
+        "pass": true,
+        "decision": {
+          "ok": true,
+          "expected": "AUTO_REPLY",
+          "got": "AUTO_REPLY"
+        },
+        "grounding": {
+          "missing": [],
+          "forbidden": [],
+          "invented": [],
+          "ok": true
+        },
+        "reply": {
+          "missing": [],
+          "forbidden": [],
+          "ok": true
+        },
+        "judge": {
+          "rubric": "polite-and-answers-the-question",
+          "score": 5,
+          "reason": "The reply is warm, direct, and fully addresses the customer's refund request while clearly explaining the return process and correcting the item's order price without promising an unverified refund.",
+          "pass": true
+        },
+        "reasons": []
+      },
+      "decision": {
+        "decision": "AUTO_REPLY",
+        "intent": "refund_request",
+        "confidence": 0.97,
+        "facts_used": [
+          "eligibility.eligible"
+        ],
+        "clause_ids": [
+          "refunds.window",
+          "returns.window"
+        ],
+        "reply_draft": "Hello,\n\nThank you for reaching out. Your order A-10412 was delivered on 14 Nov 2026, which is within our 7‑day return window. According to our policy (refunds.window, returns.window), you are eligible to initiate a return and receive a refund for the returned item(s). Please use the return portal to generate a return label; once we receive the lamp in its original condition, we will process the refund to your original payment method. The refund amount will correspond to the price of the lamp (₹749) as per the order details.\n\nIf you need any assistance with the return process, feel free to let us know.\n\nBest regards,\nKaveri Home & Kitchen Support",
+        "escalation_reason": "",
+        "missing_fields": []
+      },
+      "exit": "decided",
+      "repaired": false,
+      "usage": {
+        "steps": 5,
+        "toolCalls": 2,
+        "tokens": 5585,
+        "modelCalls": 3
+      },
+      "listPriceUsd": 0.0010218,
+      "providers": [
+        "groq/openai/gpt-oss-120b"
+      ]
+    },
+    {
+      "caseId": "wrong-amount-claimed",
+      "category": "edge",
+      "repeat": 2,
+      "complete": true,
+      "latencyMs": 3876,
+      "grade": {
+        "pass": true,
+        "decision": {
+          "ok": true,
+          "expected": "AUTO_REPLY",
+          "got": "AUTO_REPLY"
+        },
+        "grounding": {
+          "missing": [],
+          "forbidden": [],
+          "invented": [],
+          "ok": true
+        },
+        "reply": {
+          "missing": [],
+          "forbidden": [],
+          "ok": true
+        },
+        "judge": {
+          "rubric": "polite-and-answers-the-question",
+          "score": 5,
+          "reason": "The reply is warm, direct, and fully addresses the customer's refund request while clearly explaining the return process and correcting the item's order price without promising an unverified refund.",
+          "pass": true
+        },
+        "reasons": []
+      },
+      "decision": {
+        "decision": "AUTO_REPLY",
+        "intent": "refund_request",
+        "confidence": 0.97,
+        "facts_used": [
+          "eligibility.eligible"
+        ],
+        "clause_ids": [
+          "refunds.window",
+          "returns.window"
+        ],
+        "reply_draft": "Hello,\n\nThank you for reaching out. Your order A-10412 was delivered on 14 Nov 2026, which is within our 7‑day return window. According to our policy (refunds.window, returns.window), you are eligible to initiate a return and receive a refund for the returned item(s). Please use the return portal to generate a return label; once we receive the lamp in its original condition, we will process the refund to your original payment method. The refund amount will correspond to the price of the lamp (₹749) as per the order details.\n\nIf you need any assistance with the return process, feel free to let us know.\n\nBest regards,\nKaveri Home & Kitchen Support",
+        "escalation_reason": "",
+        "missing_fields": []
+      },
+      "exit": "decided",
+      "repaired": false,
+      "usage": {
+        "steps": 5,
+        "toolCalls": 2,
+        "tokens": 5585,
+        "modelCalls": 3
+      },
+      "listPriceUsd": 0.0010218,
+      "providers": [
+        "groq/openai/gpt-oss-120b"
+      ]
+    },
+    {
+      "caseId": "wrong-amount-claimed",
+      "category": "edge",
+      "repeat": 3,
+      "complete": true,
+      "latencyMs": 3876,
+      "grade": {
+        "pass": true,
+        "decision": {
+          "ok": true,
+          "expected": "AUTO_REPLY",
+          "got": "AUTO_REPLY"
+        },
+        "grounding": {
+          "missing": [],
+          "forbidden": [],
+          "invented": [],
+          "ok": true
+        },
+        "reply": {
+          "missing": [],
+          "forbidden": [],
+          "ok": true
+        },
+        "judge": {
+          "rubric": "polite-and-answers-the-question",
+          "score": 5,
+          "reason": "The reply is warm, direct, and fully addresses the customer's refund request while clearly explaining the return process and correcting the item's order price without promising an unverified refund.",
+          "pass": true
+        },
+        "reasons": []
+      },
       "decision": {
         "decision": "AUTO_REPLY",
         "intent": "refund_request",

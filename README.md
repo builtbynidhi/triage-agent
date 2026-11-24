@@ -27,22 +27,22 @@ It only **proposes**. A human with the reviewer role approves anything that woul
 
 40 hand-written cases (15 normal, 15 edge, 10 adversarial), each run 3 times, replayed from recorded model answers. Every number is measured; none is a target. Full report: [evals/report/report.md](evals/report/report.md).
 
-| Metric                                     | Result                                                                                |
-| ------------------------------------------ | ------------------------------------------------------------------------------------- |
-| **Pass rate**                              | **70.6%** (72/102 runs)                                                               |
-| normal / edge / adversarial                | 54.5% / 61.5% / **100%**                                                              |
-| Decision accuracy                          | 88.2%                                                                                 |
-| Citation accuracy                          | 93.3% (of AUTO_REPLY runs)                                                            |
-| Escalation precision, recall               | 87.5%, 87.5%                                                                          |
-| Injection resistance                       | 10/10 adversarial cases held on every repeat                                          |
-| p50 / p95 latency                          | 8.0 s / 76.8 s                                                                        |
-| Cost per 100 tickets                       | $0.16 at list price (actual: $0, free tiers)                                          |
-| LLM judge: replies scored, mean            | 42/48 pass (87.5%), mean 4.38 out of 5                                                |
-| Judge agreement with **human** labels      | **not measured yet** (it needs 15 labels from a person)                               |
-| Judge agreement with an AI second reviewer | 13/14 (a sanity check only: not human, and that reviewer's labels were all "pass")    |
-| Not scored                                 | 6 of 40 cases (5 waiting for a judge recording, 1 the model cannot answer; see below) |
+| Metric                                     | Result                                                                             |
+| ------------------------------------------ | ---------------------------------------------------------------------------------- |
+| **Pass rate**                              | **66.7%** (78/117 runs)                                                            |
+| normal / edge / adversarial                | 50% / 60% / **100%**                                                               |
+| Decision accuracy                          | 89.7%                                                                              |
+| Citation accuracy                          | 90% (of AUTO_REPLY runs)                                                           |
+| Escalation precision, recall               | 87.5%, 87.5%                                                                       |
+| Injection resistance                       | 10/10 adversarial cases held on every repeat                                       |
+| p50 / p95 latency                          | 4.0 s / 76.8 s                                                                     |
+| Cost per 100 tickets                       | $0.15 at list price (actual: $0, free tiers)                                       |
+| LLM judge: replies scored, mean            | 51/63 pass (81%), mean 4.14 out of 5                                               |
+| Judge agreement with **human** labels      | **not measured yet** (it needs 15 labels from a person)                            |
+| Judge agreement with an AI second reviewer | 14/15 (a sanity check only: not human, and that reviewer's labels were all "pass") |
+| Not scored                                 | 1 of 40 cases (`damaged-item-safety-hazard`, see below)                            |
 
-Run on 2026-11-23, prompt `system.v1`, 3 repeats per case. The model answers were recorded mostly on Groq `gpt-oss-120b` (24 cases; 5 were recorded on Gemini 3.6 Flash, and 5 never reach a model because the input guard rejects them first). The judge is Gemini 3.6 Flash: a different model family from the agent.
+Run on 2026-11-24, prompt `system.v1`, 3 repeats per case. The model answers were recorded mostly on Groq `gpt-oss-120b` (29 cases; 5 were recorded on Gemini 3.6 Flash, and 5 never reach a model because the input guard rejects them first). The judge is Gemini 3.6 Flash: a different model family from the agent.
 
 ![Pass rate by group](docs/images/pass-rate.png)
 
@@ -102,9 +102,9 @@ More in [packages/mcp-server/README.md](packages/mcp-server/README.md).
 
 ## What does not work yet
 
-- **The judge has not been checked against a person.** It scores 42 of 48 replies and agrees with an AI reviewer 13 times out of 14, but the spec's check is against 15 replies **you** label by hand (`evals/labels/to-label.md`), and that has not been done.
-- **Six of the 40 cases are unscored.** Five wait for their judge recording (Gemini's free tier allows 18 calls a day). `damaged-item-safety-hazard` has not been recorded: the model tries to call a tool named `ESCALATE` that does not exist, Groq rejects the request, and the Gemini fallback's daily quota was spent before it could answer. The gate treats a case that stops being scored as a failure, so none can quietly drop out.
-- **The agent is untuned.** 70.6% overall; ordinary tickets 54.5%. Fixes were built (a retrieval step run by code, handling for refused model output, a stricter prompt) but on the 6 cases recorded they did worse than the current agent, so they are parked on branch `phase-8-v2` and **not merged**. Measuring them fully needs about three days of free-tier quota ([#18](https://github.com/builtbynidhi/triage-agent/issues/18)).
+- **The judge has not been checked against a person.** It passes 51 of 63 replies and agrees with an AI reviewer 14 times out of 15, but the spec's check is against 15 replies **you** label by hand (`evals/labels/to-label.md`), and that has not been done.
+- **One of the 40 cases is unscored.** On `damaged-item-safety-hazard` Groq rejects the request (the model calls a tool named `ESCALATE` that does not exist), so it needs the Gemini fallback, and Gemini's free tier allows 18 calls a day; its last step timed out during a Gemini "high demand" period. The gate treats a case that stops being scored as a failure, so none can quietly drop out.
+- **The agent is untuned.** 66.7% overall; ordinary tickets 50%. The common failure: it cites a policy clause by ID without reading its text, so replies miss required clauses, invent return steps (the policy says support arranges a pickup) or promise a refund only a human may approve. A redesign is parked on branch `phase-8-v2` and **not merged**: on the 27 cases recorded so far it passes 2 that the current agent fails and fails 6 that it passes (2 of those because the branch predates the input guards) ([#18](https://github.com/builtbynidhi/triage-agent/issues/18)).
 - **Approved writes are recorded, not delivered.** An approved reply goes into an outbox table; nothing is actually emailed. There is no login endpoint (tokens come from whoever holds `JWT_SECRET`), and the web app has no login, so approving from it is off by default.
 - **The nightly live check is built but switched off.** It runs five cases against the real models and opens an issue if they disagree with the recordings. It needs your free-tier keys as repository secrets, and a full-suite nightly would not fit the free quota.
 - **The three repeats of a case are identical in replay**, because there is one recording per request. They test the pipeline, not the model's run-to-run variation.
