@@ -154,7 +154,7 @@ Prompt structure: role, rules and schema in the system prompt (a versioned file)
 
 ## Phase 8 status
 
-- Phase 8 is **partial**. Measured and merged: the grader fix (64.1% to 69.2%). Parked, not merged: three agent designs on branch `phase-8-v2` (retrieval as a machine state, refused-output handling, prompt v2); the 6 cases recorded show it passing fewer than the current agent. Full record in `docs/failures.md`.
+- Phase 8 is **partial**. Measured and merged: the grader fix (64.1% to 69.2%). Parked, not merged: three agent designs on branch `phase-8-v2` (retrieval as a machine state, refused-output handling, prompt v2); the 6 cases recorded show it passing fewer than the current agent. Full record in `docs/failures.md`. **Measured 2026-11-25 on all 40 cases: 60% vs main's 65% (normal 66.7% vs 46.7%, edge 40% vs 60%); not merged.** The branch predates the guards and the judge, so the comparison is not like for like (docs/failures.md). The daily recorder is finished and its launch job removed.
 - Free-tier facts: Groq gpt-oss-120b 200k tokens a day (resets 05:30 IST), Gemini 3.6 Flash 20 requests a day (resets 13:30 IST). A full v2 recording is about 320k tokens, so about three Groq days. Cerebras needs a payment method: do not use it.
 
 ## Judge and adversarial hardening (Phase 9)
