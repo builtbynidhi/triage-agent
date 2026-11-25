@@ -29,20 +29,20 @@ It only **proposes**. A human with the reviewer role approves anything that woul
 
 | Metric                                     | Result                                                                             |
 | ------------------------------------------ | ---------------------------------------------------------------------------------- |
-| **Pass rate**                              | **66.7%** (78/117 runs)                                                            |
-| normal / edge / adversarial                | 50% / 60% / **100%**                                                               |
-| Decision accuracy                          | 89.7%                                                                              |
+| **Pass rate**                              | **65%** (78/120 runs)                                                              |
+| normal / edge / adversarial                | 46.7% / 60% / **100%**                                                             |
+| Decision accuracy                          | 90%                                                                                |
 | Citation accuracy                          | 90% (of AUTO_REPLY runs)                                                           |
-| Escalation precision, recall               | 87.5%, 87.5%                                                                       |
+| Escalation precision, recall               | 88.9%, 88.9%                                                                       |
 | Injection resistance                       | 10/10 adversarial cases held on every repeat                                       |
-| p50 / p95 latency                          | 4.0 s / 76.8 s                                                                     |
+| p50 / p95 latency                          | 4.0 s / 74.2 s                                                                     |
 | Cost per 100 tickets                       | $0.15 at list price (actual: $0, free tiers)                                       |
 | LLM judge: replies scored, mean            | 51/63 pass (81%), mean 4.14 out of 5                                               |
 | Judge agreement with **human** labels      | **not measured yet** (it needs 15 labels from a person)                            |
 | Judge agreement with an AI second reviewer | 14/15 (a sanity check only: not human, and that reviewer's labels were all "pass") |
-| Not scored                                 | 1 of 40 cases (`damaged-item-safety-hazard`, see below)                            |
+| Not scored                                 | none: all 40 cases scored                                                          |
 
-Run on 2026-11-24, prompt `system.v1`, 3 repeats per case. The model answers were recorded mostly on Groq `gpt-oss-120b` (29 cases; 5 were recorded on Gemini 3.6 Flash, and 5 never reach a model because the input guard rejects them first). The judge is Gemini 3.6 Flash: a different model family from the agent.
+Run on 2026-11-25, prompt `system.v1`, 3 repeats per case. The model answers were recorded mostly on Groq `gpt-oss-120b` (29 cases; 5 were recorded on Gemini 3.6 Flash, 1 on both after a mid-run fallback, and 5 never reach a model because the input guard rejects them first). The judge is Gemini 3.6 Flash: a different model family from the agent.
 
 ![Pass rate by group](docs/images/pass-rate.png)
 
@@ -103,8 +103,8 @@ More in [packages/mcp-server/README.md](packages/mcp-server/README.md).
 ## What does not work yet
 
 - **The judge has not been checked against a person.** It passes 51 of 63 replies and agrees with an AI reviewer 14 times out of 15, but the spec's check is against 15 replies **you** label by hand (`evals/labels/to-label.md`), and that has not been done.
-- **One of the 40 cases is unscored.** On `damaged-item-safety-hazard` Groq rejects the request (the model calls a tool named `ESCALATE` that does not exist), so it needs the Gemini fallback, and Gemini's free tier allows 18 calls a day; its last step timed out during a Gemini "high demand" period. The gate treats a case that stops being scored as a failure, so none can quietly drop out.
-- **The agent is untuned.** 66.7% overall; ordinary tickets 50%. The common failure: it cites a policy clause by ID without reading its text, so replies miss required clauses, invent return steps (the policy says support arranges a pickup) or promise a refund only a human may approve. A redesign is parked on branch `phase-8-v2` and **not merged**: on the 27 cases recorded so far it passes 2 that the current agent fails and fails 6 that it passes (2 of those because the branch predates the input guards) ([#18](https://github.com/builtbynidhi/triage-agent/issues/18)).
+- **A safety ticket gets an unsafe reply.** On `damaged-item-safety-hazard` (a device that sparks) the agent escalates correctly, but its reply never tells the customer to stop using or unplug the device, and it does not cite the safety clause. The escalation reaches a human, but the customer is not told the one thing that matters most in the meantime.
+- **The agent is untuned.** 65% overall; ordinary tickets 46.7%. The common failure: it cites a policy clause by ID without reading its text, so replies miss required clauses, invent return steps (the policy says support arranges a pickup) or promise a refund only a human may approve. A redesign is parked on branch `phase-8-v2` and **not merged**: on the 27 cases recorded so far it passes 2 that the current agent fails and fails 6 that it passes (2 of those because the branch predates the input guards) ([#18](https://github.com/builtbynidhi/triage-agent/issues/18)).
 - **Approved writes are recorded, not delivered.** An approved reply goes into an outbox table; nothing is actually emailed. There is no login endpoint (tokens come from whoever holds `JWT_SECRET`), and the web app has no login, so approving from it is off by default.
 - **The nightly live check is built but switched off.** It runs five cases against the real models and opens an issue if they disagree with the recordings. It needs your free-tier keys as repository secrets, and a full-suite nightly would not fit the free quota.
 - **The three repeats of a case are identical in replay**, because there is one recording per request. They test the pipeline, not the model's run-to-run variation.
@@ -124,7 +124,7 @@ More in [packages/mcp-server/README.md](packages/mcp-server/README.md).
 
 ## Status
 
-Phases 1 to 7, 10 and 11 are done; 8, 9 and 12 are partial (see above). Each phase's issue records what was built and what was not.
+Phases 1 to 7 and 10 to 12 are done; 8 and 9 are partial (the agent fixes are unmeasured, and the judge awaits human labels). Each phase's issue records what was built and what was not.
 
 ## Built with Claude Code
 
