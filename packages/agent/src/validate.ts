@@ -22,6 +22,12 @@ export interface ValidationContext {
   quarantinedClauseIds?: ReadonlySet<string>;
   /** The system prompt's text, so a reply that repeats it is refused (guard.ts). */
   promptText?: string;
+  /**
+   * Order changes check_eligibility allowed this run (cancellation, address_change). No tool
+   * performs them, so only a human can, and the decision must be ESCALATE (CLAUDE.md, "Decisions
+   * on the decision contract").
+   */
+  humanOnlyActions?: ReadonlySet<string>;
 }
 
 export type Validation =
@@ -94,6 +100,12 @@ export function validateDecision(d: Decision, ctx: ValidationContext): Validatio
   switch (d.decision) {
     case "AUTO_REPLY":
       if (!reply) errors.push("AUTO_REPLY needs a non-empty reply_draft.");
+      if (ctx.humanOnlyActions?.size) {
+        const actions = [...ctx.humanOnlyActions].map((a) => a.replace("_", " ")).join(" and ");
+        errors.push(
+          `The policy allows this ${actions}, but no tool can make it: only a human can. Use ESCALATE with the details the human needs (for an address change, the complete new address), and do not tell the customer the change is done or will be done.`,
+        );
+      }
       if (!d.clause_ids.length && d.intent !== "acknowledgement") {
         errors.push(
           "AUTO_REPLY must cite at least one clause_id (only intent acknowledgement is exempt).",

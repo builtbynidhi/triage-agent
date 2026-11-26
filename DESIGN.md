@@ -149,7 +149,16 @@ Three thin layers and one cross-cutting band.
 - NEEDS_INFO asks for its missing fields and no others, checked on the reply's question sentences;
 - ESCALATE needs a reason;
 - REJECT drafts no reply;
-- a reply never contains a full email address or phone number.
+- a reply never contains a full email address or phone number;
+- a reply never promises or confirms a refund, replacement or approval (`reply-rules.ts`; refusals and prohibitions are not promises; the standard comes from the owner's hand labels).
+
+**Reply rules in code (Phase 8, `agent-v3`).** Some things are too important to leave to the model:
+
+- **Policy wording.** `check_eligibility` names clauses by ID only, and the model used to cite clauses it had never read and invent return steps. The machine now attaches the text of every clause in the same policy document to that tool result (read once over MCP from the `policy://` resources), and those clauses become citable.
+- **Safety.** A ticket that describes a hazard (`safetyHazard`) is ESCALATEd and its reply starts with the safety clause's instruction, citing `damaged.safety`, even when the model forgets it or the run fails closed.
+- **Clause IDs** are removed from the reply text, or named in words; they belong in `clause_ids`.
+
+Every pattern is checked against the 40 eval tickets and the real policy text (`evals/src/guard.test.ts`).
 
 Below the confidence threshold (0.5 for now; Phase 8 sets it from data), an AUTO_REPLY is downgraded to ESCALATE.
 

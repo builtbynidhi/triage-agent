@@ -55,6 +55,62 @@ describe("a reply never promises a refund, replacement or approval", () => {
   });
 });
 
+describe("an order change no tool performs goes to a human", () => {
+  const base = {
+    decision: "AUTO_REPLY" as const,
+    intent: "cancellation" as const,
+    confidence: 0.9,
+    facts_used: [],
+    clause_ids: ["cancellation.before_dispatch"],
+    reply_draft: "Your order can be cancelled free of charge; our team will take care of it.",
+    escalation_reason: "",
+    missing_fields: [],
+  };
+  const ctx = { citableClauseIds: new Set(["cancellation.before_dispatch"]) };
+  it("rejects an AUTO_REPLY when eligibility allowed a cancellation or an address change", () => {
+    const v = validateDecision(base, { ...ctx, humanOnlyActions: new Set(["cancellation"]) });
+    expect(!v.ok && v.errors.join()).toMatch(/no tool can make it: only a human can/);
+  });
+  it("accepts the same decision as an ESCALATE, and a refusal when eligibility said no", () => {
+    expect(
+      validateDecision(
+        { ...base, decision: "ESCALATE", escalation_reason: "Cancellation needs a human." },
+        { ...ctx, humanOnlyActions: new Set(["cancellation"]) },
+      ).ok,
+    ).toBe(true);
+    expect(validateDecision(base, { ...ctx, humanOnlyActions: new Set() }).ok).toBe(true);
+  });
+  it("is set by the machine from an eligible check_eligibility call", async () => {
+    const tools = await seededTools("tenant_b");
+    const r = await runAgent({
+      ticket: { text: "please cancel B-20402", channel: "chat" },
+      tools,
+      router: scriptedRouter([
+        reply({
+          toolCalls: [
+            call("c1", "check_eligibility", { order_id: "B-20402", request_type: "cancellation" }),
+          ],
+        }),
+        reply({ text: "DONE" }),
+        reply({ text: decisionText({ ...base, intent: "cancellation" }) }),
+        reply({
+          text: decisionText({
+            ...base,
+            decision: "ESCALATE",
+            reply_draft: "Thanks, a member of our team will review your cancellation request.",
+            escalation_reason: "Cancellation before dispatch: no tool performs it.",
+          }),
+        }),
+      ]),
+      today: "2026-11-20",
+    });
+    expect(r.repaired).toBe(true);
+    expect(r.decision.decision).toBe("ESCALATE");
+    expect(r.proposal?.action).toBe("create_escalation");
+    await tools.close();
+  });
+});
+
 describe("clause IDs never reach the customer", () => {
   const titles = new Map([
     ["returns.window", "Return window"],

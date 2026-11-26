@@ -171,6 +171,7 @@ export async function runAgent(opts: AgentOptions): Promise<RunResult> {
   const steps: StepRecord[] = [];
   const citable = new Set<string>();
   const quarantinedClauses = new Set<string>();
+  const humanOnlyActions = new Set<string>();
   const facts: string[] = [];
   // Input quarantine: invisible characters out, length capped. A normal ticket comes back unchanged.
   const quarantined = quarantineTicket(opts.ticket);
@@ -323,6 +324,7 @@ export async function runAgent(opts: AgentOptions): Promise<RunResult> {
           citableClauseIds: citable,
           quarantinedClauseIds: quarantinedClauses,
           promptText,
+          humanOnlyActions,
         })
       : parsed;
   };
@@ -403,6 +405,14 @@ export async function runAgent(opts: AgentOptions): Promise<RunResult> {
           toolSpan.setAttribute("gen_ai.tool.call.result", JSON.stringify(result.structured));
         toolSpan.end();
         harvest(call.name, result.structured);
+        // An order change the policy allows but no tool performs: a human must make it.
+        const requested = String(call.arguments.request_type ?? "");
+        if (
+          call.name === "check_eligibility" &&
+          result.structured.eligible === true &&
+          (requested === "cancellation" || requested === "address_change")
+        )
+          humanOnlyActions.add(requested);
         record({
           state,
           kind: "tool_call",

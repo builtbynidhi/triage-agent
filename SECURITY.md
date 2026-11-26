@@ -54,11 +54,14 @@ Policy is a reviewed file in the repo (`policies/`), loaded with a check that fr
 
 ### LLM07 Misinformation
 
-| Control                                                                                                                                                           | Where                                               | Proof                                                  |
-| ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------- | ------------------------------------------------------ |
-| Any `clause_id` not returned by a tool this run is a hard failure; a cited quarantined clause is too.                                                             | `validate.ts`                                       | `validate.test.ts`; grounding check in every eval case |
-| Eligibility (windows, dates) is plain code, never a model.                                                                                                        | `packages/mcp-server/src/eligibility.ts` (ADR 0004) | `eligibility.test.ts` at every boundary                |
-| Replies are checked for required facts and forbidden promises ("refund approved"), and, for cases with a rubric, scored by a judge from a different model family. | `evals/src/grade.ts`, `judge.ts`                    | `pnpm eval`                                            |
+| Control                                                                                                                                                                                           | Where                                               | Proof                                                                   |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------- | ----------------------------------------------------------------------- |
+| Any `clause_id` not returned by a tool this run is a hard failure; a cited quarantined clause is too.                                                                                             | `validate.ts`                                       | `validate.test.ts`; grounding check in every eval case                  |
+| Eligibility (windows, dates) is plain code, never a model.                                                                                                                                        | `packages/mcp-server/src/eligibility.ts` (ADR 0004) | `eligibility.test.ts` at every boundary                                 |
+| Replies are checked for required facts and forbidden promises ("refund approved"), and, for cases with a rubric, scored by a judge from a different model family.                                 | `evals/src/grade.ts`, `judge.ts`                    | `pnpm eval`                                                             |
+| A reply that promises or confirms a refund, replacement or approval is a validation error in the agent itself (one repair, then fail closed), not only an eval finding.                           | `packages/agent/src/reply-rules.ts`, `validate.ts`  | `reply-rules.test.ts`; `guard.test.ts` (no real policy clause trips it) |
+| A ticket that describes a safety hazard is always escalated, and its reply always starts with the safety clause's "stop using it" instruction, even if the model forgets or the run fails closed. | `machine.ts` (`finalReply`)                         | `reply-rules.test.ts`; case `damaged-item-safety-hazard`                |
+| The model reads the policy wording behind clause IDs a tool names (attached from the MCP policy resources), so a reply describes the written process rather than an invented one.                 | `machine.ts` (`policyTextFor`)                      | `reply-rules.test.ts`                                                   |
 
 ### LLM08 Hidden Context Exposure
 
@@ -70,7 +73,7 @@ Retrieval is tenant-scoped (`policy_chunks.tenant_id`); user text never reaches 
 
 ### LLM10 Improper Output Handling
 
-Model output is parsed against a strict Zod schema, then validated (`validate.ts`); an invalid answer gets one repair and then fails closed. Tool arguments are validated by Zod in `invokeTool`, never by the SDK. The reply is plain text proposed for approval: nothing is executed from it. **The web UI never turns text into markup:** React escapes everything it renders, and a test (`apps/web/lib/safety.test.ts`) fails if any source file uses `dangerouslySetInnerHTML`, `innerHTML` or `eval`. Pages carry `nosniff`, `X-Frame-Options: DENY` and a strict referrer policy.
+Model output is parsed against a strict Zod schema, then validated (`validate.ts`); an invalid answer gets one repair and then fails closed. Tool arguments are validated by Zod in `invokeTool`, never by the SDK. The reply is plain text proposed for approval: nothing is executed from it. Internal clause IDs are removed from the reply text before it is proposed (`stripClauseIds`). **The web UI never turns text into markup:** React escapes everything it renders, and a test (`apps/web/lib/safety.test.ts`) fails if any source file uses `dangerouslySetInnerHTML`, `innerHTML` or `eval`. Pages carry `nosniff`, `X-Frame-Options: DENY` and a strict referrer policy.
 
 ## The HTTP API (Phase 10)
 
