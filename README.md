@@ -38,7 +38,7 @@ It only **proposes**. A human with the reviewer role approves anything that woul
 | p50 / p95 latency                          | 4.0 s / 74.2 s                                                                     |
 | Cost per 100 tickets                       | $0.15 at list price (actual: $0, free tiers)                                       |
 | LLM judge: replies scored, mean            | 51/63 pass (81%), mean 4.14 out of 5                                               |
-| Judge agreement with **human** labels      | **not measured yet** (it needs 15 labels from a person)                            |
+| Judge agreement with **human** labels      | **13/15 (87%)**, against 15 replies labelled by hand (the bar is 80%)              |
 | Judge agreement with an AI second reviewer | 14/15 (a sanity check only: not human, and that reviewer's labels were all "pass") |
 | Not scored                                 | none: all 40 cases scored                                                          |
 
@@ -102,7 +102,7 @@ More in [packages/mcp-server/README.md](packages/mcp-server/README.md).
 
 ## What does not work yet
 
-- **The judge has not been checked against a person.** It passes 51 of 63 replies and agrees with an AI reviewer 14 times out of 15, but the spec's check is against 15 replies **you** label by hand (`evals/labels/to-label.md`), and that has not been done.
+- **The judge is lenient on one thing that matters.** It agrees with a person's labels on 13 of 15 replies, but one of the two misses is serious: it scored 5 out of 5 a reply that promises a refund, which its own rubric says scores 1 (`long-rambling-return`). The other miss is borderline (`angry-but-legitimate-delivery`: judge 3, person fail). Replies also sometimes show internal clause IDs such as `(returns.window)` to the customer.
 - **A safety ticket gets an unsafe reply.** On `damaged-item-safety-hazard` (a device that sparks) the agent escalates correctly, but its reply never tells the customer to stop using or unplug the device, and it does not cite the safety clause. The escalation reaches a human, but the customer is not told the one thing that matters most in the meantime.
 - **The agent is untuned.** 65% overall; ordinary tickets 46.7%. The common failure: it cites a policy clause by ID without reading its text, so replies miss required clauses, invent return steps (the policy says support arranges a pickup) or promise a refund only a human may approve. A redesign on branch `phase-8-v2` was measured on all 40 cases and **not merged**: it lifts ordinary tickets from 46.7% to 66.7% but drops edge cases from 60% to 40%, and scores 60% overall against 65% ([details](docs/failures.md), [#18](https://github.com/builtbynidhi/triage-agent/issues/18)).
 - **Approved writes are recorded, not delivered.** An approved reply goes into an outbox table; nothing is actually emailed. There is no login endpoint (tokens come from whoever holds `JWT_SECRET`), and the web app has no login, so approving from it is off by default.

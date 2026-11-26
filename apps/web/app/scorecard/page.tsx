@@ -155,10 +155,14 @@ export default function ScorecardPage() {
           <div className="grid gap-x-4 px-3 py-2 sm:grid-cols-[16rem_9rem_1fr]">
             <dt className="text-sm">Judge agreement</dt>
             <dd className="text-sm font-semibold">
-              {typeof judgeAgreement === "string" ? "not measured" : "measured"}
+              {isRatio(judgeAgreement)
+                ? `${judgeAgreement.n}/${judgeAgreement.of} (${Math.round((judgeAgreement.n / judgeAgreement.of) * 100)}%)`
+                : "not measured"}
             </dd>
             <dd className="text-xs text-muted sm:self-center">
-              The check is against 15 replies a person labels by hand, and that has not been done.{" "}
+              {isRatio(judgeAgreement)
+                ? "How often the judge's pass or fail matches the owner's own label on 15 replies read by hand (the bar is 80%)."
+                : "The check is against 15 replies a person labels by hand, and that has not been done."}{" "}
               {aiLine}
             </dd>
           </div>

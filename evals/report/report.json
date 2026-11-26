@@ -1,6 +1,6 @@
 {
   "meta": {
-    "date": "2026-11-25",
+    "date": "2026-11-26",
     "mode": "replay",
     "repeats": 3,
     "today": "2026-11-20",
@@ -111,7 +111,24 @@
         }
       }
     },
-    "judgeAgreement": "not measured (no hand labels yet)",
+    "judgeAgreement": {
+      "n": 13,
+      "of": 15,
+      "rate": 0.8666666666666667,
+      "disagreements": [
+        {
+          "case_id": "long-rambling-return",
+          "label": "fail",
+          "judge": "5 (pass)"
+        },
+        {
+          "case_id": "angry-but-legitimate-delivery",
+          "label": "fail",
+          "judge": "3 (pass)"
+        }
+      ],
+      "unjudged": 0
+    },
     "judgeAgreementAi": {
       "n": 14,
       "of": 15,
@@ -132,7 +149,7 @@
       "category": "normal",
       "repeat": 1,
       "complete": true,
-      "latencyMs": 58243,
+      "latencyMs": 58313,
       "grade": {
         "pass": true,
         "decision": {
@@ -189,7 +206,7 @@
       "category": "normal",
       "repeat": 2,
       "complete": true,
-      "latencyMs": 57583,
+      "latencyMs": 57581,
       "grade": {
         "pass": true,
         "decision": {
@@ -246,7 +263,7 @@
       "category": "normal",
       "repeat": 3,
       "complete": true,
-      "latencyMs": 57587,
+      "latencyMs": 57580,
       "grade": {
         "pass": true,
         "decision": {
@@ -303,7 +320,7 @@
       "category": "edge",
       "repeat": 1,
       "complete": true,
-      "latencyMs": 68360,
+      "latencyMs": 68364,
       "grade": {
         "pass": true,
         "decision": {
@@ -365,7 +382,7 @@
       "category": "edge",
       "repeat": 2,
       "complete": true,
-      "latencyMs": 68361,
+      "latencyMs": 68350,
       "grade": {
         "pass": true,
         "decision": {
@@ -427,7 +444,7 @@
       "category": "edge",
       "repeat": 3,
       "complete": true,
-      "latencyMs": 68355,
+      "latencyMs": 68351,
       "grade": {
         "pass": true,
         "decision": {
@@ -489,7 +506,7 @@
       "category": "edge",
       "repeat": 1,
       "complete": true,
-      "latencyMs": 80579,
+      "latencyMs": 80578,
       "grade": {
         "pass": false,
         "decision": {
@@ -578,7 +595,7 @@
       "category": "edge",
       "repeat": 2,
       "complete": true,
-      "latencyMs": 80576,
+      "latencyMs": 80574,
       "grade": {
         "pass": false,
         "decision": {
@@ -667,7 +684,7 @@
       "category": "edge",
       "repeat": 3,
       "complete": true,
-      "latencyMs": 80575,
+      "latencyMs": 80573,
       "grade": {
         "pass": false,
         "decision": {
@@ -755,67 +772,6 @@
       "caseId": "boundary-return-day-8-outside",
       "category": "edge",
       "repeat": 1,
-      "complete": true,
-      "latencyMs": 76757,
-      "grade": {
-        "pass": true,
-        "decision": {
-          "ok": true,
-          "expected": "AUTO_REPLY",
-          "got": "AUTO_REPLY"
-        },
-        "grounding": {
-          "missing": [],
-          "forbidden": [],
-          "invented": [],
-          "ok": true
-        },
-        "reply": {
-          "missing": [],
-          "forbidden": [],
-          "ok": true
-        },
-        "judge": {
-          "rubric": "declines-clearly-and-kindly",
-          "score": 5,
-          "reason": "The reply clearly and kindly declines the return early on, accurately states the policy reason (7-day return window) without blaming the customer, and maintains a courteous tone throughout.",
-          "pass": true
-        },
-        "reasons": []
-      },
-      "decision": {
-        "decision": "AUTO_REPLY",
-        "intent": "return_request",
-        "confidence": 0.98,
-        "facts_used": [
-          "order.delivered_at",
-          "eligibility.eligible",
-          "eligibility.reason"
-        ],
-        "clause_ids": [
-          "returns.window"
-        ],
-        "reply_draft": "Dear customer, thank you for contacting Kaveri Home & Kitchen. We have looked up order A-10414, which was delivered on 12 November 2026. Under our return policy (returns.window), items must be returned within 7 days of delivery. As today is 20 November 2026 (day 8 since delivery), we are unfortunately unable to accept a return for the pan and skillet.",
-        "escalation_reason": "",
-        "missing_fields": []
-      },
-      "exit": "decided",
-      "repaired": false,
-      "usage": {
-        "steps": 6,
-        "toolCalls": 3,
-        "tokens": 6719,
-        "modelCalls": 3
-      },
-      "listPriceUsd": 0.00734625,
-      "providers": [
-        "gemini/gemini-3.6-flash"
-      ]
-    },
-    {
-      "caseId": "boundary-return-day-8-outside",
-      "category": "edge",
-      "repeat": 2,
       "complete": true,
       "latencyMs": 76756,
       "grade": {
@@ -876,9 +832,70 @@
     {
       "caseId": "boundary-return-day-8-outside",
       "category": "edge",
+      "repeat": 2,
+      "complete": true,
+      "latencyMs": 76754,
+      "grade": {
+        "pass": true,
+        "decision": {
+          "ok": true,
+          "expected": "AUTO_REPLY",
+          "got": "AUTO_REPLY"
+        },
+        "grounding": {
+          "missing": [],
+          "forbidden": [],
+          "invented": [],
+          "ok": true
+        },
+        "reply": {
+          "missing": [],
+          "forbidden": [],
+          "ok": true
+        },
+        "judge": {
+          "rubric": "declines-clearly-and-kindly",
+          "score": 5,
+          "reason": "The reply clearly and kindly declines the return early on, accurately states the policy reason (7-day return window) without blaming the customer, and maintains a courteous tone throughout.",
+          "pass": true
+        },
+        "reasons": []
+      },
+      "decision": {
+        "decision": "AUTO_REPLY",
+        "intent": "return_request",
+        "confidence": 0.98,
+        "facts_used": [
+          "order.delivered_at",
+          "eligibility.eligible",
+          "eligibility.reason"
+        ],
+        "clause_ids": [
+          "returns.window"
+        ],
+        "reply_draft": "Dear customer, thank you for contacting Kaveri Home & Kitchen. We have looked up order A-10414, which was delivered on 12 November 2026. Under our return policy (returns.window), items must be returned within 7 days of delivery. As today is 20 November 2026 (day 8 since delivery), we are unfortunately unable to accept a return for the pan and skillet.",
+        "escalation_reason": "",
+        "missing_fields": []
+      },
+      "exit": "decided",
+      "repaired": false,
+      "usage": {
+        "steps": 6,
+        "toolCalls": 3,
+        "tokens": 6719,
+        "modelCalls": 3
+      },
+      "listPriceUsd": 0.00734625,
+      "providers": [
+        "gemini/gemini-3.6-flash"
+      ]
+    },
+    {
+      "caseId": "boundary-return-day-8-outside",
+      "category": "edge",
       "repeat": 3,
       "complete": true,
-      "latencyMs": 76756,
+      "latencyMs": 76753,
       "grade": {
         "pass": true,
         "decision": {
@@ -1051,7 +1068,7 @@
       "category": "normal",
       "repeat": 3,
       "complete": true,
-      "latencyMs": 74218,
+      "latencyMs": 74217,
       "grade": {
         "pass": true,
         "decision": {
@@ -2127,7 +2144,7 @@
       "category": "edge",
       "repeat": 1,
       "complete": true,
-      "latencyMs": 13798,
+      "latencyMs": 13794,
       "grade": {
         "pass": true,
         "decision": {
@@ -2186,7 +2203,7 @@
       "category": "edge",
       "repeat": 2,
       "complete": true,
-      "latencyMs": 13794,
+      "latencyMs": 13796,
       "grade": {
         "pass": true,
         "decision": {
@@ -3591,7 +3608,7 @@
       "category": "normal",
       "repeat": 1,
       "complete": true,
-      "latencyMs": 14419,
+      "latencyMs": 14418,
       "grade": {
         "pass": true,
         "decision": {
@@ -3651,7 +3668,7 @@
       "category": "normal",
       "repeat": 2,
       "complete": true,
-      "latencyMs": 14419,
+      "latencyMs": 14416,
       "grade": {
         "pass": true,
         "decision": {
@@ -3711,7 +3728,7 @@
       "category": "normal",
       "repeat": 3,
       "complete": true,
-      "latencyMs": 14417,
+      "latencyMs": 14426,
       "grade": {
         "pass": true,
         "decision": {
@@ -4530,63 +4547,6 @@
       "category": "normal",
       "repeat": 1,
       "complete": true,
-      "latencyMs": 2558,
-      "grade": {
-        "pass": true,
-        "decision": {
-          "ok": true,
-          "expected": "AUTO_REPLY",
-          "got": "AUTO_REPLY"
-        },
-        "grounding": {
-          "missing": [],
-          "forbidden": [],
-          "invented": [],
-          "ok": true
-        },
-        "reply": {
-          "missing": [],
-          "forbidden": [],
-          "ok": true
-        },
-        "judge": {
-          "rubric": "polite-and-answers-the-question",
-          "score": 5,
-          "reason": "The reply directly and warmly answers the delivery timeline question for Guwahati right away without any unnecessary filler.",
-          "pass": true
-        },
-        "reasons": []
-      },
-      "decision": {
-        "decision": "AUTO_REPLY",
-        "intent": "delivery_question",
-        "confidence": 0.99,
-        "facts_used": [],
-        "clause_ids": [
-          "delivery.estimates"
-        ],
-        "reply_draft": "Hi! Delivery to Guwahati typically takes 5 to 7 business days from the date of dispatch (excluding Sundays and public holidays). If you place your order before 2 pm IST on a business day, it will be dispatched the same day; otherwise it will be dispatched the next business day. Let us know if you need any further assistance!",
-        "escalation_reason": "",
-        "missing_fields": []
-      },
-      "exit": "decided",
-      "repaired": false,
-      "usage": {
-        "steps": 4,
-        "toolCalls": 1,
-        "tokens": 6104,
-        "modelCalls": 3
-      },
-      "listPriceUsd": 0.0010884,
-      "providers": [
-        "groq/openai/gpt-oss-120b"
-      ]
-    },
-    {
-      "caseId": "policy-question-delivery-time",
-      "category": "normal",
-      "repeat": 2,
-      "complete": true,
       "latencyMs": 2556,
       "grade": {
         "pass": true,
@@ -4642,9 +4602,66 @@
     {
       "caseId": "policy-question-delivery-time",
       "category": "normal",
+      "repeat": 2,
+      "complete": true,
+      "latencyMs": 2554,
+      "grade": {
+        "pass": true,
+        "decision": {
+          "ok": true,
+          "expected": "AUTO_REPLY",
+          "got": "AUTO_REPLY"
+        },
+        "grounding": {
+          "missing": [],
+          "forbidden": [],
+          "invented": [],
+          "ok": true
+        },
+        "reply": {
+          "missing": [],
+          "forbidden": [],
+          "ok": true
+        },
+        "judge": {
+          "rubric": "polite-and-answers-the-question",
+          "score": 5,
+          "reason": "The reply directly and warmly answers the delivery timeline question for Guwahati right away without any unnecessary filler.",
+          "pass": true
+        },
+        "reasons": []
+      },
+      "decision": {
+        "decision": "AUTO_REPLY",
+        "intent": "delivery_question",
+        "confidence": 0.99,
+        "facts_used": [],
+        "clause_ids": [
+          "delivery.estimates"
+        ],
+        "reply_draft": "Hi! Delivery to Guwahati typically takes 5 to 7 business days from the date of dispatch (excluding Sundays and public holidays). If you place your order before 2 pm IST on a business day, it will be dispatched the same day; otherwise it will be dispatched the next business day. Let us know if you need any further assistance!",
+        "escalation_reason": "",
+        "missing_fields": []
+      },
+      "exit": "decided",
+      "repaired": false,
+      "usage": {
+        "steps": 4,
+        "toolCalls": 1,
+        "tokens": 6104,
+        "modelCalls": 3
+      },
+      "listPriceUsd": 0.0010884,
+      "providers": [
+        "groq/openai/gpt-oss-120b"
+      ]
+    },
+    {
+      "caseId": "policy-question-delivery-time",
+      "category": "normal",
       "repeat": 3,
       "complete": true,
-      "latencyMs": 2561,
+      "latencyMs": 2555,
       "grade": {
         "pass": true,
         "decision": {
@@ -4701,7 +4718,7 @@
       "category": "normal",
       "repeat": 1,
       "complete": true,
-      "latencyMs": 2646,
+      "latencyMs": 2645,
       "grade": {
         "pass": true,
         "decision": {
@@ -4760,7 +4777,7 @@
       "category": "normal",
       "repeat": 2,
       "complete": true,
-      "latencyMs": 2646,
+      "latencyMs": 2645,
       "grade": {
         "pass": true,
         "decision": {
@@ -4819,7 +4836,7 @@
       "category": "normal",
       "repeat": 3,
       "complete": true,
-      "latencyMs": 2647,
+      "latencyMs": 2644,
       "grade": {
         "pass": true,
         "decision": {
@@ -4878,7 +4895,7 @@
       "category": "edge",
       "repeat": 1,
       "complete": true,
-      "latencyMs": 4604,
+      "latencyMs": 4601,
       "grade": {
         "pass": false,
         "decision": {
@@ -4961,7 +4978,7 @@
       "category": "edge",
       "repeat": 2,
       "complete": true,
-      "latencyMs": 4632,
+      "latencyMs": 4599,
       "grade": {
         "pass": false,
         "decision": {
@@ -5044,7 +5061,7 @@
       "category": "edge",
       "repeat": 3,
       "complete": true,
-      "latencyMs": 4600,
+      "latencyMs": 4608,
       "grade": {
         "pass": false,
         "decision": {
@@ -7374,7 +7391,7 @@
       "category": "edge",
       "repeat": 1,
       "complete": true,
-      "latencyMs": 2423,
+      "latencyMs": 2421,
       "grade": {
         "pass": true,
         "decision": {
@@ -7429,7 +7446,7 @@
       "category": "edge",
       "repeat": 2,
       "complete": true,
-      "latencyMs": 2422,
+      "latencyMs": 2421,
       "grade": {
         "pass": true,
         "decision": {
@@ -7484,7 +7501,7 @@
       "category": "edge",
       "repeat": 3,
       "complete": true,
-      "latencyMs": 2421,
+      "latencyMs": 2422,
       "grade": {
         "pass": true,
         "decision": {
@@ -7632,7 +7649,7 @@
       "category": "edge",
       "repeat": 2,
       "complete": true,
-      "latencyMs": 3098,
+      "latencyMs": 3096,
       "grade": {
         "pass": false,
         "decision": {
@@ -7725,7 +7742,7 @@
       "category": "edge",
       "repeat": 3,
       "complete": true,
-      "latencyMs": 3095,
+      "latencyMs": 3094,
       "grade": {
         "pass": false,
         "decision": {

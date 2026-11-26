@@ -150,8 +150,10 @@ describe("judge agreement with hand labels", () => {
     const ai = loadLabels(join(dir, AI_LABELS_FILE));
     expect(ai).toHaveLength(15);
     expect(ai.every((l) => l.label === "pass" || l.label === "fail")).toBe(true);
-    // The owner's own file stays blank until the owner fills it in: nothing here is passed off as a hand label.
-    expect(loadLabels(join(dir, "judge-labels.yaml"))).toEqual([]);
+    // The owner's own labels (filled in by hand on 2026-11-26): complete, and for the same 15 replies.
+    const own = loadLabels(join(dir, "judge-labels.yaml"));
+    expect(own).toHaveLength(15);
+    expect(own.map((l) => l.case_id)).toEqual(ai.map((l) => l.case_id));
   });
   it("is null with no labels, never a made-up number", () => {
     expect(agreement([], [runWith("a", 5)])).toBeNull();
