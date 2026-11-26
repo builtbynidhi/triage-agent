@@ -7,7 +7,10 @@ import {
   instructionLike,
   leaksPrompt,
   loadSystemPrompt,
+  promisedApprovals,
   quarantineTicket,
+  safetyHazard,
+  stripClauseIds,
 } from "@triage/agent";
 import { loadPolicies } from "@triage/data";
 import { loadCases } from "./load-cases.ts";
@@ -101,5 +104,27 @@ describe("the system prompt never appears in a reply", () => {
     );
     expect(replies.length).toBeGreaterThan(100);
     expect(replies.filter((x) => leaksPrompt(x, promptText))).toEqual([]);
+  });
+});
+
+describe("reply rules (agent-v3): checked against the real tickets and the real policy", () => {
+  it("the hazard pattern matches only the safety ticket among the 40", () => {
+    expect(cases.filter((c) => safetyHazard(c.ticket.text)).map((c) => c.id)).toEqual([
+      "damaged-item-safety-hazard",
+    ]);
+  });
+  it("the refund-promise rule flags none of the real policy clauses (they describe, they do not promise)", () => {
+    expect(
+      loadPolicies()
+        .filter((p) => promisedApprovals(p.text).length)
+        .map((p) => p.clauseId),
+    ).toEqual([]);
+  });
+  it("removing clause IDs leaves the real policy text unchanged (it contains none)", () => {
+    const real = loadPolicies();
+    const titles = new Map(real.map((p) => [p.clauseId, p.title]));
+    expect(
+      real.filter((p) => stripClauseIds(p.text, titles) !== p.text).map((p) => p.clauseId),
+    ).toEqual([]);
   });
 });

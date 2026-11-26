@@ -8,7 +8,7 @@ import { fileURLToPath } from "node:url";
  * every change shows up in a diff. A new version gets a new file; the version and a content hash
  * go into each run's step record, so a score can always be traced to the exact prompt.
  */
-export const PROMPT_FILE = "system.v1.md";
+export const PROMPT_FILE = "system.v2.md";
 
 export type PromptStage = "gather" | "decide" | "repair";
 

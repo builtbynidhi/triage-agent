@@ -1,4 +1,5 @@
 import { Client, InMemoryTransport } from "@modelcontextprotocol/client";
+import { parsePolicyFile } from "@triage/data";
 import type { ToolSpec } from "@triage/providers";
 import { createTriageServer, type TriageServerOptions } from "@triage/mcp-server";
 
@@ -16,10 +17,24 @@ export interface ToolResult {
   text: string;
 }
 
+/** One policy clause as the policy resources publish it. */
+export interface PolicyClause {
+  clause_id: string;
+  doc: string;
+  title: string;
+  text: string;
+}
+
 export interface McpTools {
   merchant: string;
   /** The tools the model may call, in provider-neutral form (read-only tools only). */
   specs: ToolSpec[];
+  /**
+   * Every policy clause, read once at connect time from the server's policy:// resources (the
+   * same text a person sees in Claude Desktop). Used to show the model the wording of clauses a
+   * tool names by ID only, and to name clauses in words. Never written to.
+   */
+  clauses: ReadonlyMap<string, PolicyClause>;
   call(name: string, args: Record<string, unknown>): Promise<ToolResult>;
   close(): Promise<void>;
 }
@@ -36,8 +51,20 @@ export async function connectTools(server: TriageServerOptions): Promise<McpTool
   const readOnly = tools.filter((t) => t.annotations?.readOnlyHint === true);
   const store = await server.store.getTenant(server.tenantId);
 
+  // The policy text, through MCP like everything else (resources, not the database).
+  const clauses = new Map<string, PolicyClause>();
+  const { resources } = await client.listResources();
+  for (const r of resources.filter((x) => x.uri.startsWith("policy://"))) {
+    const { contents } = await client.readResource({ uri: r.uri });
+    const markdown = contents.map((c) => ("text" in c ? c.text : "")).join("\n");
+    for (const c of parsePolicyFile(markdown, r.uri)) {
+      clauses.set(c.clauseId, { clause_id: c.clauseId, doc: c.doc, title: c.title, text: c.text });
+    }
+  }
+
   return {
     merchant: store?.name ?? server.tenantId,
+    clauses,
     specs: readOnly.map((t) => ({
       name: t.name,
       description: t.description ?? "",

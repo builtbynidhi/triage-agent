@@ -56,6 +56,7 @@ describe("a normal run, end to end", () => {
       "retrieve:tool_call",
       "gather:tool_call",
       "gather:tool_call",
+      "retrieve:transition", // the eligibility clauses' policy text is attached for the model
       "gather:model_call",
       "decide:transition",
       "decide:model_call",

@@ -10,6 +10,7 @@ import { Budget, type BudgetExhausted, type BudgetLimits } from "./budget.ts";
 import { DECISION_JSON_SCHEMA, type Decision } from "./decision.ts";
 import { injectionMarkers, instructionLike, quarantineTicket } from "./guard.ts";
 import { loadSystemPrompt, type PromptStage, type SystemPrompt } from "./prompts/index.ts";
+import { SAFETY_CLAUSE, SAFETY_NOTICE, safetyHazard, stripClauseIds } from "./reply-rules.ts";
 import { ticketMessage, type Ticket } from "./ticket.ts";
 import type { McpTools } from "./tools.ts";
 import {
@@ -142,7 +143,18 @@ const BUDGET_REASON: Record<BudgetExhausted, string> = {
  * on macOS arm64 missed every recording on the Linux x86 CI runner until scores were removed.
  * The full result, scores included, stays in the step record.
  */
-export function modelView(tool: string, structured: Record<string, unknown>): string {
+export function modelView(
+  tool: string,
+  structured: Record<string, unknown>,
+  policyText: { clause_id: string; title: string; text: string }[] = [],
+): string {
+  if (policyText.length) {
+    // The wording of the clauses a tool named by ID only (see policyTextFor in runAgent).
+    return JSON.stringify({
+      ...structured,
+      policy_text: policyText.map(({ clause_id, title, text }) => ({ clause_id, title, text })),
+    });
+  }
   if (tool === "search_policy" && Array.isArray(structured.results)) {
     const results = (structured.results as Record<string, unknown>[]).map((r) =>
       Object.fromEntries(Object.entries(r).filter(([k]) => k !== "score")),
@@ -399,12 +411,18 @@ export async function runAgent(opts: AgentOptions): Promise<RunResult> {
           output: result.structured,
           ms: Math.round(performance.now() - t0),
         });
+        const attached = policyTextFor(call.name, result.structured);
+        if (attached.length)
+          transition(
+            "retrieve",
+            `policy text attached to ${call.name}: ${attached.map((c) => c.clause_id).join(", ")}`,
+          );
         // Tool results go back as tool messages, never into the system prompt.
         messages.push({
           role: "tool",
           toolCallId: call.id,
           name: call.name,
-          content: modelView(call.name, result.structured),
+          content: modelView(call.name, result.structured, attached),
         });
       }
     }
@@ -453,7 +471,7 @@ export async function runAgent(opts: AgentOptions): Promise<RunResult> {
       verdict.decision,
       opts.confidenceThreshold ?? CONFIDENCE_THRESHOLD,
     );
-    return finish(decision, "decided", undefined, downgraded);
+    return finish(finalReply(decision), "decided", undefined, downgraded);
   } catch (err) {
     if (!(err instanceof StopRun)) {
       // A harness problem (a missing recording): close the span honestly, then fail loudly.
@@ -467,7 +485,7 @@ export async function runAgent(opts: AgentOptions): Promise<RunResult> {
     }
     // Fail closed: a human gets the ticket with whatever was gathered.
     transition("escalate", `${err.exit} → escalate`);
-    return finish(failClosed(err.message), err.exit, err.message, false);
+    return finish(finalReply(failClosed(err.message)), err.exit, err.message, false);
   }
 
   function harvest(tool: string, s: Record<string, unknown>) {
@@ -491,6 +509,69 @@ export async function runAgent(opts: AgentOptions): Promise<RunResult> {
           ? `order ${(s.order as { order_id?: string })?.order_id ?? ""}: ${(s.order as { status?: string })?.status ?? ""}`
           : `${tool}: ok`,
     );
+  }
+
+  /**
+   * The text of every clause a tool named by ID only (check_eligibility returns clause IDs, not
+   * wording), plus the other clauses of the same policy document, so the model writes from the
+   * policy itself: the return process, the refund timeline. Read from the MCP policy resources;
+   * a clause that gives orders to the assistant is never attached. Attached clauses are citable:
+   * the model has read them in this run.
+   */
+  function policyTextFor(tool: string, s: Record<string, unknown>) {
+    if (tool !== "check_eligibility" || s.ok === false || !Array.isArray(s.clause_ids)) return [];
+    const docs = new Set(
+      (s.clause_ids as string[]).flatMap((id) => opts.tools.clauses.get(id)?.doc ?? []),
+    );
+    const attached = [...opts.tools.clauses.values()].filter(
+      (c) => docs.has(c.doc) && !instructionLike(c.text),
+    );
+    for (const c of attached) citable.add(c.clause_id);
+    return attached;
+  }
+
+  /**
+   * Rules applied in code to the final decision (reply-rules.ts):
+   *   - a ticket that describes a safety hazard is ESCALATEd, and its reply starts with the safety
+   *     clause's instruction and cites that clause, whatever the model wrote;
+   *   - clause IDs are removed from the reply text (they belong in clause_ids).
+   * A REJECT is left alone: it sends nothing.
+   */
+  function finalReply(d: Decision): Decision {
+    if (d.decision === "REJECT") return d;
+    let out = d;
+    const hazard = safetyHazard(ticket.text);
+    const safety = opts.tools.clauses.get(SAFETY_CLAUSE);
+    if (hazard && safety) {
+      citable.add(SAFETY_CLAUSE);
+      const reply = out.reply_draft.includes(SAFETY_NOTICE)
+        ? out.reply_draft
+        : `${SAFETY_NOTICE} ${out.reply_draft}`.trim();
+      out = {
+        ...out,
+        decision: "ESCALATE",
+        reply_draft: reply,
+        clause_ids: out.clause_ids.includes(SAFETY_CLAUSE)
+          ? out.clause_ids
+          : [...out.clause_ids, SAFETY_CLAUSE],
+        escalation_reason:
+          out.decision === "ESCALATE" && out.escalation_reason.trim()
+            ? out.escalation_reason
+            : `Safety hazard reported ("${hazard}"): escalate at once with high priority (${SAFETY_CLAUSE}).`,
+        missing_fields: [],
+      };
+      transition(
+        "validate",
+        `safety rule: hazard "${hazard}" → ESCALATE with the safety instruction`,
+      );
+    }
+    const titles = new Map([...opts.tools.clauses.values()].map((c) => [c.clause_id, c.title]));
+    const stripped = stripClauseIds(out.reply_draft, titles);
+    if (stripped !== out.reply_draft) {
+      out = { ...out, reply_draft: stripped };
+      transition("validate", "removed clause IDs from the reply text");
+    }
+    return out;
   }
 
   function failClosed(reason: string): Decision {

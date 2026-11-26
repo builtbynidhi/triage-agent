@@ -23,6 +23,14 @@ export { ticketMessage } from "./ticket.ts";
 export { failureDetail } from "./failure.ts";
 export type { FailureDetail } from "./failure.ts";
 export { injectionMarkers, instructionLike, leaksPrompt, quarantineTicket } from "./guard.ts";
+export {
+  promisedApprovals,
+  safetyHazard,
+  stripClauseIds,
+  SAFETY_CLAUSE,
+  SAFETY_NOTICE,
+} from "./reply-rules.ts";
+export type { PolicyClause } from "./tools.ts";
 export type { Ticket } from "./ticket.ts";
 export { connectTools } from "./tools.ts";
 export type { McpTools, ToolResult } from "./tools.ts";

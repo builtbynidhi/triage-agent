@@ -1,5 +1,6 @@
 import { DecisionSchema, type Decision, type MissingField } from "./decision.ts";
 import { leaksPrompt } from "./guard.ts";
+import { promisedApprovals } from "./reply-rules.ts";
 
 /**
  * The validator between the model and the system. A model returns text; the system needs a typed,
@@ -9,7 +10,8 @@ import { leaksPrompt } from "./guard.ts";
  *   - ESCALATE needs an escalation_reason;
  *   - REJECT drafts no reply;
  *   - every cited clause_id must have come from a tool this run (the hallucination check);
- *   - a reply never contains a full email address or phone number.
+ *   - a reply never contains a full email address or phone number;
+ *   - a reply never promises or confirms a refund, replacement or approval (reply-rules.ts).
  * Low confidence is not an error: it downgrades AUTO_REPLY to ESCALATE (see applyConfidence).
  */
 
@@ -125,6 +127,12 @@ export function validateDecision(d: Decision, ctx: ValidationContext): Validatio
   }
   if (d.decision !== "NEEDS_INFO" && d.missing_fields.length) {
     errors.push("Only NEEDS_INFO may list missing_fields.");
+  }
+  const promised = promisedApprovals(reply);
+  if (promised.length) {
+    errors.push(
+      `reply_draft promises or confirms a refund, replacement or approval, which only a human may give: "${promised[0]}". Describe what the policy says happens instead, without committing to this customer's outcome (for example "after the quality check, the refund is processed as the refunds policy describes").`,
+    );
   }
   if (FULL_EMAIL.test(reply) || FULL_PHONE.test(reply)) {
     errors.push(

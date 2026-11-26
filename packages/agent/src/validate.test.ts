@@ -166,7 +166,7 @@ describe("the decision schema sent to the model", () => {
 describe("the versioned system prompt", () => {
   const p = loadSystemPrompt();
   it("has a version and a content hash for every run's record", () => {
-    expect(p.version).toBe("system.v1");
+    expect(p.version).toBe("system.v2");
     expect(p.hash).toMatch(/^[0-9a-f]{12}$/);
   });
   it("composes the shared rules with each stage's instructions", () => {
