@@ -29,8 +29,8 @@ It only **proposes**. A human with the reviewer role approves anything that woul
 
 | Metric                                     | Result                                                                             |
 | ------------------------------------------ | ---------------------------------------------------------------------------------- |
-| **Pass rate**                              | **65%** (78/120 runs)                                                              |
-| normal / edge / adversarial                | 46.7% / 60% / **100%**                                                             |
+| **Pass rate**                              | **67.5%** (81/120 runs)                                                            |
+| normal / edge / adversarial                | 53.3% / 60% / **100%**                                                             |
 | Decision accuracy                          | 90%                                                                                |
 | Citation accuracy                          | 90% (of AUTO_REPLY runs)                                                           |
 | Escalation precision, recall               | 88.9%, 88.9%                                                                       |
@@ -42,7 +42,7 @@ It only **proposes**. A human with the reviewer role approves anything that woul
 | Judge agreement with an AI second reviewer | 14/15 (a sanity check only: not human, and that reviewer's labels were all "pass") |
 | Not scored                                 | none: all 40 cases scored                                                          |
 
-Run on 2026-11-25, prompt `system.v1`, 3 repeats per case. The model answers were recorded mostly on Groq `gpt-oss-120b` (29 cases; 5 were recorded on Gemini 3.6 Flash, 1 on both after a mid-run fallback, and 5 never reach a model because the input guard rejects them first). The judge is Gemini 3.6 Flash: a different model family from the agent.
+Run on 2026-11-27, prompt `system.v1`, 3 repeats per case (the safety rule in code, added that day, changes no model request, so the recordings are those of 2026-11-25). The model answers were recorded mostly on Groq `gpt-oss-120b` (29 cases; 5 were recorded on Gemini 3.6 Flash, 1 on both after a mid-run fallback, and 5 never reach a model because the input guard rejects them first). The judge is Gemini 3.6 Flash: a different model family from the agent.
 
 ![Pass rate by group](docs/images/pass-rate.png)
 
@@ -103,8 +103,7 @@ More in [packages/mcp-server/README.md](packages/mcp-server/README.md).
 ## What does not work yet
 
 - **The judge is lenient on one thing that matters.** It agrees with a person's labels on 13 of 15 replies, but one of the two misses is serious: it scored 5 out of 5 a reply that promises a refund, which its own rubric says scores 1 (`long-rambling-return`). The other miss is borderline (`angry-but-legitimate-delivery`: judge 3, person fail). Replies also sometimes show internal clause IDs such as `(returns.window)` to the customer.
-- **A safety ticket gets an unsafe reply.** On `damaged-item-safety-hazard` (a device that sparks) the agent escalates correctly, but its reply never tells the customer to stop using or unplug the device, and it does not cite the safety clause. The escalation reaches a human, but the customer is not told the one thing that matters most in the meantime.
-- **The agent is untuned.** 65% overall; ordinary tickets 46.7%. The common failure: it cites a policy clause by ID without reading its text, so replies miss required clauses, invent return steps (the policy says support arranges a pickup) or promise a refund only a human may approve. A redesign on branch `phase-8-v2` was measured on all 40 cases and **not merged**: it lifts ordinary tickets from 46.7% to 66.7% but drops edge cases from 60% to 40%, and scores 60% overall against 65% ([details](docs/failures.md), [#18](https://github.com/builtbynidhi/triage-agent/issues/18)).
+- **The agent is barely tuned.** 67.5% overall; ordinary tickets 53.3%. The one fix merged is the safety rule: a ticket describing a hazard (smoke, sparks, overheating) now always escalates, and its reply starts with the safety clause's instruction to stop using the item, enforced in code (`damaged-item-safety-hazard`: 0/3 to 3/3). The common failure: it cites a policy clause by ID without reading its text, so replies miss required clauses, invent return steps (the policy says support arranges a pickup) or promise a refund only a human may approve. A redesign on branch `phase-8-v2` was measured on all 40 cases and **not merged**: it lifts ordinary tickets from 46.7% to 66.7% but drops edge cases from 60% to 40%, and scores 60% overall against 65% ([details](docs/failures.md), [#18](https://github.com/builtbynidhi/triage-agent/issues/18)). A second attempt, branch `agent-v3` (reply rules in code, the model reads the policy wording), was measured on 27 Nov and **not merged** either: higher overall on the cases scored, but one adversarial case (`quoted-email-injection`) fails, and the gate allows no adversarial drop.
 - **Approved writes are recorded, not delivered.** An approved reply goes into an outbox table; nothing is actually emailed. There is no login endpoint (tokens come from whoever holds `JWT_SECRET`), and the web app has no login, so approving from it is off by default.
 - **The nightly live check is built but switched off.** It runs five cases against the real models and opens an issue if they disagree with the recordings. It needs your free-tier keys as repository secrets, and a full-suite nightly would not fit the free quota.
 - **The three repeats of a case are identical in replay**, because there is one recording per request. They test the pipeline, not the model's run-to-run variation.

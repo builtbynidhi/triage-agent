@@ -45,9 +45,9 @@ TypeScript on Node 22 (pnpm workspace) · SQLite with FTS5 and sqlite-vec · MCP
 
 ## Where it stands
 
-- **Measured:** 65% of eval runs pass (78 of 120: all 40 cases × 3 repeats; adversarial 30 of 30) on an untuned agent. Cost: $0 (about $0.15 per 100 tickets at list price). CI replays this suite on every push and fails if the pass rate or any adversarial case drops against the committed baseline.
+- **Measured:** 67.5% of eval runs pass (81 of 120: all 40 cases × 3 repeats; adversarial 30 of 30) on a barely tuned agent (one fix merged: the safety rule). Cost: $0 (about $0.15 per 100 tickets at list price). CI replays this suite on every push and fails if the pass rate or any adversarial case drops against the committed baseline.
 - **Judge:** 51 of the 63 replies scored pass (mean 4.14 out of 5). It agrees with the owner's own labels on 13 of 15 replies (87%, above the 80% bar).
-- **Not done:** the agent fixes from Phase 8 are parked on a branch and unmeasured; the nightly live check is built but off (it needs your free-tier keys and fits only a five-case canary); the Supabase mode and the LangGraph port are not built. Details: [docs/failures.md](failures.md).
+- **Not done:** two larger agent redesigns (`phase-8-v2`, `agent-v3`) were measured and not merged; the nightly live check is built but off (it needs your free-tier keys and fits only a five-case canary); the Supabase mode and the LangGraph port are not built. Details: [docs/failures.md](failures.md).
 
 ## Run it
 

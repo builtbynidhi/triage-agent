@@ -1,6 +1,6 @@
 {
   "meta": {
-    "date": "2026-11-26",
+    "date": "2026-11-27",
     "mode": "replay",
     "repeats": 3,
     "today": "2026-11-20",
@@ -17,15 +17,15 @@
       "incomplete": 0
     },
     "passRate": {
-      "n": 78,
+      "n": 81,
       "of": 120,
-      "rate": 0.65
+      "rate": 0.675
     },
     "byGroup": {
       "normal": {
-        "n": 21,
+        "n": 24,
         "of": 45,
-        "rate": 0.4666666666666667
+        "rate": 0.5333333333333333
       },
       "edge": {
         "n": 27,
@@ -65,7 +65,7 @@
     },
     "latencyMs": {
       "p50": 4040,
-      "p95": 74220
+      "p95": 74219
     },
     "tokensPerRun": {
       "mean": 4630.775
@@ -149,7 +149,7 @@
       "category": "normal",
       "repeat": 1,
       "complete": true,
-      "latencyMs": 58313,
+      "latencyMs": 58254,
       "grade": {
         "pass": true,
         "decision": {
@@ -206,7 +206,7 @@
       "category": "normal",
       "repeat": 2,
       "complete": true,
-      "latencyMs": 57581,
+      "latencyMs": 57585,
       "grade": {
         "pass": true,
         "decision": {
@@ -263,7 +263,7 @@
       "category": "normal",
       "repeat": 3,
       "complete": true,
-      "latencyMs": 57580,
+      "latencyMs": 57585,
       "grade": {
         "pass": true,
         "decision": {
@@ -320,7 +320,7 @@
       "category": "edge",
       "repeat": 1,
       "complete": true,
-      "latencyMs": 68364,
+      "latencyMs": 68383,
       "grade": {
         "pass": true,
         "decision": {
@@ -382,7 +382,7 @@
       "category": "edge",
       "repeat": 2,
       "complete": true,
-      "latencyMs": 68350,
+      "latencyMs": 68352,
       "grade": {
         "pass": true,
         "decision": {
@@ -506,7 +506,7 @@
       "category": "edge",
       "repeat": 1,
       "complete": true,
-      "latencyMs": 80578,
+      "latencyMs": 80588,
       "grade": {
         "pass": false,
         "decision": {
@@ -595,7 +595,7 @@
       "category": "edge",
       "repeat": 2,
       "complete": true,
-      "latencyMs": 80574,
+      "latencyMs": 80596,
       "grade": {
         "pass": false,
         "decision": {
@@ -684,7 +684,7 @@
       "category": "edge",
       "repeat": 3,
       "complete": true,
-      "latencyMs": 80573,
+      "latencyMs": 80575,
       "grade": {
         "pass": false,
         "decision": {
@@ -773,7 +773,7 @@
       "category": "edge",
       "repeat": 1,
       "complete": true,
-      "latencyMs": 76756,
+      "latencyMs": 76758,
       "grade": {
         "pass": true,
         "decision": {
@@ -834,7 +834,7 @@
       "category": "edge",
       "repeat": 2,
       "complete": true,
-      "latencyMs": 76754,
+      "latencyMs": 76760,
       "grade": {
         "pass": true,
         "decision": {
@@ -895,7 +895,7 @@
       "category": "edge",
       "repeat": 3,
       "complete": true,
-      "latencyMs": 76753,
+      "latencyMs": 76755,
       "grade": {
         "pass": true,
         "decision": {
@@ -956,7 +956,7 @@
       "category": "normal",
       "repeat": 1,
       "complete": true,
-      "latencyMs": 74220,
+      "latencyMs": 74219,
       "grade": {
         "pass": true,
         "decision": {
@@ -1012,7 +1012,7 @@
       "category": "normal",
       "repeat": 2,
       "complete": true,
-      "latencyMs": 74218,
+      "latencyMs": 74216,
       "grade": {
         "pass": true,
         "decision": {
@@ -1124,7 +1124,7 @@
       "category": "normal",
       "repeat": 1,
       "complete": true,
-      "latencyMs": 10053,
+      "latencyMs": 10054,
       "grade": {
         "pass": false,
         "decision": {
@@ -1354,38 +1354,25 @@
       "complete": true,
       "latencyMs": 65396,
       "grade": {
-        "pass": false,
+        "pass": true,
         "decision": {
           "ok": true,
           "expected": "ESCALATE",
           "got": "ESCALATE"
         },
         "grounding": {
-          "missing": [
-            "damaged.safety"
-          ],
+          "missing": [],
           "forbidden": [],
           "invented": [],
-          "ok": false
+          "ok": true
         },
         "reply": {
-          "missing": [
-            [
-              "stop using",
-              "do not use",
-              "don't use",
-              "stop charging",
-              "unplug"
-            ]
-          ],
+          "missing": [],
           "forbidden": [],
-          "ok": false
+          "ok": true
         },
         "judge": "not requested",
-        "reasons": [
-          "missing required clause",
-          "reply missing required fact"
-        ]
+        "reasons": []
       },
       "decision": {
         "decision": "ESCALATE",
@@ -1396,9 +1383,10 @@
           "eligibility.eligible"
         ],
         "clause_ids": [
-          "returns.window"
+          "returns.window",
+          "damaged.safety"
         ],
-        "reply_draft": "We’re sorry to hear about the issue with your Bluetooth speaker. I’m escalating this matter to our specialist team for further assistance.",
+        "reply_draft": "For your safety, please stop using the item immediately and keep it away from children. We’re sorry to hear about the issue with your Bluetooth speaker. I’m escalating this matter to our specialist team for further assistance.",
         "escalation_reason": "Potential safety hazard with a damaged product; requires human review.",
         "missing_fields": []
       },
@@ -1414,26 +1402,7 @@
       "providers": [
         "groq/openai/gpt-oss-120b",
         "gemini/gemini-3.6-flash"
-      ],
-      "failure": {
-        "promptHash": "8ccf719d6eb1",
-        "validation": [
-          {
-            "ok": true
-          }
-        ],
-        "budgetAtExit": {
-          "steps": 5,
-          "toolCalls": 2,
-          "tokens": 5340,
-          "modelCalls": 3
-        },
-        "retrievedClauseIds": [
-          "returns.window"
-        ],
-        "exit": "decided",
-        "exitReason": null
-      }
+      ]
     },
     {
       "caseId": "damaged-item-safety-hazard",
@@ -1442,38 +1411,25 @@
       "complete": true,
       "latencyMs": 65394,
       "grade": {
-        "pass": false,
+        "pass": true,
         "decision": {
           "ok": true,
           "expected": "ESCALATE",
           "got": "ESCALATE"
         },
         "grounding": {
-          "missing": [
-            "damaged.safety"
-          ],
+          "missing": [],
           "forbidden": [],
           "invented": [],
-          "ok": false
+          "ok": true
         },
         "reply": {
-          "missing": [
-            [
-              "stop using",
-              "do not use",
-              "don't use",
-              "stop charging",
-              "unplug"
-            ]
-          ],
+          "missing": [],
           "forbidden": [],
-          "ok": false
+          "ok": true
         },
         "judge": "not requested",
-        "reasons": [
-          "missing required clause",
-          "reply missing required fact"
-        ]
+        "reasons": []
       },
       "decision": {
         "decision": "ESCALATE",
@@ -1484,9 +1440,10 @@
           "eligibility.eligible"
         ],
         "clause_ids": [
-          "returns.window"
+          "returns.window",
+          "damaged.safety"
         ],
-        "reply_draft": "We’re sorry to hear about the issue with your Bluetooth speaker. I’m escalating this matter to our specialist team for further assistance.",
+        "reply_draft": "For your safety, please stop using the item immediately and keep it away from children. We’re sorry to hear about the issue with your Bluetooth speaker. I’m escalating this matter to our specialist team for further assistance.",
         "escalation_reason": "Potential safety hazard with a damaged product; requires human review.",
         "missing_fields": []
       },
@@ -1502,26 +1459,7 @@
       "providers": [
         "groq/openai/gpt-oss-120b",
         "gemini/gemini-3.6-flash"
-      ],
-      "failure": {
-        "promptHash": "8ccf719d6eb1",
-        "validation": [
-          {
-            "ok": true
-          }
-        ],
-        "budgetAtExit": {
-          "steps": 5,
-          "toolCalls": 2,
-          "tokens": 5340,
-          "modelCalls": 3
-        },
-        "retrievedClauseIds": [
-          "returns.window"
-        ],
-        "exit": "decided",
-        "exitReason": null
-      }
+      ]
     },
     {
       "caseId": "damaged-item-safety-hazard",
@@ -1530,38 +1468,25 @@
       "complete": true,
       "latencyMs": 65394,
       "grade": {
-        "pass": false,
+        "pass": true,
         "decision": {
           "ok": true,
           "expected": "ESCALATE",
           "got": "ESCALATE"
         },
         "grounding": {
-          "missing": [
-            "damaged.safety"
-          ],
+          "missing": [],
           "forbidden": [],
           "invented": [],
-          "ok": false
+          "ok": true
         },
         "reply": {
-          "missing": [
-            [
-              "stop using",
-              "do not use",
-              "don't use",
-              "stop charging",
-              "unplug"
-            ]
-          ],
+          "missing": [],
           "forbidden": [],
-          "ok": false
+          "ok": true
         },
         "judge": "not requested",
-        "reasons": [
-          "missing required clause",
-          "reply missing required fact"
-        ]
+        "reasons": []
       },
       "decision": {
         "decision": "ESCALATE",
@@ -1572,9 +1497,10 @@
           "eligibility.eligible"
         ],
         "clause_ids": [
-          "returns.window"
+          "returns.window",
+          "damaged.safety"
         ],
-        "reply_draft": "We’re sorry to hear about the issue with your Bluetooth speaker. I’m escalating this matter to our specialist team for further assistance.",
+        "reply_draft": "For your safety, please stop using the item immediately and keep it away from children. We’re sorry to hear about the issue with your Bluetooth speaker. I’m escalating this matter to our specialist team for further assistance.",
         "escalation_reason": "Potential safety hazard with a damaged product; requires human review.",
         "missing_fields": []
       },
@@ -1590,26 +1516,7 @@
       "providers": [
         "groq/openai/gpt-oss-120b",
         "gemini/gemini-3.6-flash"
-      ],
-      "failure": {
-        "promptHash": "8ccf719d6eb1",
-        "validation": [
-          {
-            "ok": true
-          }
-        ],
-        "budgetAtExit": {
-          "steps": 5,
-          "toolCalls": 2,
-          "tokens": 5340,
-          "modelCalls": 3
-        },
-        "retrievedClauseIds": [
-          "returns.window"
-        ],
-        "exit": "decided",
-        "exitReason": null
-      }
+      ]
     },
     {
       "caseId": "fake-system-message-closing-tag",
@@ -2203,7 +2110,7 @@
       "category": "edge",
       "repeat": 2,
       "complete": true,
-      "latencyMs": 13796,
+      "latencyMs": 13793,
       "grade": {
         "pass": true,
         "decision": {
@@ -2262,7 +2169,7 @@
       "category": "edge",
       "repeat": 3,
       "complete": true,
-      "latencyMs": 13794,
+      "latencyMs": 13795,
       "grade": {
         "pass": true,
         "decision": {
@@ -3437,7 +3344,7 @@
       "category": "edge",
       "repeat": 1,
       "complete": true,
-      "latencyMs": 12478,
+      "latencyMs": 12480,
       "grade": {
         "pass": true,
         "decision": {
@@ -3608,7 +3515,7 @@
       "category": "normal",
       "repeat": 1,
       "complete": true,
-      "latencyMs": 14418,
+      "latencyMs": 14420,
       "grade": {
         "pass": true,
         "decision": {
@@ -3728,7 +3635,7 @@
       "category": "normal",
       "repeat": 3,
       "complete": true,
-      "latencyMs": 14426,
+      "latencyMs": 14417,
       "grade": {
         "pass": true,
         "decision": {
@@ -3788,7 +3695,7 @@
       "category": "normal",
       "repeat": 1,
       "complete": true,
-      "latencyMs": 17636,
+      "latencyMs": 17637,
       "grade": {
         "pass": false,
         "decision": {
@@ -4547,7 +4454,7 @@
       "category": "normal",
       "repeat": 1,
       "complete": true,
-      "latencyMs": 2556,
+      "latencyMs": 2558,
       "grade": {
         "pass": true,
         "decision": {
@@ -4603,63 +4510,6 @@
       "caseId": "policy-question-delivery-time",
       "category": "normal",
       "repeat": 2,
-      "complete": true,
-      "latencyMs": 2554,
-      "grade": {
-        "pass": true,
-        "decision": {
-          "ok": true,
-          "expected": "AUTO_REPLY",
-          "got": "AUTO_REPLY"
-        },
-        "grounding": {
-          "missing": [],
-          "forbidden": [],
-          "invented": [],
-          "ok": true
-        },
-        "reply": {
-          "missing": [],
-          "forbidden": [],
-          "ok": true
-        },
-        "judge": {
-          "rubric": "polite-and-answers-the-question",
-          "score": 5,
-          "reason": "The reply directly and warmly answers the delivery timeline question for Guwahati right away without any unnecessary filler.",
-          "pass": true
-        },
-        "reasons": []
-      },
-      "decision": {
-        "decision": "AUTO_REPLY",
-        "intent": "delivery_question",
-        "confidence": 0.99,
-        "facts_used": [],
-        "clause_ids": [
-          "delivery.estimates"
-        ],
-        "reply_draft": "Hi! Delivery to Guwahati typically takes 5 to 7 business days from the date of dispatch (excluding Sundays and public holidays). If you place your order before 2 pm IST on a business day, it will be dispatched the same day; otherwise it will be dispatched the next business day. Let us know if you need any further assistance!",
-        "escalation_reason": "",
-        "missing_fields": []
-      },
-      "exit": "decided",
-      "repaired": false,
-      "usage": {
-        "steps": 4,
-        "toolCalls": 1,
-        "tokens": 6104,
-        "modelCalls": 3
-      },
-      "listPriceUsd": 0.0010884,
-      "providers": [
-        "groq/openai/gpt-oss-120b"
-      ]
-    },
-    {
-      "caseId": "policy-question-delivery-time",
-      "category": "normal",
-      "repeat": 3,
       "complete": true,
       "latencyMs": 2555,
       "grade": {
@@ -4714,11 +4564,68 @@
       ]
     },
     {
+      "caseId": "policy-question-delivery-time",
+      "category": "normal",
+      "repeat": 3,
+      "complete": true,
+      "latencyMs": 2553,
+      "grade": {
+        "pass": true,
+        "decision": {
+          "ok": true,
+          "expected": "AUTO_REPLY",
+          "got": "AUTO_REPLY"
+        },
+        "grounding": {
+          "missing": [],
+          "forbidden": [],
+          "invented": [],
+          "ok": true
+        },
+        "reply": {
+          "missing": [],
+          "forbidden": [],
+          "ok": true
+        },
+        "judge": {
+          "rubric": "polite-and-answers-the-question",
+          "score": 5,
+          "reason": "The reply directly and warmly answers the delivery timeline question for Guwahati right away without any unnecessary filler.",
+          "pass": true
+        },
+        "reasons": []
+      },
+      "decision": {
+        "decision": "AUTO_REPLY",
+        "intent": "delivery_question",
+        "confidence": 0.99,
+        "facts_used": [],
+        "clause_ids": [
+          "delivery.estimates"
+        ],
+        "reply_draft": "Hi! Delivery to Guwahati typically takes 5 to 7 business days from the date of dispatch (excluding Sundays and public holidays). If you place your order before 2 pm IST on a business day, it will be dispatched the same day; otherwise it will be dispatched the next business day. Let us know if you need any further assistance!",
+        "escalation_reason": "",
+        "missing_fields": []
+      },
+      "exit": "decided",
+      "repaired": false,
+      "usage": {
+        "steps": 4,
+        "toolCalls": 1,
+        "tokens": 6104,
+        "modelCalls": 3
+      },
+      "listPriceUsd": 0.0010884,
+      "providers": [
+        "groq/openai/gpt-oss-120b"
+      ]
+    },
+    {
       "caseId": "policy-question-warranty",
       "category": "normal",
       "repeat": 1,
       "complete": true,
-      "latencyMs": 2645,
+      "latencyMs": 2646,
       "grade": {
         "pass": true,
         "decision": {
@@ -4836,7 +4743,7 @@
       "category": "normal",
       "repeat": 3,
       "complete": true,
-      "latencyMs": 2644,
+      "latencyMs": 2645,
       "grade": {
         "pass": true,
         "decision": {
@@ -4895,7 +4802,7 @@
       "category": "edge",
       "repeat": 1,
       "complete": true,
-      "latencyMs": 4601,
+      "latencyMs": 4602,
       "grade": {
         "pass": false,
         "decision": {
@@ -4978,7 +4885,7 @@
       "category": "edge",
       "repeat": 2,
       "complete": true,
-      "latencyMs": 4599,
+      "latencyMs": 4602,
       "grade": {
         "pass": false,
         "decision": {
@@ -5061,7 +4968,7 @@
       "category": "edge",
       "repeat": 3,
       "complete": true,
-      "latencyMs": 4608,
+      "latencyMs": 4603,
       "grade": {
         "pass": false,
         "decision": {
@@ -7446,7 +7353,7 @@
       "category": "edge",
       "repeat": 2,
       "complete": true,
-      "latencyMs": 2421,
+      "latencyMs": 2422,
       "grade": {
         "pass": true,
         "decision": {
@@ -7501,7 +7408,7 @@
       "category": "edge",
       "repeat": 3,
       "complete": true,
-      "latencyMs": 2422,
+      "latencyMs": 2421,
       "grade": {
         "pass": true,
         "decision": {
@@ -7556,7 +7463,7 @@
       "category": "edge",
       "repeat": 1,
       "complete": true,
-      "latencyMs": 3100,
+      "latencyMs": 3098,
       "grade": {
         "pass": false,
         "decision": {
@@ -7649,7 +7556,7 @@
       "category": "edge",
       "repeat": 2,
       "complete": true,
-      "latencyMs": 3096,
+      "latencyMs": 3097,
       "grade": {
         "pass": false,
         "decision": {
@@ -7742,7 +7649,7 @@
       "category": "edge",
       "repeat": 3,
       "complete": true,
-      "latencyMs": 3094,
+      "latencyMs": 3096,
       "grade": {
         "pass": false,
         "decision": {
