@@ -10,6 +10,7 @@ import { Budget, type BudgetExhausted, type BudgetLimits } from "./budget.ts";
 import { DECISION_JSON_SCHEMA, type Decision } from "./decision.ts";
 import { injectionMarkers, instructionLike, quarantineTicket } from "./guard.ts";
 import { loadSystemPrompt, type PromptStage, type SystemPrompt } from "./prompts/index.ts";
+import { SAFETY_CLAUSE, SAFETY_NOTICE, safetyHazard } from "./safety.ts";
 import { ticketMessage, type Ticket } from "./ticket.ts";
 import type { McpTools } from "./tools.ts";
 import {
@@ -453,7 +454,7 @@ export async function runAgent(opts: AgentOptions): Promise<RunResult> {
       verdict.decision,
       opts.confidenceThreshold ?? CONFIDENCE_THRESHOLD,
     );
-    return finish(decision, "decided", undefined, downgraded);
+    return finish(safetyRule(decision), "decided", undefined, downgraded);
   } catch (err) {
     if (!(err instanceof StopRun)) {
       // A harness problem (a missing recording): close the span honestly, then fail loudly.
@@ -467,7 +468,7 @@ export async function runAgent(opts: AgentOptions): Promise<RunResult> {
     }
     // Fail closed: a human gets the ticket with whatever was gathered.
     transition("escalate", `${err.exit} → escalate`);
-    return finish(failClosed(err.message), err.exit, err.message, false);
+    return finish(safetyRule(failClosed(err.message)), err.exit, err.message, false);
   }
 
   function harvest(tool: string, s: Record<string, unknown>) {
@@ -491,6 +492,37 @@ export async function runAgent(opts: AgentOptions): Promise<RunResult> {
           ? `order ${(s.order as { order_id?: string })?.order_id ?? ""}: ${(s.order as { status?: string })?.status ?? ""}`
           : `${tool}: ok`,
     );
+  }
+
+  /**
+   * The safety rule (safety.ts), applied in code to the final decision: a ticket that describes a
+   * safety hazard is ESCALATEd, and its reply starts with the safety clause's instruction and cites
+   * that clause, whatever the model wrote. The clause was read this run (over MCP, at connect), so
+   * it is citable. A REJECT is left alone: it sends nothing.
+   */
+  function safetyRule(d: Decision): Decision {
+    const hazard = d.decision === "REJECT" ? null : safetyHazard(ticket.text);
+    if (!hazard || !opts.tools.clauses.has(SAFETY_CLAUSE)) return d;
+    citable.add(SAFETY_CLAUSE);
+    transition(
+      "validate",
+      `safety rule: hazard "${hazard}" → ESCALATE with the safety instruction`,
+    );
+    return {
+      ...d,
+      decision: "ESCALATE",
+      reply_draft: d.reply_draft.includes(SAFETY_NOTICE)
+        ? d.reply_draft
+        : `${SAFETY_NOTICE} ${d.reply_draft}`.trim(),
+      clause_ids: d.clause_ids.includes(SAFETY_CLAUSE)
+        ? d.clause_ids
+        : [...d.clause_ids, SAFETY_CLAUSE],
+      escalation_reason:
+        d.decision === "ESCALATE" && d.escalation_reason.trim()
+          ? d.escalation_reason
+          : `Safety hazard reported ("${hazard}"): escalate at once with high priority (${SAFETY_CLAUSE}).`,
+      missing_fields: [],
+    };
   }
 
   function failClosed(reason: string): Decision {

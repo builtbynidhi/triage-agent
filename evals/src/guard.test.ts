@@ -8,6 +8,7 @@ import {
   leaksPrompt,
   loadSystemPrompt,
   quarantineTicket,
+  safetyHazard,
 } from "@triage/agent";
 import { loadPolicies } from "@triage/data";
 import { loadCases } from "./load-cases.ts";
@@ -101,5 +102,13 @@ describe("the system prompt never appears in a reply", () => {
     );
     expect(replies.length).toBeGreaterThan(100);
     expect(replies.filter((x) => leaksPrompt(x, promptText))).toEqual([]);
+  });
+});
+
+describe("the safety rule: checked against the real tickets", () => {
+  it("the hazard pattern matches only the safety ticket among the 40", () => {
+    expect(cases.filter((c) => safetyHazard(c.ticket.text)).map((c) => c.id)).toEqual([
+      "damaged-item-safety-hazard",
+    ]);
   });
 });
