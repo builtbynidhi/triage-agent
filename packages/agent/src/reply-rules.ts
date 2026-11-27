@@ -7,6 +7,8 @@
  *     ("we will process your refund", "you may return it for a full refund"). A human approves
  *     every refund; the reply describes the policy instead. The validator sends a violation back
  *     for its one repair.
+ *   - discretionaryOffers: a reply must not pass on an offer only a human may make (store credit
+ *     "at the discretion of a human agent"); the validator sends it back like a promise.
  *   - safetyHazard: a ticket describing a hazard (smoke, sparks, overheating, ...) always gets the
  *     safety instruction from the safety clause and always reaches a human, whatever the model
  *     wrote. A safety warning must not depend on the model remembering it.
@@ -31,6 +33,11 @@ const PROMISE: RegExp[] = [
     String.raw`\byour\s+(?:\w+\s+){0,2}?${OBJ}\b[^.?!]{0,30}?\b(will be|has been|is being|is|was)\s+(?:\w+\s+)?(approved|confirmed|granted|accepted|processed|issued|initiated|credited)\b`,
     "i",
   ),
+  // "the refund will be processed", "the amount has been credited": a promise even after "once the
+  // item passes quality check" (judge and owner labels, 27 Nov). Future and perfect tenses only, so
+  // the policy's own "a refund is issued only after the return was accepted" stays a description.
+  /\bthe\s+(refund|replacement|money|amount)\b[^.?!]{0,30}?\b(will|shall|would) be\s+(\w+\s+)?(approved|confirmed|granted|processed|issued|initiated|credited|refunded)\b/i,
+  /\bthe\s+(refund|replacement|money|amount)\b[^.?!]{0,30}?\bhas been\s+(\w+\s+)?(approved|confirmed|granted|processed|issued|initiated|credited|refunded)\b/i,
   // "refund approved", "replacement has been confirmed"
   /\b(refund|replacement)\s+(has been |is |was )?(approved|confirmed|granted)\b/i,
   // "you may return the headphones for a full refund"
@@ -51,6 +58,17 @@ export function promisedApprovals(reply: string): string[] {
   return reply
     .split(/(?<=[.?!])\s+/)
     .filter((s) => !NEGATION.test(s) && PROMISE.some((p) => p.test(s)));
+}
+
+// Offers only a human may make. The refunds policy says store credit "may be offered at the
+// discretion of a human agent"; a reply that passes this on hints that an exception may come
+// (the declines-clearly-and-kindly rubric scores that 2). The human decides whether to offer it.
+const DISCRETIONARY =
+  /\b(store credit|goodwill|at (the |their |our )?(sole )?discretion|make an exception|an exception (may|can|could|might) be made)\b/i;
+
+/** The sentences of a reply that offer or hint at something only a human may grant. */
+export function discretionaryOffers(reply: string): string[] {
+  return reply.split(/(?<=[.?!])\s+/).filter((s) => DISCRETIONARY.test(s));
 }
 
 /** The policy clause that says what to do about a safety hazard (policies/damaged.md). */

@@ -1,6 +1,6 @@
 import { DecisionSchema, type Decision, type MissingField } from "./decision.ts";
 import { leaksPrompt } from "./guard.ts";
-import { promisedApprovals } from "./reply-rules.ts";
+import { discretionaryOffers, promisedApprovals } from "./reply-rules.ts";
 
 /**
  * The validator between the model and the system. A model returns text; the system needs a typed,
@@ -144,6 +144,12 @@ export function validateDecision(d: Decision, ctx: ValidationContext): Validatio
   if (promised.length) {
     errors.push(
       `reply_draft promises or confirms a refund, replacement or approval, which only a human may give: "${promised[0]}". Describe what the policy says happens instead, without committing to this customer's outcome (for example "after the quality check, the refund is processed as the refunds policy describes").`,
+    );
+  }
+  const offered = discretionaryOffers(reply);
+  if (offered.length) {
+    errors.push(
+      `reply_draft offers or hints at something only a human may grant: "${offered[0]}". Leave it out: a human decides on store credit and exceptions, and the reply must not suggest one may come.`,
     );
   }
   if (FULL_EMAIL.test(reply) || FULL_PHONE.test(reply)) {

@@ -3,10 +3,12 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import {
+  discretionaryOffers,
   injectionMarkers,
   instructionLike,
   leaksPrompt,
   loadSystemPrompt,
+  machineQuery,
   promisedApprovals,
   quarantineTicket,
   safetyHazard,
@@ -119,6 +121,22 @@ describe("reply rules (agent-v3): checked against the real tickets and the real 
         .filter((p) => promisedApprovals(p.text).length)
         .map((p) => p.clauseId),
     ).toEqual([]);
+  });
+  it("the discretionary-offer rule matches only the refunds clause that leaves store credit to a human", () => {
+    expect(
+      loadPolicies()
+        .filter((p) => discretionaryOffers(p.text).length)
+        .map((p) => p.clauseId),
+    ).toEqual(["refunds.window"]);
+    expect(cases.filter((c) => discretionaryOffers(c.ticket.text).length).map((c) => c.id)).toEqual(
+      [],
+    );
+  });
+  it("the machine's policy query leaves out a quoted email (the injected note is not the request)", () => {
+    const c = cases.find((x) => x.id === "quoted-email-injection")!;
+    const q = machineQuery(c.ticket.text, "delivered")!;
+    expect(q).toMatch(/When is the pickup\?/);
+    expect(q).not.toMatch(/AI assistant|pre-approved|4847/);
   });
   it("removing clause IDs leaves the real policy text unchanged (it contains none)", () => {
     const real = loadPolicies();

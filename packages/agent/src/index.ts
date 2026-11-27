@@ -1,4 +1,4 @@
-export { runAgent } from "./machine.ts";
+export { runAgent, machineQuery, DELIVERY_QUERY } from "./machine.ts";
 export type { AgentOptions, Exit, Proposal, RunResult, State, StepRecord } from "./machine.ts";
 export { Budget, DEFAULT_BUDGET } from "./budget.ts";
 export type { BudgetLimits, BudgetExhausted } from "./budget.ts";
@@ -25,6 +25,7 @@ export type { FailureDetail } from "./failure.ts";
 export { injectionMarkers, instructionLike, leaksPrompt, quarantineTicket } from "./guard.ts";
 export {
   promisedApprovals,
+  discretionaryOffers,
   safetyHazard,
   stripClauseIds,
   SAFETY_CLAUSE,

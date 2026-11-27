@@ -164,6 +164,30 @@ export function modelView(
   return JSON.stringify(structured);
 }
 
+/** The search for an order not yet delivered: its question is when it arrives (delivery policy). */
+export const DELIVERY_QUERY = "delivery time, dispatch time and tracking";
+
+/**
+ * What the machine searches the policy for when the model found an order but read no policy:
+ * null when no order was found (nothing to answer from). For an order still on its way, the
+ * delivery question (whole-ticket searches rank cancellation and address clauses first for
+ * "where is my order"); otherwise the customer's own words, with quoted earlier emails ("> ...")
+ * left out, since a quote is not the customer's request.
+ */
+export function machineQuery(ticketText: string, orderStatus: string | null): string | null {
+  if (!orderStatus) return null;
+  if (orderStatus === "placed" || orderStatus === "dispatched") return DELIVERY_QUERY;
+  const own = ticketText
+    .split("\n")
+    .filter((l) => !l.trimStart().startsWith(">"))
+    .join(" ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 500)
+    .trim();
+  return own || null;
+}
+
 export async function runAgent(opts: AgentOptions): Promise<RunResult> {
   const prompt = opts.prompt ?? loadSystemPrompt();
   const budget = new Budget(opts.budget);
@@ -173,6 +197,8 @@ export async function runAgent(opts: AgentOptions): Promise<RunResult> {
   const quarantinedClauses = new Set<string>();
   const humanOnlyActions = new Set<string>();
   const facts: string[] = [];
+  /** The status of the last order get_order found this run, if any. */
+  let orderStatus: string | null = null;
   // Input quarantine: invisible characters out, length capped. A normal ticket comes back unchanged.
   const quarantined = quarantineTicket(opts.ticket);
   const ticket = quarantined.ticket;
@@ -370,71 +396,24 @@ export async function runAgent(opts: AgentOptions): Promise<RunResult> {
         const blocked = budget.blocksToolCall();
         if (blocked)
           throw new StopRun("budget", `${BUDGET_REASON[blocked]} exhausted before ${call.name}`);
-        const state: State = call.name === "search_policy" ? "retrieve" : "gather";
-        const t0 = performance.now();
-        const toolSpan = tracer.startSpan(
-          `execute_tool ${call.name}`,
-          {
-            kind: SpanKind.INTERNAL,
-            attributes: {
-              "gen_ai.operation.name": "execute_tool",
-              "gen_ai.tool.name": call.name,
-              "gen_ai.tool.call.id": call.id,
-              "gen_ai.tool.type": "function",
-              ...(capture ? { "gen_ai.tool.call.arguments": JSON.stringify(call.arguments) } : {}),
-            },
-          },
-          rootCtx,
-        );
-        const result = await opts.tools.call(call.name, call.arguments);
-        budget.spendToolCall();
-        const failed = result.structured.ok === false;
-        toolSpan.setAttribute("triage.tool.ok", !failed);
-        if (call.name === "search_policy" && Array.isArray(result.structured.results)) {
-          toolSpan.setAttribute(
-            "triage.clause_ids",
-            (result.structured.results as { clause_id?: string }[]).flatMap((r) =>
-              r.clause_id ? [r.clause_id] : [],
-            ),
-          );
-        }
-        if (failed)
-          toolSpan.setAttribute("error.type", String(result.structured.code ?? "tool_error"));
-        if (result.isError) toolSpan.setStatus({ code: SpanStatusCode.ERROR });
-        if (capture)
-          toolSpan.setAttribute("gen_ai.tool.call.result", JSON.stringify(result.structured));
-        toolSpan.end();
-        harvest(call.name, result.structured);
-        // An order change the policy allows but no tool performs: a human must make it.
-        const requested = String(call.arguments.request_type ?? "");
-        if (
-          call.name === "check_eligibility" &&
-          result.structured.eligible === true &&
-          (requested === "cancellation" || requested === "address_change")
-        )
-          humanOnlyActions.add(requested);
-        record({
-          state,
-          kind: "tool_call",
-          name: call.name,
-          input: call.arguments,
-          output: result.structured,
-          ms: Math.round(performance.now() - t0),
-        });
-        const attached = policyTextFor(call.name, result.structured);
-        if (attached.length)
-          transition(
-            "retrieve",
-            `policy text attached to ${call.name}: ${attached.map((c) => c.clause_id).join(", ")}`,
-          );
-        // Tool results go back as tool messages, never into the system prompt.
-        messages.push({
-          role: "tool",
-          toolCallId: call.id,
-          name: call.name,
-          content: modelView(call.name, result.structured, attached),
-        });
+        await runTool(call);
       }
+    }
+
+    // RETRIEVE, by the machine: the model looked an order up but read no policy, so its reply
+    // would have nothing to cite (measured 27 Nov: three cases decided from order facts alone,
+    // and one was REJECTed with no policy in view). One search_policy call through MCP, like the
+    // model's own; its results pass the same guard. Only runs that read no policy change.
+    const query = citable.size ? null : machineQuery(ticket.text, orderStatus);
+    if (query && !budget.blocksToolCall()) {
+      transition("retrieve", `no policy read: the machine searches the policy for "${query}"`);
+      const call = {
+        id: "machine_retrieve",
+        name: "search_policy",
+        arguments: { query, top_k: 4 },
+      };
+      messages.push({ role: "assistant", content: "", toolCalls: [call] });
+      await runTool(call);
     }
 
     // DECIDE: schema-shaped answer, no tools.
@@ -498,7 +477,77 @@ export async function runAgent(opts: AgentOptions): Promise<RunResult> {
     return finish(finalReply(failClosed(err.message)), err.exit, err.message, false);
   }
 
+  async function runTool(call: { id: string; name: string; arguments: Record<string, unknown> }) {
+    const state: State = call.name === "search_policy" ? "retrieve" : "gather";
+    const t0 = performance.now();
+    const toolSpan = tracer.startSpan(
+      `execute_tool ${call.name}`,
+      {
+        kind: SpanKind.INTERNAL,
+        attributes: {
+          "gen_ai.operation.name": "execute_tool",
+          "gen_ai.tool.name": call.name,
+          "gen_ai.tool.call.id": call.id,
+          "gen_ai.tool.type": "function",
+          ...(capture ? { "gen_ai.tool.call.arguments": JSON.stringify(call.arguments) } : {}),
+        },
+      },
+      rootCtx,
+    );
+    const result = await opts.tools.call(call.name, call.arguments);
+    budget.spendToolCall();
+    const failed = result.structured.ok === false;
+    toolSpan.setAttribute("triage.tool.ok", !failed);
+    if (call.name === "search_policy" && Array.isArray(result.structured.results)) {
+      toolSpan.setAttribute(
+        "triage.clause_ids",
+        (result.structured.results as { clause_id?: string }[]).flatMap((r) =>
+          r.clause_id ? [r.clause_id] : [],
+        ),
+      );
+    }
+    if (failed) toolSpan.setAttribute("error.type", String(result.structured.code ?? "tool_error"));
+    if (result.isError) toolSpan.setStatus({ code: SpanStatusCode.ERROR });
+    if (capture)
+      toolSpan.setAttribute("gen_ai.tool.call.result", JSON.stringify(result.structured));
+    toolSpan.end();
+    harvest(call.name, result.structured);
+    // An order change the policy allows but no tool performs: a human must make it.
+    const requested = String(call.arguments.request_type ?? "");
+    if (
+      call.name === "check_eligibility" &&
+      result.structured.eligible === true &&
+      (requested === "cancellation" || requested === "address_change")
+    )
+      humanOnlyActions.add(requested);
+    record({
+      state,
+      kind: "tool_call",
+      name: call.name,
+      input: call.arguments,
+      output: result.structured,
+      ms: Math.round(performance.now() - t0),
+    });
+    const attached = policyTextFor(call.name, result.structured);
+    if (attached.length)
+      transition(
+        "retrieve",
+        `policy text attached to ${call.name}: ${attached.map((c) => c.clause_id).join(", ")}`,
+      );
+    // Tool results go back as tool messages, never into the system prompt.
+    messages.push({
+      role: "tool",
+      toolCallId: call.id,
+      name: call.name,
+      content: modelView(call.name, result.structured, attached),
+    });
+  }
+
   function harvest(tool: string, s: Record<string, unknown>) {
+    if (tool === "get_order" && s.ok !== false) {
+      const status = (s.order as { status?: string } | undefined)?.status;
+      if (status) orderStatus = status;
+    }
     if (tool === "search_policy" && Array.isArray(s.results)) {
       for (const r of s.results as { clause_id?: string; text?: string }[]) {
         if (!r.clause_id) continue;
